@@ -197,9 +197,7 @@ open-source license is a maintainer decision, not a code-generation default.
 
 ## 🧭 Roadmap
 
-The next renderer milestone is KaTeX integration for the mathematical source
-already marked in the HTML. Mermaid class and unit-dependency diagrams,
-followed by interactive zooming and panning, come after that. An opt-in brace
-comment dialect remains a separate compatibility decision because ordinary
-brace comments often contain section labels and implementation notes rather
-than public API documentation.
+The next milestone is configurable documentation-comment dialect support for
+projects using `///`, `{ ... }`, `(* ... *)`, or an explicit combination of
+them. KaTeX rendering and Mermaid diagrams follow. See
+[ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.
