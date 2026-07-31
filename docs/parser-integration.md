@@ -1,0 +1,80 @@
+# Parser integration
+
+PasWeave's first adapter was developed against the installed Free Pascal
+3.2.2 `fcl-passrc` sources, not from remembered API names. The relevant
+sources are `packages/fcl-passrc/src/pparser.pp`,
+`packages/fcl-passrc/src/pastree.pp`, and the bundled
+`packages/fcl-passrc/examples/parsepp.pp`.
+
+The concrete integration is:
+
+1. `PParser.ParseSource` accepts an array of compiler-style arguments plus
+   target OS and CPU strings and returns a `PasTree.TPasModule`. In FPC 3.2.2,
+   `ParseUnit` constructs `TPasModule` itself rather than the also-declared
+   `TPasUnitModule`, so the adapter identifies a unit by its populated
+   `InterfaceSection`.
+2. Parsing requires a `TPasTreeContainer` subclass. PasWeave implements both
+   the required filename/line `CreateElement` overload and the virtual
+   `TPasSourcePos` overload. The latter retains the column that the base
+   overload would otherwise discard.
+3. `TPasTreeContainer.NeedComments := True` tells `TPasParser` not to skip
+   comments. `TPasParser.SaveComments` makes them available through
+   `CurrentParser.SavedComments`; the adapter copies that value into each
+   node's `TPasElement.DocComment`, following the pattern used by
+   `fcl-passrc`'s own parser tests.
+4. `TPasTreeContainer.InterfaceOnly := True` stops before implementation
+   parsing. Interface declarations are read from
+   `TPasModule.InterfaceSection.Declarations`, and dependencies come from
+   `TPasSection.UsesClause`. FPC injects its implicit `System` unit into that
+   clause; PasWeave filters it so the model describes source-level
+   dependencies.
+5. Declaration text starts from the tree node's `GetDeclaration(True)` where
+   it is reliable. The adapter reconstructs the declaration categories where
+   FPC 3.2.2 returns incomplete syntax, converts supported `PasTree` node
+   classes immediately into PasWeave model objects, then frees the FPC tree.
+   No `PasTree` type crosses the adapter's public interface.
+6. `EParserError` provides filename, row, and column properties. The adapter
+   converts it to PasWeave's parser-independent diagnostic type.
+
+The container's `FindElement` currently returns `nil`, matching the minimal
+bundled `parsepp` example. This allows unresolved type references to remain
+unresolved in the syntax tree and is sufficient for declaration extraction;
+semantic type resolution is not part of this iteration.
+
+## Known behaviour and uncertainty
+
+- `fcl-passrc` groups comments encountered before a token. PasWeave currently
+  accepts the trailing group of `///` lines from `DocComment`, but does not yet
+  re-read source gaps to reject a group separated from its declaration by a
+  blank line.
+- Comment text is normalised to LF in the model. Text following the third
+  slash is preserved, including Markdown and mathematics.
+- The adapter supplies `-Mobjfpc`; source mode directives can still change
+  scanner mode in the normal FPC way.
+- Include paths, defines, and other compiler arguments are not exposed by the
+  CLI yet.
+- The mapping covers the requested initial symbol categories, but unusual
+  generic, helper, Objective-C, and compiler-extension nodes have not yet been
+  validated with fixtures.
+- Only the interface is parsed. Syntax errors solely in an implementation
+  section are therefore intentionally outside this iteration's diagnostics.
+- The adapter was verified with FPC 3.2.2. Compatibility with FPC trunk must
+  be tested rather than assumed.
+
+## Declaration reconstruction in FPC 3.2.2
+
+Real-world validation exposed several declaration-text gaps in the installed
+tree:
+
+- `TPasClassType` does not override `GetDeclaration`, so it returns only its
+  name rather than a class or interface header.
+- `TPasSpecializeType.GetDeclaration` emits `<` but does not append `>`.
+  Generic template parameters also render empty when requested through
+  `TPasElement.GetDeclaration(False)`.
+
+PasWeave reconstructs compact class, interface, record, and specialization
+headers from the typed tree fields. It also reconstructs affected procedure
+and property signatures with their typed arguments and result types. Members
+are represented as separate symbols, so compact `class ... end` and
+`record ... end` headers avoid duplicating entire member lists in every type
+declaration.
