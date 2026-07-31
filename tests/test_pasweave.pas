@@ -4,7 +4,7 @@ program test_pasweave;
 
 uses
   Classes, SysUtils, FPJSON, JSONParser,
-  PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Comments, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown;
 
@@ -22,6 +22,16 @@ begin
   for I := 0 to AUnit.Symbols.Count - 1 do
     if TDocSymbol(AUnit.Symbols[I]).Name = AName then
       Exit(TDocSymbol(AUnit.Symbols[I]));
+end;
+
+function HasDirective(ASymbol: TDocSymbol; const AName: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  for I := 0 to ASymbol.Directives.Count - 1 do
+    if TDocDirective(ASymbol.Directives[I]).Name = AName then
+      Exit(True);
 end;
 
 procedure RunTests;
@@ -44,7 +54,30 @@ var
   SecondUnitHTML: UTF8String;
   SearchIndex: UTF8String;
   ParsedJSON: TJSONData;
+  DialectProject: TDocProject;
+  DialectUnit: TDocUnit;
+  DialectSymbol: TDocSymbol;
+  MixedSymbol: TDocSymbol;
+  CommentStyles: TDocumentationCommentStyles;
+  SlashPosition: Integer;
+  BracePosition: Integer;
+  ParenPosition: Integer;
 begin
+  Check(TryParseDocumentationCommentStyles('slash, brace,paren',
+    CommentStyles), 'combined documentation comment styles should parse');
+  Check(CommentStyles = AllDocumentationCommentStyles,
+    'combined documentation comment styles should enable every form');
+  Check(TryParseDocumentationCommentStyles('ALL', CommentStyles),
+    'the all shorthand should be case insensitive');
+  Check(CommentStyles = AllDocumentationCommentStyles,
+    'the all shorthand should enable every form');
+  Check(not TryParseDocumentationCommentStyles('slash,unknown',
+    CommentStyles), 'unknown documentation comment styles should fail');
+  Check(CommentStyles = [],
+    'failed documentation comment parsing should not leave partial styles');
+  Check(DocumentationCommentStylesText([dcsBrace, dcsSlash]) =
+    'slash,brace', 'documentation comment styles should have stable text');
+
   Project := BuildProject('tests/fixtures/SimpleUnit.pas',
     'PasWeaveFixture', AttemptedCount);
   try
@@ -193,6 +226,130 @@ begin
       'HTML renderer should write its offline search index');
   finally
     Project.Free;
+  end;
+
+  DialectProject := BuildProject(
+    'tests/fixtures/comments/CommentDialects.pas',
+    'CommentDialectDefaultFixture', AttemptedCount);
+  try
+    Check(DialectProject.Errors.Count = 0,
+      'comment dialect fixture should parse with the default style');
+    DialectUnit := TDocUnit(DialectProject.Units[0]);
+    Check(FindSymbol(DialectUnit, 'SlashOnly').MarkdownDocumentation =
+      'Slash documentation.', 'slash comments should remain the default');
+    Check(FindSymbol(DialectUnit, 'BraceOnly').MarkdownDocumentation = '',
+      'brace comments should be disabled by default');
+    Check(FindSymbol(DialectUnit, 'ParenOnly').MarkdownDocumentation = '',
+      'paren comments should be disabled by default');
+    Check(FindSymbol(DialectUnit, 'Mixed').MarkdownDocumentation = '',
+      'a disabled adjacent form should stop a default slash group');
+    Check(FindSymbol(DialectUnit,
+      'AfterSlashBlankLine').MarkdownDocumentation = '',
+      'a blank line should end default slash documentation association');
+  finally
+    DialectProject.Free;
+  end;
+
+  DialectProject := BuildProject(
+    'tests/fixtures/comments/CommentDialects.pas',
+    'CommentDialectBraceFixture', AttemptedCount, [dcsBrace]);
+  try
+    DialectUnit := TDocUnit(DialectProject.Units[0]);
+    Check(FindSymbol(DialectUnit, 'BraceOnly').MarkdownDocumentation =
+      'Brace documentation.', 'brace-only mode should capture brace comments');
+    Check(FindSymbol(DialectUnit, 'BraceOnly').RawDocumentation =
+      '{ Brace documentation. }',
+      'brace raw documentation should preserve both delimiters');
+    Check(FindSymbol(DialectUnit, 'SlashOnly').MarkdownDocumentation = '',
+      'brace-only mode should not capture slash comments');
+  finally
+    DialectProject.Free;
+  end;
+
+  DialectProject := BuildProject(
+    'tests/fixtures/comments/CommentDialects.pas',
+    'CommentDialectParenFixture', AttemptedCount, [dcsParen]);
+  try
+    DialectUnit := TDocUnit(DialectProject.Units[0]);
+    Check(FindSymbol(DialectUnit, 'ParenOnly').MarkdownDocumentation =
+      'Paren documentation.', 'paren-only mode should capture paren comments');
+    Check(FindSymbol(DialectUnit, 'ParenOnly').RawDocumentation =
+      '(* Paren documentation. *)',
+      'paren raw documentation should preserve both delimiters');
+    Check(FindSymbol(DialectUnit, 'BraceOnly').MarkdownDocumentation = '',
+      'paren-only mode should not capture brace comments');
+  finally
+    DialectProject.Free;
+  end;
+
+  DialectProject := BuildProject(
+    'tests/fixtures/comments/CommentDialects.pas',
+    'CommentDialectAllFixture', AttemptedCount,
+    AllDocumentationCommentStyles);
+  try
+    Check(DialectProject.Errors.Count = 0,
+      'comment dialect fixture should parse with every style');
+    DialectUnit := TDocUnit(DialectProject.Units[0]);
+    MixedSymbol := FindSymbol(DialectUnit, 'Mixed');
+    Check(Assigned(MixedSymbol), 'mixed comment declaration should be modeled');
+    SlashPosition := Pos('/// Mixed slash summary.',
+      MixedSymbol.RawDocumentation);
+    BracePosition := Pos('{', MixedSymbol.RawDocumentation);
+    ParenPosition := Pos('(*', MixedSymbol.RawDocumentation);
+    Check((SlashPosition > 0) and (SlashPosition < BracePosition) and
+      (BracePosition < ParenPosition),
+      'mixed raw documentation should retain delimiters in source order');
+    Check(Copy(MixedSymbol.RawDocumentation,
+      Length(MixedSymbol.RawDocumentation) - 1, 2) = '*)',
+      'mixed raw documentation should preserve its final paren delimiter');
+    Check(Pos('Mixed slash summary.', MixedSymbol.MarkdownDocumentation) > 0,
+      'mixed Markdown should include the slash body');
+    Check(Pos('Mixed brace detail.', MixedSymbol.MarkdownDocumentation) > 0,
+      'mixed Markdown should include the brace body');
+    Check(Pos('Mixed paren detail.', MixedSymbol.MarkdownDocumentation) > 0,
+      'mixed Markdown should include the paren body');
+    Check(Pos('@param', MixedSymbol.MarkdownDocumentation) = 0,
+      'structured directives should be removed from mixed Markdown');
+    Check((MixedSymbol.Directives.Count = 3) and
+      HasDirective(MixedSymbol, 'param') and
+      HasDirective(MixedSymbol, 'returns') and
+      HasDirective(MixedSymbol, 'since'),
+      'structured directives should be extracted across a mixed group');
+
+    Check(FindSymbol(DialectUnit, 'AfterBlankLine').MarkdownDocumentation = '',
+      'a blank line should end documentation association');
+    Check(FindSymbol(DialectUnit, 'FirstAfterGroup').MarkdownDocumentation =
+      'Documentation attached to one declaration.',
+      'a group should attach to its immediately following declaration');
+    Check(FindSymbol(DialectUnit, 'SecondAfterGroup').MarkdownDocumentation = '',
+      'a group should not attach to a second declaration');
+    Check(FindSymbol(DialectUnit,
+      'BraceDirectiveBarrier').MarkdownDocumentation = '',
+      'brace compiler directives should never become documentation');
+    Check(FindSymbol(DialectUnit,
+      'ParenDirectiveBarrier').MarkdownDocumentation = '',
+      'paren compiler directives should never become documentation');
+
+    Check(FindSymbol(DialectUnit,
+      'TAfterSectionLabel').MarkdownDocumentation = 'Types',
+      'opted-in ordinary section labels should be exposed for audit');
+    Check(FindSymbol(DialectUnit,
+      'TAfterDisabledCode').MarkdownDocumentation =
+      'procedure RemovedRoutine;',
+      'opted-in disabled code comments should be exposed for audit');
+    Check(FindSymbol(DialectUnit, 'Next').MarkdownDocumentation = '',
+      'a trailing comment should not shift to the next declaration');
+    DialectSymbol := FindSymbol(DialectUnit, 'FSecret');
+    Check(Assigned(DialectSymbol) and
+      (DialectSymbol.MarkdownDocumentation = 'Internal storage.'),
+      'private declarations should retain documentation in the model');
+    Check(Pos('CommentDialects.TVisibilityFixture.FSecret',
+      string(RenderHTMLUnit(DialectProject, DialectUnit))) = 0,
+      'private declarations should remain excluded from rendered API docs');
+    Check(ProjectToJSON(DialectProject) = ProjectToJSON(DialectProject),
+      'mixed comment JSON should be deterministic');
+  finally
+    DialectProject.Free;
   end;
 
   PartialProject := BuildProject('tests/fixtures/partial',

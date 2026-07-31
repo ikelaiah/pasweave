@@ -11,13 +11,14 @@ the project brief.
 - Commit date: 2026-07-31
 - FPC and `fcl-passrc`: 3.2.2
 
-The validation command was:
+The default and opt-in brace validation commands were:
 
 ```text
 pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-docs --project-name mathlib-fp
+pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-brace-docs --project-name mathlib-fp --doc-comments=brace
 ```
 
-## Results
+## Default `slash` results
 
 | Check | Result |
 |---|---:|
@@ -87,7 +88,7 @@ symbol fragments, and search-index URLs. Every generated file is UTF-8 without
 a byte-order mark and uses LF line endings. Both JavaScript assets pass
 `node --check`.
 
-## Documentation coverage finding
+## Default documentation coverage
 
 The model contains zero documented symbols for this revision. This is not a
 comment-association or parser error:
@@ -97,9 +98,9 @@ comment-association or parser error:
 - 496 lines use one of PasWeave's initially recognised directive names, but
   those lines occur inside brace comments.
 
-The current milestone intentionally recognises only consecutive `///` comments.
-Treating every plain `{ ... }` block as public API documentation would also
-capture section labels and implementation notes, so PasWeave does not do that
+The default intentionally recognises only consecutive `///` comments. Treating
+every plain `{ ... }` block as public API documentation would also capture
+section labels and implementation notes, so PasWeave does not do that
 implicitly.
 
 The Markdown renderer therefore emits 2,227 explicit undocumented warnings:
@@ -107,14 +108,68 @@ The Markdown renderer therefore emits 2,227 explicit undocumented warnings:
 or strict-private symbols from the API pages; those symbols remain available
 in the JSON model.
 
-A later compatibility decision can either:
+Projects can now either:
 
-1. add an explicit, opt-in brace-comment documentation dialect with clear
-   association rules; or
+1. opt into brace-comment documentation with `--doc-comments=brace`; or
 2. migrate selected public API comments in `mathlib-fp` to `///`.
 
+## Opt-in `brace` audit
+
+The brace-mode run parsed the same 45 units and generated the same 2,338
+symbols with no warnings or errors. It associated brace documentation with 615
+model symbols. Of those, 570 are renderable API symbols across 25 units and 45
+are private or nested beneath private declarations. The generated index reports
+570 documented symbols out of 2,227 renderable symbols, or 25.6% coverage.
+
+The useful extraction is substantial. It includes detailed matrix, finance,
+statistics, combinatorics, geometry, and probability API prose as well as
+short descriptions for types and constants. Existing supported tags were
+extracted into 496 structured directives on 197 symbols:
+
+| Directive | Count |
+|---|---:|
+| `@param` | 312 |
+| `@returns` | 184 |
+
+Another 200 symbols retain project-specific tags such as `@description`,
+`@usage`, `@warning`, and `@example` in Markdown because those names are not
+currently part of PasWeave's structured-directive contract. No compiler
+directive was captured as documentation.
+
+Two brace-mode runs produced 96 files each with no per-file hash differences.
+Their JSON SHA-256 was:
+
+```text
+35FCD3424EA61662AAA0D918CD829825931847C8FCA9E127888EC87AC3E47548
+```
+
+The brace JSON is 2,306,190 bytes. The default JSON hash remains the earlier
+`C76154919F7CD8D92E4F9D604AD87334BE983907845F8A2617C10859B32CE655`,
+confirming that the new feature does not alter default output for this source.
+
+### False-positive findings
+
+Ordinary brace comments do not carry enough syntax to distinguish prose for a
+declaration from a section heading. Manual and pattern-assisted review found
+nine unambiguous standalone dashed section labels attached to the first method
+in their section, for example `--- Basic Filtering ---` on
+`TSignalKit.MovingAverage` and `---- Inverse trig ----` on
+`TTrigKit.ArcSin`. A broader audit identified 23 additional short
+category-like comments, including `Length conversions` and `Unit compatibility
+checking`; some are useful summaries, so they are reported as candidates
+rather than definite errors.
+
+The first audit also exposed trailing field comments drifting onto the next
+field. PasWeave now rejects a block group whose earliest comment does not start
+on an otherwise blank source line, and the fixture suite covers that case.
+After the fix, inline record-field notes are not counted as documentation. No
+obvious commented-out declaration was attached in this `mathlib-fp` revision,
+although a dedicated fixture records that this remains an unavoidable risk
+when ordinary block comments are enabled.
+
 The real-world parser, model conversion, source positions, symbol IDs, partial
-failure architecture, deterministic JSON, linked Markdown pages, stable
-anchors, searchable static HTML, offline asset paths, and public/private
-filtering are validated. Documentation extraction from `mathlib-fp` remains
-unsupported until that syntax decision is made deliberately.
+failure architecture, deterministic outputs, comment association, structured
+directive extraction, linked pages, stable anchors, offline search, and
+public/private filtering are therefore validated. Brace mode is useful for
+this project, but its reported coverage should be interpreted with the
+section-label caveat above.

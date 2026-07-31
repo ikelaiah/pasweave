@@ -5,13 +5,16 @@ unit PasWeave.Parser;
 interface
 
 uses
-  SysUtils, PasWeave.Model;
+  SysUtils, PasWeave.Model, PasWeave.Comments;
 
 type
   EPasWeaveInputError = class(Exception);
 
 function BuildProject(const ASourcePath, AProjectName: string;
-  out AAttemptedFileCount: Integer): TDocProject;
+  out AAttemptedFileCount: Integer): TDocProject; overload;
+function BuildProject(const ASourcePath, AProjectName: string;
+  out AAttemptedFileCount: Integer;
+  ACommentStyles: TDocumentationCommentStyles): TDocProject; overload;
 
 implementation
 
@@ -51,6 +54,14 @@ end;
 
 function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer): TDocProject;
+begin
+  Result := BuildProject(ASourcePath, AProjectName, AAttemptedFileCount,
+    DefaultDocumentationCommentStyles);
+end;
+
+function BuildProject(const ASourcePath, AProjectName: string;
+  out AAttemptedFileCount: Integer;
+  ACommentStyles: TDocumentationCommentStyles): TDocProject;
 var
   Files: TStringList;
   SourceRoot: string;
@@ -102,7 +113,8 @@ begin
       begin
         UnitModel := nil;
         Diagnostic := nil;
-        if ParseUnitFile(Files[I], SourceRoot, UnitModel, Diagnostic) then
+        if ParseUnitFile(Files[I], SourceRoot, ACommentStyles, UnitModel,
+          Diagnostic) then
           Result.Units.Add(UnitModel)
         else if Assigned(Diagnostic) then
           Result.Errors.Add(Diagnostic);

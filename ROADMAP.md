@@ -31,13 +31,12 @@ when real Free Pascal projects expose a more immediate compatibility need.
 - Audit generated links, assets, anchors, search targets, and deterministic
   output against `mathlib-fp`.
 
-## Next: documentation comment dialects
+### Documentation comment dialects
 
-PasWeave currently recognizes consecutive `///` comments. The next milestone
-will allow a project to opt into the Pascal comment forms it uses for API
-documentation.
+PasWeave recognizes consecutive `///` comments by default and lets a project
+opt into the Pascal block-comment forms it uses for API documentation.
 
-Planned command-line forms:
+Command-line forms:
 
 ```text
 --doc-comments=slash
@@ -47,10 +46,10 @@ Planned command-line forms:
 --doc-comments=all
 ```
 
-The default will remain `slash` so ordinary source comments do not silently
+The default remains `slash` so ordinary source comments do not silently
 become public documentation.
 
-Acceptance criteria:
+Completed acceptance criteria:
 
 - Recognize enabled `///`, `{ ... }`, and `(* ... *)` documentation.
 - Merge adjacent enabled comment forms in source order.
@@ -69,7 +68,10 @@ Acceptance criteria:
 Explicit block-documentation markers such as `{** ... }` and `(** ... *)`
 may later be recognized independently of the ordinary-comment settings.
 
-## Planned: mathematical rendering
+The `mathlib-fp` brace-mode audit found useful API prose and expected
+false-positive section labels.
+
+## Next: mathematical rendering
 
 - Integrate KaTeX with the elements already marked by `data-math-inline` and
   `data-math-display`.

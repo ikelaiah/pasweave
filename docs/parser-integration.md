@@ -17,11 +17,13 @@ The concrete integration is:
    the required filename/line `CreateElement` overload and the virtual
    `TPasSourcePos` overload. The latter retains the column that the base
    overload would otherwise discard.
-3. `TPasTreeContainer.NeedComments := True` tells `TPasParser` not to skip
-   comments. `TPasParser.SaveComments` makes them available through
-   `CurrentParser.SavedComments`; the adapter copies that value into each
-   node's `TPasElement.DocComment`, following the pattern used by
-   `fcl-passrc`'s own parser tests.
+3. Documentation association is source-backed rather than based on
+   `TPasElement.DocComment`. The adapter reads the unit once, uses each tree
+   node's declaration line as the boundary, and scans backwards for enabled
+   standalone comment forms. This retains exact delimiters, enforces blank-line
+   gaps, merges mixed forms in source order, and treats compiler directives as
+   barriers. `fcl-passrc` still supplies declaration identity and positions;
+   PasWeave is not parsing Pascal declarations itself.
 4. `TPasTreeContainer.InterfaceOnly := True` stops before implementation
    parsing. Interface declarations are read from
    `TPasModule.InterfaceSection.Declarations`, and dependencies come from
@@ -43,12 +45,18 @@ semantic type resolution is not part of this iteration.
 
 ## Known behaviour and uncertainty
 
-- `fcl-passrc` groups comments encountered before a token. PasWeave currently
-  accepts the trailing group of `///` lines from `DocComment`, but does not yet
-  re-read source gaps to reject a group separated from its declaration by a
-  blank line.
-- Comment text is normalised to LF in the model. Text following the third
-  slash is preserved, including Markdown and mathematics.
+- Documentation comment styles are selected per build. `slash` is the default;
+  `brace`, `paren`, comma-separated combinations, and `all` are explicit
+  opt-ins.
+- A blank line, compiler directive, disabled comment form, or source token
+  ends a documentation group. The earliest block in a group must begin on an
+  otherwise blank source line, preventing a trailing comment on one
+  declaration from attaching to the next declaration.
+- Comment text is normalised to LF in the model. Raw delimiters are preserved,
+  as are Markdown and mathematical source in normalized bodies.
+- The source-backed lookup currently uses the main unit file. A declaration
+  supplied by an include file may have a correct FPC source position but does
+  not yet receive documentation from that include file.
 - The adapter supplies `-Mobjfpc`; source mode directives can still change
   scanner mode in the normal FPC way.
 - Include paths, defines, and other compiler arguments are not exposed by the

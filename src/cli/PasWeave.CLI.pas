@@ -9,7 +9,7 @@ function RunPasWeave: Integer;
 implementation
 
 uses
-  Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Model,
+  Classes, SysUtils, PasWeave.Comments, PasWeave.Diagnostics, PasWeave.Model,
   PasWeave.Model.JSON, PasWeave.Parser, PasWeave.Render.Markdown,
   PasWeave.Render.HTML;
 
@@ -19,7 +19,12 @@ begin
   WriteLn;
   WriteLn('Usage:');
   WriteLn('  pasweave build <unit-or-directory> [--output <directory>]');
-  WriteLn('                 [--project-name <name>] [--verbose]');
+  WriteLn('                 [--project-name <name>] [--doc-comments=<styles>]');
+  WriteLn('                 [--verbose]');
+  WriteLn;
+  WriteLn('Documentation comment styles:');
+  WriteLn('  slash, brace, paren, a comma-separated combination, or all');
+  WriteLn('  Default: slash');
 end;
 
 function RequireOptionValue(var AIndex: Integer; const AOption: string): string;
@@ -65,11 +70,14 @@ var
   OutputFile: string;
   MarkdownOutputPath: string;
   HTMLOutputPath: string;
+  CommentStyleValue: string;
+  CommentStyles: TDocumentationCommentStyles;
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
   ProjectName := '';
   Verbose := False;
+  CommentStyles := DefaultDocumentationCommentStyles;
   I := 2;
   while I <= ParamCount do
   begin
@@ -77,6 +85,27 @@ begin
       OutputPath := RequireOptionValue(I, '--output')
     else if ParamStr(I) = '--project-name' then
       ProjectName := RequireOptionValue(I, '--project-name')
+    else if ParamStr(I) = '--doc-comments' then
+    begin
+      CommentStyleValue := RequireOptionValue(I, '--doc-comments');
+      if not TryParseDocumentationCommentStyles(CommentStyleValue,
+        CommentStyles) then
+        raise EPasWeaveInputError.CreateFmt(
+          'invalid documentation comment styles: %s ' +
+          '(expected slash, brace, paren, a comma-separated combination, or all)',
+          [CommentStyleValue]);
+    end
+    else if Pos('--doc-comments=', ParamStr(I)) = 1 then
+    begin
+      CommentStyleValue := Copy(ParamStr(I), Length('--doc-comments=') + 1,
+        MaxInt);
+      if not TryParseDocumentationCommentStyles(CommentStyleValue,
+        CommentStyles) then
+        raise EPasWeaveInputError.CreateFmt(
+          'invalid documentation comment styles: %s ' +
+          '(expected slash, brace, paren, a comma-separated combination, or all)',
+          [CommentStyleValue]);
+    end
     else if ParamStr(I) = '--verbose' then
       Verbose := True
     else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
@@ -96,7 +125,8 @@ begin
   if SourcePath = '' then
     raise EPasWeaveInputError.Create('missing unit or source directory');
 
-  Project := BuildProject(SourcePath, ProjectName, AttemptedCount);
+  Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
+    CommentStyles);
   try
     OutputFile := IncludeTrailingPathDelimiter(OutputPath) + 'api-model.json';
     WriteProjectJSON(Project, OutputFile);

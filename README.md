@@ -12,8 +12,8 @@ The working parser-to-site pipeline includes:
   of `.pas` and `.pp` units;
 - interface parsing through `fcl-passrc`;
 - parser-independent project, unit, symbol, directive, and diagnostic models;
-- association of consecutive `///` documentation lines captured by the
-  parser;
+- source-backed association of enabled `///`, `{ ... }`, and `(* ... *)`
+  documentation groups, with `///` as the safe default;
 - structural extraction of `@param`, `@returns`, `@raises`, `@deprecated`,
   `@see`, and `@since`;
 - deterministic, human-readable UTF-8 JSON;
@@ -118,7 +118,8 @@ underlying exception class and adapter mode without printing a stack trace.
 
 ## Documentation comments
 
-Place consecutive `///` lines immediately before an interface declaration:
+By default, place consecutive `///` lines immediately before an interface
+declaration:
 
 ```pascal
 /// Returns the standard normal probability density.
@@ -136,6 +137,41 @@ Ordinary Markdown and mathematical delimiters are retained in
 `markdownDocumentation`. The original `///` form is retained in
 `rawDocumentation`, while recognised directives are also emitted as structured
 objects.
+
+Projects that deliberately use ordinary Pascal comments for API documentation
+can opt into one or both block forms:
+
+```text
+pasweave build src --doc-comments=brace
+pasweave build src --doc-comments=paren
+pasweave build src --doc-comments=slash,brace,paren
+pasweave build src --doc-comments=all
+```
+
+The space-separated form, such as `--doc-comments brace`, is also accepted.
+Enabled forms may be mixed in one standalone group and are merged in source
+order:
+
+```pascal
+/// Computes a scaled value.
+{ @param X Input value. }
+(* @returns The scaled result. *)
+function Scale(const X: Double): Double;
+```
+
+A group must directly precede its interface declaration. A blank line,
+compiler directive, disabled comment form, or other source token ends the
+association. Block groups must start on an otherwise blank source line, so a
+trailing comment such as `X: Double; { describes X }` cannot drift onto the
+next declaration. Compiler directives in `{$...}` and `(*$...*)` are never
+documentation.
+
+Opting into `brace` or `paren` is intentionally broad: section labels and
+commented-out declarations can look exactly like ordinary documentation. Use
+those modes only where the project's comment conventions make that trade-off
+acceptable. The original delimiters are retained in `rawDocumentation`; the
+combined bodies and supported structured directives are normalized into the
+other model fields.
 
 ## Markdown output
 
@@ -184,10 +220,12 @@ for its offline-search, safety, and Markdown-subset contracts.
 - source directory discovery is non-recursive;
 - no project/package file reader or configurable compiler search paths;
 - no semantic type resolution or implementation-body analysis;
-- only `///` documentation is extracted; plain brace comments such as those
-  currently used by `mathlib-fp` are not treated as API documentation;
-- blank-line adjacency for `///` groups is not yet independently verified
-  against source text;
+- ordinary block-comment modes cannot semantically distinguish API prose from
+  section labels or commented-out code; they therefore remain explicit
+  project opt-ins;
+- documentation association currently reads the main unit source file, so
+  declarations originating from include files do not yet have source-backed
+  comment extraction;
 - no fixture coverage yet for every requested symbol kind or unusual FPC
   syntax;
 - no license has been selected for the repository yet.
@@ -197,7 +235,6 @@ open-source license is a maintainer decision, not a code-generation default.
 
 ## 🧭 Roadmap
 
-The next milestone is configurable documentation-comment dialect support for
-projects using `///`, `{ ... }`, `(* ... *)`, or an explicit combination of
-them. KaTeX rendering and Mermaid diagrams follow. See
-[ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.
+The next milestone is offline mathematical rendering with KaTeX. Mermaid
+diagrams follow. See [ROADMAP.md](ROADMAP.md) for acceptance criteria and the
+longer-term sequence.

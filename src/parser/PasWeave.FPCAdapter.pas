@@ -5,16 +5,16 @@ unit PasWeave.FPCAdapter;
 interface
 
 uses
-  PasWeave.Diagnostics, PasWeave.Model;
+  PasWeave.Comments, PasWeave.Diagnostics, PasWeave.Model;
 
 function ParseUnitFile(const AFileName, ASourceRoot: string;
+  ACommentStyles: TDocumentationCommentStyles;
   out AUnit: TDocUnit; out ADiagnostic: TDiagnostic): Boolean;
 
 implementation
 
 uses
-  Classes, Contnrs, SysUtils, PParser, PScanner, PasTree,
-  PasWeave.Comments;
+  Classes, Contnrs, SysUtils, PParser, PScanner, PasTree;
 
 type
   TElementSourceInfo = class
@@ -50,7 +50,6 @@ constructor TPasWeaveTreeContainer.Create;
 begin
   inherited Create;
   FSourceInfos := TObjectList.Create(True);
-  NeedComments := True;
   InterfaceOnly := True;
 end;
 
@@ -71,8 +70,6 @@ begin
   Result.Visibility := AVisibility;
   Result.SourceFilename := ASourceFilename;
   Result.SourceLinenumber := ASourceLinenumber;
-  if NeedComments and Assigned(CurrentParser) then
-    Result.DocComment := CurrentParser.SavedComments;
   SourceInfo := TElementSourceInfo.Create(0);
   FSourceInfos.Add(SourceInfo);
   Result.CustomData := SourceInfo;
@@ -110,6 +107,20 @@ begin
   RootPath := IncludeTrailingPathDelimiter(ExpandFileName(ASourceRoot));
   Result := ExtractRelativePath(RootPath, ExpandFileName(AFileName));
   Result := NormalisePath(Result);
+end;
+
+function ReadSourceText(const AFileName: string): string;
+var
+  SourceStream: TFileStream;
+begin
+  SourceStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(Result, SourceStream.Size);
+    if SourceStream.Size > 0 then
+      SourceStream.ReadBuffer(Result[1], SourceStream.Size);
+  finally
+    SourceStream.Free;
+  end;
 end;
 
 function CleanParserMessage(const AMessage, AParserFilename,
@@ -518,7 +529,8 @@ end;
 
 procedure AddElementSymbols(AElement: TPasElement; AUnit: TDocUnit;
   AEngine: TPasWeaveTreeContainer; const ASourceRoot, ADefaultFilename,
-  AParentSymbolID, AParentQualifiedName: string);
+  AParentSymbolID, AParentQualifiedName, ASourceText: string;
+  ACommentStyles: TDocumentationCommentStyles);
 var
   Kind: TSymbolKind;
   Symbol: TDocSymbol;
@@ -532,7 +544,7 @@ begin
     for I := 0 to TPasOverloadedProc(AElement).Overloads.Count - 1 do
       AddElementSymbols(TPasElement(TPasOverloadedProc(AElement).Overloads[I]),
         AUnit, AEngine, ASourceRoot, ADefaultFilename, AParentSymbolID,
-        AParentQualifiedName);
+        AParentQualifiedName, ASourceText, ACommentStyles);
     Exit;
   end;
 
@@ -561,9 +573,10 @@ begin
       Symbol.SourceFilename := ADefaultFilename;
     Symbol.SourceLine := AElement.SourceLinenumber;
     Symbol.SourceColumn := ElementColumn(AElement);
-    ParseDocumentationComment(AElement.DocComment,
-      Symbol.RawDocumentation, Symbol.MarkdownDocumentation,
-      Symbol.Directives);
+    if SameText(Symbol.SourceFilename, ADefaultFilename) then
+      ParseDocumentationComment(ASourceText, AElement.SourceLinenumber,
+        ACommentStyles, Symbol.RawDocumentation,
+        Symbol.MarkdownDocumentation, Symbol.Directives);
     Symbol.ParentSymbolID := AParentSymbolID;
     Symbol.ID := StableSymbolID(Kind, QualifiedName, DeclarationText);
     AUnit.Symbols.Add(Symbol);
@@ -577,12 +590,14 @@ begin
     Members := TPasMembersType(AElement).Members;
     for I := 0 to Members.Count - 1 do
       AddElementSymbols(TPasElement(Members[I]), AUnit, AEngine, ASourceRoot,
-        ADefaultFilename, Symbol.ID, Symbol.QualifiedName);
+        ADefaultFilename, Symbol.ID, Symbol.QualifiedName, ASourceText,
+        ACommentStyles);
   end;
 end;
 
 function ConvertModule(AModule: TPasModule; AEngine: TPasWeaveTreeContainer;
-  const AFileName, ASourceRoot: string): TDocUnit;
+  const AFileName, ASourceRoot, ASourceText: string;
+  ACommentStyles: TDocumentationCommentStyles): TDocUnit;
 var
   I: Integer;
   UnitSymbol: TDocSymbol;
@@ -604,7 +619,7 @@ begin
     end;
 
     AddElementSymbols(AModule, Result, AEngine, ASourceRoot,
-      DefaultFilename, '', '');
+      DefaultFilename, '', '', ASourceText, ACommentStyles);
     UnitSymbol := TDocSymbol(Result.Symbols[Result.Symbols.Count - 1]);
 
     if Assigned(AModule.InterfaceSection) then
@@ -612,7 +627,7 @@ begin
         AddElementSymbols(
           TPasElement(AModule.InterfaceSection.Declarations[I]),
           Result, AEngine, ASourceRoot, DefaultFilename,
-          UnitSymbol.ID, AModule.Name);
+          UnitSymbol.ID, AModule.Name, ASourceText, ACommentStyles);
   except
     Result.Free;
     raise;
@@ -620,6 +635,7 @@ begin
 end;
 
 function ParseUnitFile(const AFileName, ASourceRoot: string;
+  ACommentStyles: TDocumentationCommentStyles;
   out AUnit: TDocUnit; out ADiagnostic: TDiagnostic): Boolean;
 var
   Engine: TPasWeaveTreeContainer;
@@ -627,6 +643,7 @@ var
   Arguments: array[0..1] of string;
   DisplayFilename: string;
   ModuleClassName: string;
+  SourceText: string;
 begin
   Result := False;
   AUnit := nil;
@@ -638,6 +655,7 @@ begin
     Arguments[0] := '-Mobjfpc';
     Arguments[1] := ExpandFileName(AFileName);
     try
+      SourceText := ReadSourceText(AFileName);
       Module := ParseSource(Engine, Arguments,
         {$I %FPCTARGETOS%}, {$I %FPCTARGETCPU%}, []);
       if not Assigned(Module) or not Assigned(Module.InterfaceSection) then
@@ -652,7 +670,8 @@ begin
           ModuleClassName);
         Exit;
       end;
-      AUnit := ConvertModule(Module, Engine, AFileName, ASourceRoot);
+      AUnit := ConvertModule(Module, Engine, AFileName, ASourceRoot,
+        SourceText, ACommentStyles);
       Result := True;
     except
       on E: EParserError do
