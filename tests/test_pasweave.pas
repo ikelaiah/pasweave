@@ -24,6 +24,27 @@ begin
       Exit(TDocSymbol(AUnit.Symbols[I]));
 end;
 
+function FindUnitModel(AProject: TDocProject; const AName: string): TDocUnit;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to AProject.Units.Count - 1 do
+    if TDocUnit(AProject.Units[I]).Name = AName then
+      Exit(TDocUnit(AProject.Units[I]));
+end;
+
+function FindTypeRelationship(ASymbol: TDocSymbol;
+  AKind: TTypeRelationshipKind): TDocTypeRelationship;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to ASymbol.TypeRelationships.Count - 1 do
+    if TDocTypeRelationship(ASymbol.TypeRelationships[I]).Kind = AKind then
+      Exit(TDocTypeRelationship(ASymbol.TypeRelationships[I]));
+end;
+
 function HasDirective(ASymbol: TDocSymbol; const AName: string): Boolean;
 var
   I: Integer;
@@ -87,6 +108,13 @@ var
   DependencyGraph: UTF8String;
   ExpectedDependencyGraph: UTF8String;
   DependencyIndexHTML: UTF8String;
+  RelationshipProject: TDocProject;
+  RelationshipBaseUnit: TDocUnit;
+  RelationshipImplementationUnit: TDocUnit;
+  RelationshipSymbol: TDocSymbol;
+  TypeRelationship: TDocTypeRelationship;
+  RelationshipGraph: UTF8String;
+  RelationshipIndexHTML: UTF8String;
 begin
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -381,6 +409,123 @@ begin
       'dependency fixture diagram targets should be generated');
   finally
     DependencyProject.Free;
+  end;
+
+  RelationshipProject := BuildProject('tests/fixtures/relationships',
+    'RelationshipFixture', AttemptedCount);
+  try
+    Check(AttemptedCount = 3,
+      'all relationship fixtures should be attempted');
+    Check(RelationshipProject.Errors.Count = 0,
+      'relationship fixtures should parse without errors');
+    RelationshipBaseUnit := FindUnitModel(RelationshipProject,
+      'RelationshipBase');
+    RelationshipImplementationUnit := FindUnitModel(RelationshipProject,
+      'RelationshipImplementations');
+    Check(Assigned(RelationshipBaseUnit) and
+      Assigned(RelationshipImplementationUnit),
+      'both relationship fixture units should be modeled');
+
+    RelationshipSymbol := FindSymbol(RelationshipBaseUnit, 'IExtended');
+    TypeRelationship := FindTypeRelationship(RelationshipSymbol,
+      trkInheritance);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetSymbolID =
+        'interface:relationshipbase.ibase'),
+      'interface inheritance should resolve within its unit');
+
+    RelationshipSymbol := FindSymbol(RelationshipImplementationUnit,
+      'TChild');
+    Check(RelationshipSymbol.TypeRelationships.Count = 2,
+      'a class should retain its ancestor and implemented interface');
+    TypeRelationship := FindTypeRelationship(RelationshipSymbol,
+      trkInheritance);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetSymbolID = 'class:relationshipbase.tbase'),
+      'class inheritance should resolve through interface uses');
+    TypeRelationship := FindTypeRelationship(RelationshipSymbol,
+      trkImplementation);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetSymbolID =
+        'interface:relationshipbase.ibase'),
+      'interface implementation should resolve through interface uses');
+
+    RelationshipSymbol := FindSymbol(RelationshipImplementationUnit,
+      'TGenericChild');
+    TypeRelationship := FindTypeRelationship(RelationshipSymbol,
+      trkInheritance);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetName = 'TGenericBase') and
+      (TypeRelationship.DisplayName =
+        'specialize TGenericBase<T>') and
+      (TypeRelationship.TargetSymbolID =
+        'class:relationshipbase.tgenericbase'),
+      'generic ancestors should resolve by their typed AST destination');
+
+    RelationshipSymbol := FindSymbol(RelationshipImplementationUnit,
+      'TUnresolvedChild');
+    TypeRelationship := FindTypeRelationship(RelationshipSymbol,
+      trkInheritance);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetName = 'TMissingBase') and
+      (TypeRelationship.TargetSymbolID = ''),
+      'unavailable ancestors should remain explicitly unresolved');
+    RelationshipSymbol := FindSymbol(RelationshipImplementationUnit,
+      'TUnscopedChild');
+    TypeRelationship := FindTypeRelationship(RelationshipSymbol,
+      trkInheritance);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetName = 'TUnscopedBase') and
+      (TypeRelationship.TargetSymbolID = ''),
+      'a type in an unrelated project unit should not be guessed as a target');
+    Check(FindSymbol(RelationshipImplementationUnit,
+      'TChildAlias').TypeRelationships.Count = 0,
+      'type aliases should not gain relationships from declaration text');
+    Check(Pos('"typeRelationships"',
+      string(ProjectToJSON(RelationshipProject))) > 0,
+      'JSON should expose the resolved relationship model');
+
+    RelationshipGraph := RenderMermaidTypeRelationshipGraph(
+      RelationshipProject);
+    Check(RelationshipGraph = RenderMermaidTypeRelationshipGraph(
+      RelationshipProject),
+      'relationship Mermaid source should be deterministic');
+    Check(Pos('flowchart BT' + #10,
+      string(RelationshipGraph)) = 1,
+      'relationship graph should orient descendants toward ancestors');
+    Check(Pos('type0005 -. implements .-> type0001',
+      string(RelationshipGraph)) > 0,
+      'relationship graph should distinguish interface implementation');
+    Check(Pos('type0006 -->|inherits| type0004',
+      string(RelationshipGraph)) > 0,
+      'relationship graph should link specialized generic inheritance');
+    Check(Pos('unresolved0001["[unresolved] TMissingBase"]',
+      string(RelationshipGraph)) > 0,
+      'relationship graph should label unresolved ancestors');
+    Check(Pos('click type0006 "units/RelationshipImplementations.html#',
+      string(RelationshipGraph)) > 0,
+      'resolved relationship nodes should link to symbol documentation');
+
+    RelationshipIndexHTML := RenderHTMLIndex(RelationshipProject);
+    Check(Pos('<h2 id="type-relationships">Class and interface ' +
+      'relationships</h2>', string(RelationshipIndexHTML)) > 0,
+      'HTML index should include the relationship diagram section');
+    Check(Pos('inherits from unresolved type <code>TMissingBase</code>.',
+      string(RelationshipIndexHTML)) > 0,
+      'HTML should include a readable unresolved relationship fallback');
+    Check(Pos('<details class="diagram-fallback relationship-fallback" ' +
+      'data-diagram-fallback open>', string(RelationshipIndexHTML)) > 0,
+      'relationship fallback should start expanded without JavaScript');
+    Check(Pos('as <code>specialize TGenericBase&lt;T&gt;</code>',
+      string(RelationshipIndexHTML)) > 0,
+      'text fallback should preserve a generic relationship display name');
+    WriteHTMLDocumentation(RelationshipProject,
+      'build/relationship-test-docs/html');
+    Check(FileExists('build/relationship-test-docs/html/units/' +
+      'RelationshipBase.html'),
+      'relationship diagram symbol targets should be generated');
+  finally
+    RelationshipProject.Free;
   end;
 
   MathProject := BuildProject(

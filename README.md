@@ -27,8 +27,9 @@ The working parser-to-site pipeline includes:
 - shared styling with light and dark colour schemes, safe Markdown-to-HTML
   conversion, and offline KaTeX rendering for marked inline and display
   mathematics;
-- a deterministic, linked Mermaid diagram of project-local interface
-  dependencies with an accessible text fallback;
+- deterministic, linked Mermaid diagrams of project-local interface
+  dependencies and semantically resolved class/interface relationships, each
+  with an accessible text fallback;
 - per-file error isolation, concise summaries, and meaningful exit codes.
 
 The Markdown renderer consumes only PasWeave's model. FPC parser classes remain
@@ -129,6 +130,12 @@ produced with one or more per-file parse errors, `2` for command-line or input
 errors, and `3` for an unexpected internal failure. `--verbose` adds the
 underlying exception class and adapter mode without printing a stack trace.
 
+In `api-model.json`, class and interface symbols expose a
+`typeRelationships` array. Each entry records `kind` (`inherits` or
+`implements`), the typed-AST `targetName`, its source-like `displayName`, and a
+stable `targetSymbolId` when the target resolves inside the documented
+project. An empty target ID is an explicit unresolved result.
+
 ## Documentation comments
 
 By default, place consecutive `///` lines immediately before an interface
@@ -218,6 +225,8 @@ fonts, and licenses are copied into the output. It contains:
   original delimited source left readable when an expression is invalid;
 - a linked Mermaid graph of project-local interface dependencies on the index,
   backed by an initially expanded textual list when diagrams are unavailable;
+- a linked class/interface relationship graph generated from resolved model
+  data, with generic and unresolved targets preserved in its text fallback;
 - an offline search index covering names, qualified names, kinds, units, and
   documentation summaries;
 - keyboard search focus with `/` and dismissal with Escape;
@@ -233,11 +242,12 @@ for its offline-search, safety, and Markdown-subset contracts.
   LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
-- dependency diagrams do not yet support type relationships, pan, zoom, or
-  reset controls;
+- architecture diagrams do not yet support pan, zoom, or reset controls;
 - source directory discovery is non-recursive;
 - no project/package file reader or configurable compiler search paths;
-- no semantic type resolution or implementation-body analysis;
+- type relationship resolution is limited to the current unit and its
+  interface dependencies; ancestors outside the documented source set remain
+  explicitly unresolved, and implementation bodies are not analysed;
 - ordinary block-comment modes cannot semantically distinguish API prose from
   section labels or commented-out code; they therefore remain explicit
   project opt-ins;
@@ -255,5 +265,5 @@ Bundled third-party components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The next milestone is resolved class and interface relationship diagrams. See
+The next milestone is accessible diagram zoom, pan, and reset controls. See
 [ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.

@@ -141,24 +141,24 @@ begin
     'list-style: none; margin: 0; padding: 0; }');
   AppendLine(Result, '.dependency-list li { padding: 7px 11px; border: 1px solid ' +
     'var(--line); border-radius: 999px; background: var(--surface); }');
-  AppendLine(Result, '.dependency-overview { position: relative; }');
-  AppendLine(Result, '.dependency-diagram { overflow-x: auto; padding: 20px; ' +
+  AppendLine(Result, '.diagram-overview { position: relative; }');
+  AppendLine(Result, '.architecture-diagram { overflow-x: auto; padding: 20px; ' +
     'border: 1px solid var(--line); border-radius: 16px; background: ' +
     'var(--surface); }');
-  AppendLine(Result, '.dependency-diagram[data-diagram-rendering] { position: ' +
+  AppendLine(Result, '.architecture-diagram[data-diagram-rendering] { position: ' +
     'absolute; width: 100%; visibility: hidden; pointer-events: none; }');
-  AppendLine(Result, '.dependency-diagram pre.mermaid { overflow: visible; ' +
+  AppendLine(Result, '.architecture-diagram pre.mermaid { overflow: visible; ' +
     'margin: 0; padding: 0; background: transparent; color: inherit; ' +
     'white-space: pre-wrap; }');
-  AppendLine(Result, '.dependency-diagram svg { display: block; max-width: 100%; ' +
+  AppendLine(Result, '.architecture-diagram svg { display: block; max-width: 100%; ' +
     'height: auto; margin: 0 auto; }');
-  AppendLine(Result, '.dependency-fallback { margin-top: 14px; padding: 0 16px; ' +
+  AppendLine(Result, '.diagram-fallback { margin-top: 14px; padding: 0 16px; ' +
     'border: 1px solid var(--line); border-radius: 12px; background: ' +
     'var(--surface); }');
-  AppendLine(Result, '.dependency-fallback summary { padding: 12px 0; ' +
+  AppendLine(Result, '.diagram-fallback summary { padding: 12px 0; ' +
     'font-weight: 700; cursor: pointer; }');
-  AppendLine(Result, '.dependency-fallback ul { margin: 0 0 16px; }');
-  AppendLine(Result, '.dependency-fallback p { margin: 0 0 16px; color: ' +
+  AppendLine(Result, '.diagram-fallback ul { margin: 0 0 16px; }');
+  AppendLine(Result, '.diagram-fallback p { margin: 0 0 16px; color: ' +
     'var(--muted); }');
   AppendLine(Result, '.symbol { margin: 0 0 22px; padding: 28px; border: 1px solid ' +
     'var(--line); border-radius: 18px; background: var(--surface); ' +
@@ -371,20 +371,21 @@ begin
   AppendLine(Result, '  var diagrams = Array.prototype.slice.call(' +
     'document.querySelectorAll("[data-mermaid]"));');
   AppendLine(Result, '  if (!diagrams.length) return;');
+  AppendLine(Result, '  function hideDiagram(diagram) {');
+  AppendLine(Result, '    var container = diagram.closest(' +
+    '"[data-diagram-container]");');
+  AppendLine(Result, '    if (container) {');
+  AppendLine(Result, '      container.hidden = true;');
+  AppendLine(Result, '      container.removeAttribute("data-diagram-rendering");');
+  AppendLine(Result, '      container.setAttribute("aria-hidden", "true");');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '  }');
   AppendLine(Result, '  function unavailable(error) {');
   AppendLine(Result, '    document.documentElement.classList.add(' +
     '"diagram-unavailable");');
-  AppendLine(Result, '    diagrams.forEach(function (diagram) {');
-  AppendLine(Result, '      var container = diagram.closest(' +
-    '"[data-dependency-diagram]");');
-  AppendLine(Result, '      if (container) {');
-  AppendLine(Result, '        container.hidden = true;');
-  AppendLine(Result, '        container.removeAttribute("data-diagram-rendering");');
-  AppendLine(Result, '        container.setAttribute("aria-hidden", "true");');
-  AppendLine(Result, '      }');
-  AppendLine(Result, '    });');
-  AppendLine(Result, '    console.warn("PasWeave could not render the unit dependency ' +
-    'diagram.", error || "local Mermaid runtime unavailable");');
+  AppendLine(Result, '    diagrams.forEach(hideDiagram);');
+  AppendLine(Result, '    console.warn("PasWeave could not render the architecture ' +
+    'diagrams.", error || "local Mermaid runtime unavailable");');
   AppendLine(Result, '  }');
   AppendLine(Result, '  if (!window.mermaid || typeof window.mermaid.run !== "function") {');
   AppendLine(Result, '    unavailable();');
@@ -397,13 +398,13 @@ begin
   AppendLine(Result, '      startOnLoad: false,');
   AppendLine(Result, '      securityLevel: "loose",');
   AppendLine(Result, '      deterministicIds: true,');
-  AppendLine(Result, '      deterministicIDSeed: "pasweave-unit-dependencies",');
+  AppendLine(Result, '      deterministicIDSeed: "pasweave-architecture-diagrams",');
   AppendLine(Result, '      theme: dark ? "dark" : "neutral",');
   AppendLine(Result, '      flowchart: { htmlLabels: false, useMaxWidth: true }');
   AppendLine(Result, '    });');
   AppendLine(Result, '    diagrams.forEach(function (diagram) {');
   AppendLine(Result, '      var container = diagram.closest(' +
-    '"[data-dependency-diagram]");');
+    '"[data-diagram-container]");');
   AppendLine(Result, '      if (container) {');
   AppendLine(Result, '        container.hidden = false;');
   AppendLine(Result, '        container.setAttribute("data-diagram-rendering", "");');
@@ -414,11 +415,15 @@ begin
   AppendLine(Result, '    })).then(function () {');
   AppendLine(Result, '      diagrams.forEach(function (diagram) {');
   AppendLine(Result, '        var section = diagram.closest(' +
-    '"[data-dependency-overview]");');
+    '"[data-diagram-section]");');
   AppendLine(Result, '        var container = diagram.closest(' +
-    '"[data-dependency-diagram]");');
+    '"[data-diagram-container]");');
   AppendLine(Result, '        var fallback = section && section.querySelector(' +
-    '"[data-dependency-fallback]");');
+    '"[data-diagram-fallback]");');
+  AppendLine(Result, '        if (!diagram.querySelector("svg")) {');
+  AppendLine(Result, '          hideDiagram(diagram);');
+  AppendLine(Result, '          return;');
+  AppendLine(Result, '        }');
   AppendLine(Result, '        diagram.setAttribute("data-diagram-rendered", "true");');
   AppendLine(Result, '        if (container) {');
   AppendLine(Result, '          container.removeAttribute("data-diagram-rendering");');

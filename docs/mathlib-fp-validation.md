@@ -31,7 +31,7 @@ pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-brace-docs 
 | Symbols missing a source line | 0 |
 | Symbols missing a source column | 0 |
 | Unique interface dependencies | 24 |
-| JSON size | 1,868,197 bytes |
+| JSON size | 1,985,131 bytes |
 | Markdown index pages | 1 |
 | Markdown unit pages | 45 |
 | Markdown size | 1,061,561 bytes |
@@ -40,11 +40,15 @@ pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-brace-docs 
 | HTML index pages | 1 |
 | HTML unit pages | 45 |
 | HTML asset files | 70 |
-| HTML site size | 6,857,904 bytes |
+| HTML site size | 6,879,567 bytes |
 | Offline search entries | 2,227 |
 | Unit diagram nodes | 45 |
 | Project-local diagram edges | 97 |
 | Units without project-local outgoing edges | 9 |
+| Explicit type relationships | 34 |
+| Project-resolved type relationships | 7 |
+| External/unresolved type relationships | 27 |
+| Linked type diagram nodes | 34 |
 | Broken HTML links or asset references | 0 |
 | Broken search-result targets | 0 |
 | Duplicate HTML IDs | 0 |
@@ -67,10 +71,10 @@ The generated model contained:
 | field | 502 |
 | constant | 34 |
 
-Two independent runs produced the same JSON SHA-256:
+Two independent runs with type relationships produced the same JSON SHA-256:
 
 ```text
-C76154919F7CD8D92E4F9D604AD87334BE983907845F8A2617C10859B32CE655
+18B8029D2ACC456D0A807507ADDF3C69442FC34F1C2247552449276DE12985B6
 ```
 
 The Markdown tree was also deterministic. Its current manifest hash,
@@ -80,12 +84,11 @@ calculated from each relative filename and file SHA-256, was:
 22E8488E113F2B6F1A5A373FC288480D1A77F69ABABC0F0250C0146CFC872CCD
 ```
 
-The diagram-enabled static HTML tree was deterministic across two independent
-runs. Hashing the sorted, slash-normalized relative path and SHA-256 of every
-file produced this manifest hash:
+The relationship-enabled build produced 163 files. Two independent runs had
+zero per-file hash differences. Their HTML index SHA-256 was:
 
 ```text
-107D3D664FBC8E8A55A8F70208F638B440761C8C6DE803F8D55B20CD7EB1C65D
+4B821D9761ABCBE9C206131A0DE02003E9D3A2ADF7526551370E165AB15626CD
 ```
 
 The HTML audit covered all page links, stylesheet and script references,
@@ -109,6 +112,31 @@ the generated accessible title and description, repeat loads produced the same
 SVG identifier, and the linked text fallback collapsed only after successful
 rendering. The static fallback remains expanded in the source document for
 disabled or unavailable JavaScript.
+
+## Class and interface relationship findings
+
+The typed AST exposed 34 explicit relationships across 33 source types: 33
+inheritance edges and one interface-implementation edge. Seven targets resolve
+inside the documented project, including cross-unit inheritance from
+`EngineeringLib.DSP.EDSPError` to
+`EngineeringLib.Common.ESignalError`. The local implementation edge from
+`AlgebraLib.Matrices.TMatrixKit` to `IMatrix` also resolves to the interface
+symbol rather than being inferred from declaration text.
+
+The other 27 targets are standard-library ancestors outside the documented
+source set: 25 `Exception` references plus `EInvalidArgument` and
+`TInterfacedObject`. They remain individual `[unresolved]` nodes. This is
+expected scope behavior, not a parse failure or a false positive; PasWeave
+does not invent undocumented RTL nodes.
+
+The local browser rendered both architecture diagrams from vendored assets.
+The SVGs contained 131 edges in total (97 unit dependencies and 34 type
+relationships), and all 34 resolved/source type nodes linked to generated
+symbol fragments. The implementation edge rendered dotted, inheritance edges
+rendered solid, the accessible relationship title was present, and its text
+fallback collapsed only after successful rendering. Inspection found no
+relationship false positives: every edge corresponds to an explicit typed AST
+ancestor or interface entry.
 
 ## Default documentation coverage
 
@@ -158,22 +186,21 @@ Another 200 symbols retain project-specific tags such as `@description`,
 currently part of PasWeave's structured-directive contract. No compiler
 directive was captured as documentation.
 
-Two brace-mode runs after the KaTeX integration produced 160 files each with
-no per-file hash differences. Their whole-output manifest hash was:
+Two current brace-mode runs produced 163 files each with no per-file hash
+differences. The HTML index SHA-256 was:
 
 ```text
-230DE21081E6730C477CEDDE605DD96503C7F0ED5CE6B1F7BC04BD4DCD97A25A
+6067960B853AD444D23C2EAF03867C3AA4F970846D82F666837220C774F31D4E
 ```
 
-Their JSON SHA-256 remained:
+Their JSON SHA-256 was:
 
 ```text
-35FCD3424EA61662AAA0D918CD829825931847C8FCA9E127888EC87AC3E47548
+B8B5B20A84412C2741392CBE0A91C3B2B962D4481BBF3E3CFAE606E898B3DB93
 ```
 
-The brace JSON is 2,306,190 bytes. The default JSON hash remains the earlier
-`C76154919F7CD8D92E4F9D604AD87334BE983907845F8A2617C10859B32CE655`,
-confirming that the new feature does not alter default output for this source.
+The brace JSON is 2,423,124 bytes. The documentation dialect changes only
+documentation fields; both modes contain the same 34 typed relationships.
 
 ### Mathematical-delimiter findings
 

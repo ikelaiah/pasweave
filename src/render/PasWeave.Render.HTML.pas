@@ -11,6 +11,8 @@ uses
 function HTMLUnitFilename(AUnit: TDocUnit): string;
 function HTMLSymbolAnchor(ASymbol: TDocSymbol): string;
 function RenderMermaidDependencyGraph(AProject: TDocProject): UTF8String;
+function RenderMermaidTypeRelationshipGraph(
+  AProject: TDocProject): UTF8String;
 function RenderHTMLIndex(AProject: TDocProject): UTF8String;
 function RenderHTMLUnit(AProject: TDocProject; AUnit: TDocUnit): UTF8String;
 function RenderHTMLSearchIndex(AProject: TDocProject): UTF8String;
@@ -20,12 +22,22 @@ procedure WriteHTMLDocumentation(AProject: TDocProject;
 implementation
 
 uses
-  Classes, SysUtils, FPJSON, PasWeave.Diagnostics,
+  Classes, Contnrs, SysUtils, FPJSON, PasWeave.Diagnostics,
   PasWeave.Render.Support, PasWeave.Render.HTML.Markdown,
   PasWeave.Render.HTML.Assets;
 
 type
   TSymbolKinds = set of TSymbolKind;
+
+  TRelationshipDiagramEdge = class
+  public
+    SourceUnit: TDocUnit;
+    SourceSymbol: TDocSymbol;
+    Relationship: TDocTypeRelationship;
+    TargetUnit: TDocUnit;
+    TargetSymbol: TDocSymbol;
+    UnresolvedIndex: Integer;
+  end;
 
 const
   TypeKinds: TSymbolKinds = [
@@ -185,6 +197,200 @@ begin
     if not Assigned(ParentSymbol) then
       Break;
     Result := IsDirectlyRenderable(ParentSymbol);
+  end;
+end;
+
+function FindProjectSymbolByID(AProject: TDocProject; const AID: string;
+  out AUnit: TDocUnit): TDocSymbol;
+var
+  I: Integer;
+begin
+  Result := nil;
+  AUnit := nil;
+  if AID = '' then
+    Exit;
+  for I := 0 to AProject.Units.Count - 1 do
+  begin
+    AUnit := TDocUnit(AProject.Units[I]);
+    Result := FindSymbolByID(AUnit, AID);
+    if Assigned(Result) then
+      Exit;
+  end;
+  AUnit := nil;
+end;
+
+function IndexOfObject(AList: TStringList; AObject: TObject): Integer;
+begin
+  for Result := 0 to AList.Count - 1 do
+    if AList.Objects[Result] = AObject then
+      Exit;
+  Result := -1;
+end;
+
+procedure AddRelationshipNode(ANodes: TStringList; ASymbol: TDocSymbol);
+begin
+  if IndexOfObject(ANodes, ASymbol) < 0 then
+    ANodes.AddObject(ASymbol.QualifiedName + #1 + ASymbol.ID, ASymbol);
+end;
+
+function RelationshipEdgeKey(AEdge: TRelationshipDiagramEdge): string;
+var
+  TargetKey: string;
+begin
+  if Assigned(AEdge.TargetSymbol) then
+    TargetKey := AEdge.TargetSymbol.QualifiedName + #1 +
+      AEdge.TargetSymbol.ID
+  else
+    TargetKey := AEdge.Relationship.TargetName + #1 +
+      AEdge.Relationship.DisplayName;
+  Result := AEdge.SourceSymbol.QualifiedName + #1 +
+    TypeRelationshipKindName(AEdge.Relationship.Kind) + #1 + TargetKey +
+    #1 + AEdge.SourceSymbol.ID;
+end;
+
+procedure CollectRelationshipDiagram(AProject: TDocProject;
+  AEdges: TObjectList; ASortedEdges, ANodes: TStringList);
+var
+  Edge: TRelationshipDiagramEdge;
+  Relationship: TDocTypeRelationship;
+  SourceSymbol: TDocSymbol;
+  SourceUnit: TDocUnit;
+  I: Integer;
+  J: Integer;
+  K: Integer;
+begin
+  for I := 0 to AProject.Units.Count - 1 do
+  begin
+    SourceUnit := TDocUnit(AProject.Units[I]);
+    for J := 0 to SourceUnit.Symbols.Count - 1 do
+    begin
+      SourceSymbol := TDocSymbol(SourceUnit.Symbols[J]);
+      if not (SourceSymbol.Kind in [skClass, skInterface]) or
+        not IsEffectivelyRenderable(SourceUnit, SourceSymbol) then
+        Continue;
+      for K := 0 to SourceSymbol.TypeRelationships.Count - 1 do
+      begin
+        Relationship := TDocTypeRelationship(
+          SourceSymbol.TypeRelationships[K]);
+        Edge := TRelationshipDiagramEdge.Create;
+        Edge.SourceUnit := SourceUnit;
+        Edge.SourceSymbol := SourceSymbol;
+        Edge.Relationship := Relationship;
+        Edge.TargetSymbol := FindProjectSymbolByID(AProject,
+          Relationship.TargetSymbolID, Edge.TargetUnit);
+        if Assigned(Edge.TargetSymbol) and
+          not IsEffectivelyRenderable(Edge.TargetUnit, Edge.TargetSymbol) then
+        begin
+          Edge.TargetSymbol := nil;
+          Edge.TargetUnit := nil;
+        end;
+        AEdges.Add(Edge);
+        ASortedEdges.AddObject(RelationshipEdgeKey(Edge), Edge);
+        AddRelationshipNode(ANodes, SourceSymbol);
+        if Assigned(Edge.TargetSymbol) then
+          AddRelationshipNode(ANodes, Edge.TargetSymbol);
+      end;
+    end;
+  end;
+end;
+
+function MermaidTypeNodeID(AIndex: Integer): string;
+begin
+  Result := Format('type%.4d', [AIndex + 1]);
+end;
+
+function MermaidUnresolvedNodeID(AIndex: Integer): string;
+begin
+  Result := Format('unresolved%.4d', [AIndex + 1]);
+end;
+
+function RenderMermaidTypeRelationshipGraph(
+  AProject: TDocProject): UTF8String;
+var
+  Edge: TRelationshipDiagramEdge;
+  Edges: TObjectList;
+  Nodes: TStringList;
+  SortedEdges: TStringList;
+  Symbol: TDocSymbol;
+  I: Integer;
+  SourceIndex: Integer;
+  TargetIndex: Integer;
+  SymbolUnit: TDocUnit;
+  UnresolvedCount: Integer;
+  TargetNodeID: string;
+begin
+  Result := '';
+  Edges := TObjectList.Create(True);
+  Nodes := TStringList.Create;
+  SortedEdges := TStringList.Create;
+  try
+    Nodes.Sorted := True;
+    Nodes.CaseSensitive := True;
+    Nodes.Duplicates := dupAccept;
+    SortedEdges.Sorted := True;
+    SortedEdges.CaseSensitive := True;
+    SortedEdges.Duplicates := dupAccept;
+    CollectRelationshipDiagram(AProject, Edges, SortedEdges, Nodes);
+    if SortedEdges.Count = 0 then
+      Exit;
+
+    AppendLine(Result, 'flowchart BT');
+    AppendLine(Result, '  accTitle: Class and interface relationships');
+    AppendLine(Result, '  accDescr: Classes and interfaces point to their ' +
+      'resolved ancestors and implemented interfaces.');
+    for I := 0 to Nodes.Count - 1 do
+    begin
+      Symbol := TDocSymbol(Nodes.Objects[I]);
+      AppendLine(Result, '  ' + MermaidTypeNodeID(I) + '["[' +
+        EscapeMermaidString(SymbolKindName(Symbol.Kind)) + '] ' +
+        EscapeMermaidString(Symbol.QualifiedName) + '"]');
+    end;
+
+    UnresolvedCount := 0;
+    for I := 0 to SortedEdges.Count - 1 do
+    begin
+      Edge := TRelationshipDiagramEdge(SortedEdges.Objects[I]);
+      if Assigned(Edge.TargetSymbol) then
+        Continue;
+      Edge.UnresolvedIndex := UnresolvedCount;
+      AppendLine(Result, '  ' + MermaidUnresolvedNodeID(UnresolvedCount) +
+        '["[unresolved] ' +
+        EscapeMermaidString(Edge.Relationship.DisplayName) + '"]');
+      Inc(UnresolvedCount);
+    end;
+
+    for I := 0 to SortedEdges.Count - 1 do
+    begin
+      Edge := TRelationshipDiagramEdge(SortedEdges.Objects[I]);
+      SourceIndex := IndexOfObject(Nodes, Edge.SourceSymbol);
+      if Assigned(Edge.TargetSymbol) then
+      begin
+        TargetIndex := IndexOfObject(Nodes, Edge.TargetSymbol);
+        TargetNodeID := MermaidTypeNodeID(TargetIndex);
+      end
+      else
+        TargetNodeID := MermaidUnresolvedNodeID(Edge.UnresolvedIndex);
+      if Edge.Relationship.Kind = trkImplementation then
+        AppendLine(Result, '  ' + MermaidTypeNodeID(SourceIndex) +
+          ' -. implements .-> ' + TargetNodeID)
+      else
+        AppendLine(Result, '  ' + MermaidTypeNodeID(SourceIndex) +
+          ' -->|inherits| ' + TargetNodeID);
+    end;
+
+    for I := 0 to Nodes.Count - 1 do
+    begin
+      Symbol := TDocSymbol(Nodes.Objects[I]);
+      FindProjectSymbolByID(AProject, Symbol.ID, SymbolUnit);
+      AppendLine(Result, '  click ' + MermaidTypeNodeID(I) + ' "units/' +
+        EscapeMermaidString(HTMLUnitFilename(SymbolUnit)) + '#' +
+        EscapeMermaidString(HTMLSymbolAnchor(Symbol)) + '" "Open ' +
+        EscapeMermaidString(Symbol.QualifiedName) + ' documentation" _self');
+    end;
+  finally
+    SortedEdges.Free;
+    Nodes.Free;
+    Edges.Free;
   end;
 end;
 
@@ -560,7 +766,8 @@ var
   UnitModel: TDocUnit;
   HasProjectDependency: Boolean;
 begin
-  AppendLine(AOutput, '<details class="dependency-fallback" ' +
+  AppendLine(AOutput, '<details class="diagram-fallback ' +
+    'dependency-fallback" data-diagram-fallback ' +
     'data-dependency-fallback open>');
   AppendLine(AOutput, '<summary>Text dependency list</summary>');
   AppendLine(AOutput, '<ul>');
@@ -596,23 +803,124 @@ begin
   AppendLine(AOutput, '</details>');
 end;
 
+function RelationshipSymbolLink(AUnit: TDocUnit;
+  ASymbol: TDocSymbol): UTF8String;
+begin
+  Result := '<a href="units/' + EscapeHTML(HTMLUnitFilename(AUnit)) + '#' +
+    EscapeHTML(HTMLSymbolAnchor(ASymbol)) + '"><code>' +
+    EscapeHTML(ASymbol.QualifiedName) + '</code></a>';
+end;
+
+procedure RenderTypeRelationshipFallback(var AOutput: UTF8String;
+  AProject: TDocProject);
+var
+  Edge: TRelationshipDiagramEdge;
+  Edges: TObjectList;
+  Nodes: TStringList;
+  SortedEdges: TStringList;
+  I: Integer;
+  DisplaySuffix: UTF8String;
+  Verb: string;
+begin
+  Edges := TObjectList.Create(True);
+  Nodes := TStringList.Create;
+  SortedEdges := TStringList.Create;
+  try
+    Nodes.Sorted := True;
+    Nodes.CaseSensitive := True;
+    Nodes.Duplicates := dupAccept;
+    SortedEdges.Sorted := True;
+    SortedEdges.CaseSensitive := True;
+    SortedEdges.Duplicates := dupAccept;
+    CollectRelationshipDiagram(AProject, Edges, SortedEdges, Nodes);
+    if SortedEdges.Count = 0 then
+      Exit;
+
+    AppendLine(AOutput, '<details class="diagram-fallback ' +
+      'relationship-fallback" data-diagram-fallback open>');
+    AppendLine(AOutput, '<summary>Text relationship list</summary>');
+    AppendLine(AOutput, '<ul>');
+    for I := 0 to SortedEdges.Count - 1 do
+    begin
+      Edge := TRelationshipDiagramEdge(SortedEdges.Objects[I]);
+      if Edge.Relationship.Kind = trkImplementation then
+        Verb := ' implements '
+      else
+        Verb := ' inherits from ';
+      if Assigned(Edge.TargetSymbol) then
+      begin
+        if not SameText(Edge.Relationship.DisplayName,
+          Edge.TargetSymbol.Name) then
+          DisplaySuffix := ' as <code>' +
+            EscapeHTML(Edge.Relationship.DisplayName) + '</code>'
+        else
+          DisplaySuffix := '';
+        AppendLine(AOutput, '<li>' + RelationshipSymbolLink(Edge.SourceUnit,
+          Edge.SourceSymbol) + EscapeHTML(Verb) +
+          RelationshipSymbolLink(Edge.TargetUnit, Edge.TargetSymbol) +
+          DisplaySuffix + '.</li>');
+      end
+      else
+        AppendLine(AOutput, '<li>' + RelationshipSymbolLink(Edge.SourceUnit,
+          Edge.SourceSymbol) + EscapeHTML(Verb) +
+          'unresolved type <code>' +
+          EscapeHTML(Edge.Relationship.DisplayName) +
+          '</code>.</li>');
+    end;
+    AppendLine(AOutput, '</ul>');
+    AppendLine(AOutput, '</details>');
+  finally
+    SortedEdges.Free;
+    Nodes.Free;
+    Edges.Free;
+  end;
+end;
+
 procedure RenderDependencyOverview(var AOutput: UTF8String;
   AProject: TDocProject);
 begin
   if AProject.Units.Count = 0 then
     Exit;
-  AppendLine(AOutput, '<section class="index-section dependency-overview" ' +
+  AppendLine(AOutput, '<section class="index-section diagram-overview ' +
+    'dependency-overview" data-diagram-section ' +
     'data-dependency-overview aria-labelledby="unit-dependencies">');
   AppendLine(AOutput, '<div class="section-heading"><div><p class="eyebrow">' +
     'Architecture</p><h2 id="unit-dependencies">Unit dependencies</h2></div>' +
     '<p>Arrows point from a unit to the project unit it imports.</p></div>');
-  AppendLine(AOutput, '<div class="dependency-diagram" ' +
+  AppendLine(AOutput, '<div class="architecture-diagram ' +
+    'dependency-diagram" data-diagram-container ' +
     'data-dependency-diagram aria-hidden="true" hidden>');
   AppendLine(AOutput, '<pre class="mermaid" data-mermaid>');
   AOutput := AOutput + EscapeHTML(RenderMermaidDependencyGraph(AProject));
   AppendLine(AOutput, '</pre>');
   AppendLine(AOutput, '</div>');
   RenderDependencyFallback(AOutput, AProject);
+  AppendLine(AOutput, '</section>');
+end;
+
+procedure RenderTypeRelationshipOverview(var AOutput: UTF8String;
+  AProject: TDocProject);
+var
+  Graph: UTF8String;
+begin
+  Graph := RenderMermaidTypeRelationshipGraph(AProject);
+  if Graph = '' then
+    Exit;
+  AppendLine(AOutput, '<section class="index-section diagram-overview ' +
+    'relationship-overview" data-diagram-section ' +
+    'aria-labelledby="type-relationships">');
+  AppendLine(AOutput, '<div class="section-heading"><div><p ' +
+    'class="eyebrow">Architecture</p><h2 id="type-relationships">' +
+    'Class and interface relationships</h2></div><p>Solid arrows show ' +
+    'inheritance; dotted arrows show interface implementation.</p></div>');
+  AppendLine(AOutput, '<div class="architecture-diagram ' +
+    'relationship-diagram" data-diagram-container aria-hidden="true" ' +
+    'hidden>');
+  AppendLine(AOutput, '<pre class="mermaid" data-mermaid>');
+  AOutput := AOutput + EscapeHTML(Graph);
+  AppendLine(AOutput, '</pre>');
+  AppendLine(AOutput, '</div>');
+  RenderTypeRelationshipFallback(AOutput, AProject);
   AppendLine(AOutput, '</section>');
 end;
 
@@ -738,6 +1046,7 @@ begin
   AppendLine(Result, '</section>');
 
   RenderDependencyOverview(Result, AProject);
+  RenderTypeRelationshipOverview(Result, AProject);
 
   AppendLine(Result, '<section class="index-section">');
   AppendLine(Result, '<div class="section-heading"><div><p class="eyebrow">' +

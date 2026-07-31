@@ -99,15 +99,23 @@ generated site. Graph nodes and edges follow stable sorted model data, local
 unit links remain active, and an initially expanded linked text list survives
 disabled JavaScript or diagram errors.
 
-## Next: richer diagrams
-
 ### Type relationships
 
-- Expand semantic type resolution where required.
-- Generate class and interface relationship diagrams from resolved model data.
-- Avoid guessing relationships from declaration text alone.
+- Capture explicit ancestors and implemented interfaces from typed
+  `fcl-passrc` nodes rather than declaration text.
+- Resolve targets against the declaring unit and its interface dependencies.
+- Preserve generic display syntax while resolving its underlying declaration.
+- Keep external and ambiguous targets explicitly unresolved.
+- Emit deterministic, linked Mermaid graphs and readable text fallbacks.
+- Cover inheritance, interface implementation, generics, unresolved
+  ancestors, cross-unit scope, and declaration-text non-inference in fixtures.
+- Validate the model and rendered diagram against all 45 `mathlib-fp` units.
 
-## Planned: diagram interaction
+The `mathlib-fp` audit found 34 explicit relationships. Seven resolve inside
+the documented project; 27 standard-library ancestors remain honest
+unresolved nodes because their declaring units are outside the source set.
+
+## Next: diagram interaction
 
 ### Interaction
 

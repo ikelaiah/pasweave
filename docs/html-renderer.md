@@ -43,6 +43,10 @@ rules for `file://` URLs do not disable search.
 - The index maps every parsed unit and every project-local interface
   dependency into a linked flowchart. Dependencies outside the documented
   project remain on unit pages and are not invented as graph nodes.
+- The index maps explicit class inheritance, interface inheritance, and
+  interface implementation from resolved model relationships. Resolved nodes
+  link to stable symbol anchors; unresolved targets are labeled rather than
+  guessed.
 - Every output is deterministic UTF-8 without a byte-order mark and uses LF
   line endings.
 
@@ -66,6 +70,26 @@ server nor requests lazy-loaded chunks. Mermaid's `securityLevel` is `loose`
 to enable node links; diagram source is generated solely from parsed unit
 names, fixed prose, and local unit filenames, never from documentation
 Markdown or arbitrary HTML.
+
+## Class and interface relationship diagram
+
+The relationship flowchart consumes `typeRelationships` from the independent
+model. It does not inspect `declaration` text. Solid arrows point from a class
+or interface to its ancestor; dotted arrows point from a class to an
+implemented interface. Generic specializations resolve to the generic type
+symbol while their complete source-like form remains available in JSON and the
+text fallback.
+
+Every resolved node links to its unit page and stable symbol fragment.
+Ancestors outside the parsed source set and ambiguous references receive a
+separate `[unresolved]` node, so similarly named external references are never
+silently merged. Private and effectively private symbols remain excluded from
+the rendered diagram under the normal HTML visibility contract.
+
+Like the dependency view, the relationship diagram has an initially expanded
+linked HTML list. The shared initializer collapses each fallback only after
+that particular Mermaid source has produced an SVG; one failed diagram cannot
+hide another diagram's fallback.
 
 ## Search
 

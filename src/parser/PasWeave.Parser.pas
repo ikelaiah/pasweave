@@ -52,6 +52,129 @@ begin
     Result := 'PasWeaveProject';
 end;
 
+function IsRelationshipTypeSymbol(ASymbol: TDocSymbol): Boolean;
+begin
+  Result := ASymbol.Kind in [skClass, skInterface];
+end;
+
+function FindUnit(AProject: TDocProject; const AName: string): TDocUnit;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to AProject.Units.Count - 1 do
+    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
+      Exit(TDocUnit(AProject.Units[I]));
+end;
+
+function FindQualifiedTypeSymbol(AProject: TDocProject;
+  const AQualifiedName: string): TDocSymbol;
+var
+  Candidate: TDocSymbol;
+  I: Integer;
+  J: Integer;
+begin
+  Result := nil;
+  for I := 0 to AProject.Units.Count - 1 do
+    for J := 0 to TDocUnit(AProject.Units[I]).Symbols.Count - 1 do
+    begin
+      Candidate := TDocSymbol(TDocUnit(AProject.Units[I]).Symbols[J]);
+      if IsRelationshipTypeSymbol(Candidate) and
+        SameText(Candidate.QualifiedName, AQualifiedName) then
+      begin
+        if Assigned(Result) then
+          Exit(nil);
+        Result := Candidate;
+      end;
+    end;
+end;
+
+function FindNamedTypeSymbol(AUnit: TDocUnit;
+  const AName: string): TDocSymbol;
+var
+  Candidate: TDocSymbol;
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to AUnit.Symbols.Count - 1 do
+  begin
+    Candidate := TDocSymbol(AUnit.Symbols[I]);
+    if IsRelationshipTypeSymbol(Candidate) and
+      SameText(Candidate.Name, AName) then
+    begin
+      if Assigned(Result) then
+        Exit(nil);
+      Result := Candidate;
+    end;
+  end;
+end;
+
+function ResolveRelationshipTarget(AProject: TDocProject;
+  ASourceUnit: TDocUnit; const ATargetName: string): TDocSymbol;
+var
+  Candidate: TDocSymbol;
+  DependencyUnit: TDocUnit;
+  I: Integer;
+begin
+  Result := nil;
+  if ATargetName = '' then
+    Exit;
+
+  if Pos('.', ATargetName) > 0 then
+    Exit(FindQualifiedTypeSymbol(AProject, ATargetName));
+
+  Candidate := FindNamedTypeSymbol(ASourceUnit, ATargetName);
+  if Assigned(Candidate) then
+    Exit(Candidate);
+
+  for I := 0 to ASourceUnit.InterfaceDependencies.Count - 1 do
+  begin
+    DependencyUnit := FindUnit(AProject,
+      ASourceUnit.InterfaceDependencies[I]);
+    if not Assigned(DependencyUnit) then
+      Continue;
+    Candidate := FindNamedTypeSymbol(DependencyUnit, ATargetName);
+    if Assigned(Candidate) then
+    begin
+      if Assigned(Result) and (Result <> Candidate) then
+        Exit(nil);
+      Result := Candidate;
+    end;
+  end;
+end;
+
+procedure ResolveTypeRelationships(AProject: TDocProject);
+var
+  Relationship: TDocTypeRelationship;
+  SourceSymbol: TDocSymbol;
+  SourceUnit: TDocUnit;
+  TargetSymbol: TDocSymbol;
+  I: Integer;
+  J: Integer;
+  K: Integer;
+begin
+  for I := 0 to AProject.Units.Count - 1 do
+  begin
+    SourceUnit := TDocUnit(AProject.Units[I]);
+    for J := 0 to SourceUnit.Symbols.Count - 1 do
+    begin
+      SourceSymbol := TDocSymbol(SourceUnit.Symbols[J]);
+      for K := 0 to SourceSymbol.TypeRelationships.Count - 1 do
+      begin
+        Relationship := TDocTypeRelationship(
+          SourceSymbol.TypeRelationships[K]);
+        TargetSymbol := ResolveRelationshipTarget(AProject, SourceUnit,
+          Relationship.TargetName);
+        if Assigned(TargetSymbol) then
+        begin
+          Relationship.TargetSymbolID := TargetSymbol.ID;
+          SourceSymbol.RelatedSymbolIDs.Add(TargetSymbol.ID);
+        end;
+      end;
+    end;
+  end;
+end;
+
 function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer): TDocProject;
 begin
@@ -119,6 +242,7 @@ begin
         else if Assigned(Diagnostic) then
           Result.Errors.Add(Diagnostic);
       end;
+      ResolveTypeRelationships(Result);
     except
       Result.Free;
       raise;

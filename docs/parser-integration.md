@@ -37,11 +37,21 @@ The concrete integration is:
    No `PasTree` type crosses the adapter's public interface.
 6. `EParserError` provides filename, row, and column properties. The adapter
    converts it to PasWeave's parser-independent diagnostic type.
+7. Class ancestors and implemented interfaces come from
+   `TPasClassType.AncestorType` and `TPasClassType.Interfaces`. Generic
+   specializations retain their source-like display text while their
+   `TPasSpecializeType.DestType` supplies the lookup name. After every unit is
+   converted, PasWeave resolves those names against the declaring unit and its
+   interface `uses` units and stores only stable model symbol IDs.
 
 The container's `FindElement` currently returns `nil`, matching the minimal
 bundled `parsepp` example. This allows unresolved type references to remain
-unresolved in the syntax tree and is sufficient for declaration extraction;
-semantic type resolution is not part of this iteration.
+unresolved in the temporary FPC tree. PasWeave's renderer-independent project
+pass resolves explicit class/interface relationships after all source units
+have been parsed. It does not search unrelated units globally, parse
+declaration strings, or invent a target when a name is ambiguous. Runtime and
+package ancestors outside the documented source set therefore remain
+explicitly unresolved.
 
 ## Known behaviour and uncertainty
 

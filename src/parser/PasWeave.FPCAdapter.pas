@@ -190,6 +190,54 @@ begin
     Result := AType.GetDeclaration(False);
 end;
 
+function TypeLookupName(AType: TPasType): string;
+begin
+  if not Assigned(AType) then
+    Exit('');
+  if AType is TPasSpecializeType then
+    Result := TypeLookupName(TPasSpecializeType(AType).DestType)
+  else if AType.Name <> '' then
+    Result := AType.SafeName
+  else
+    Result := AType.GetDeclaration(False);
+end;
+
+procedure AddTypeRelationship(ASymbol: TDocSymbol;
+  AKind: TTypeRelationshipKind; AType: TPasType);
+var
+  DisplayName: string;
+  TargetName: string;
+begin
+  TargetName := Trim(TypeLookupName(AType));
+  DisplayName := Trim(TypeReferenceText(AType));
+  if TargetName = '' then
+    TargetName := DisplayName;
+  if DisplayName = '' then
+    DisplayName := TargetName;
+  if TargetName <> '' then
+    ASymbol.TypeRelationships.Add(TDocTypeRelationship.Create(AKind,
+      TargetName, DisplayName));
+end;
+
+procedure AddClassTypeRelationships(AClass: TPasClassType;
+  ASymbol: TDocSymbol);
+var
+  I: Integer;
+  RelationshipKind: TTypeRelationshipKind;
+begin
+  if AClass.ObjKind in okAllHelpers then
+    Exit;
+
+  AddTypeRelationship(ASymbol, trkInheritance, AClass.AncestorType);
+  if ASymbol.Kind = skInterface then
+    RelationshipKind := trkInheritance
+  else
+    RelationshipKind := trkImplementation;
+  for I := 0 to AClass.Interfaces.Count - 1 do
+    AddTypeRelationship(ASymbol, RelationshipKind,
+      TPasType(AClass.Interfaces[I]));
+end;
+
 function ClassDeclaration(AClass: TPasClassType): string;
 var
   TypeName: string;
@@ -579,6 +627,8 @@ begin
         Symbol.MarkdownDocumentation, Symbol.Directives);
     Symbol.ParentSymbolID := AParentSymbolID;
     Symbol.ID := StableSymbolID(Kind, QualifiedName, DeclarationText);
+    if AElement is TPasClassType then
+      AddClassTypeRelationships(TPasClassType(AElement), Symbol);
     AUnit.Symbols.Add(Symbol);
   except
     Symbol.Free;

@@ -81,6 +81,41 @@ begin
   end;
 end;
 
+function TypeRelationshipsToJSON(ARelationships: TList): TJSONArray;
+var
+  I: Integer;
+  Item: TJSONObject;
+  Relationship: TDocTypeRelationship;
+  Sorted: TStringList;
+begin
+  Result := TJSONArray.Create;
+  Sorted := TStringList.Create;
+  try
+    Sorted.Sorted := True;
+    Sorted.CaseSensitive := True;
+    Sorted.Duplicates := dupAccept;
+    for I := 0 to ARelationships.Count - 1 do
+    begin
+      Relationship := TDocTypeRelationship(ARelationships[I]);
+      Sorted.AddObject(TypeRelationshipKindName(Relationship.Kind) + #1 +
+        Relationship.TargetName + #1 + Relationship.DisplayName + #1 +
+        Relationship.TargetSymbolID, Relationship);
+    end;
+    for I := 0 to Sorted.Count - 1 do
+    begin
+      Relationship := TDocTypeRelationship(Sorted.Objects[I]);
+      Item := TJSONObject.Create;
+      Item.Add('kind', TypeRelationshipKindName(Relationship.Kind));
+      Item.Add('targetName', Relationship.TargetName);
+      Item.Add('displayName', Relationship.DisplayName);
+      Item.Add('targetSymbolId', Relationship.TargetSymbolID);
+      Result.Add(Item);
+    end;
+  finally
+    Sorted.Free;
+  end;
+end;
+
 function SymbolToJSON(ASymbol: TDocSymbol): TJSONObject;
 begin
   Result := TJSONObject.Create;
@@ -96,6 +131,8 @@ begin
   Result.Add('rawDocumentation', ASymbol.RawDocumentation);
   Result.Add('markdownDocumentation', ASymbol.MarkdownDocumentation);
   Result.Add('directives', DirectivesToJSON(ASymbol.Directives));
+  Result.Add('typeRelationships',
+    TypeRelationshipsToJSON(ASymbol.TypeRelationships));
   Result.Add('parentSymbolId', ASymbol.ParentSymbolID);
   Result.Add('relatedSymbolIds',
     StringArrayToJSON(ASymbol.RelatedSymbolIDs, True));

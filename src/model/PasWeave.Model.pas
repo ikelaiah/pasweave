@@ -36,12 +36,27 @@ type
     svStrictProtected
   );
 
+  TTypeRelationshipKind = (
+    trkInheritance,
+    trkImplementation
+  );
+
   TDocDirective = class
   public
     Name: string;
     Subject: string;
     Text: string;
     constructor Create(const AName, ASubject, AText: string);
+  end;
+
+  TDocTypeRelationship = class
+  public
+    Kind: TTypeRelationshipKind;
+    TargetName: string;
+    DisplayName: string;
+    TargetSymbolID: string;
+    constructor Create(AKind: TTypeRelationshipKind;
+      const ATargetName, ADisplayName: string);
   end;
 
   TDocSymbol = class
@@ -58,6 +73,7 @@ type
     RawDocumentation: string;
     MarkdownDocumentation: string;
     Directives: TObjectList;
+    TypeRelationships: TObjectList;
     ParentSymbolID: string;
     RelatedSymbolIDs: TStringList;
     constructor Create;
@@ -88,6 +104,7 @@ type
 
 function SymbolKindName(AKind: TSymbolKind): string;
 function SymbolVisibilityName(AVisibility: TSymbolVisibility): string;
+function TypeRelationshipKindName(AKind: TTypeRelationshipKind): string;
 
 implementation
 
@@ -99,16 +116,30 @@ begin
   Text := AText;
 end;
 
+constructor TDocTypeRelationship.Create(AKind: TTypeRelationshipKind;
+  const ATargetName, ADisplayName: string);
+begin
+  inherited Create;
+  Kind := AKind;
+  TargetName := ATargetName;
+  DisplayName := ADisplayName;
+end;
+
 constructor TDocSymbol.Create;
 begin
   inherited Create;
   Directives := TObjectList.Create(True);
+  TypeRelationships := TObjectList.Create(True);
   RelatedSymbolIDs := TStringList.Create;
+  RelatedSymbolIDs.Sorted := True;
+  RelatedSymbolIDs.CaseSensitive := True;
+  RelatedSymbolIDs.Duplicates := dupIgnore;
 end;
 
 destructor TDocSymbol.Destroy;
 begin
   RelatedSymbolIDs.Free;
+  TypeRelationships.Free;
   Directives.Free;
   inherited Destroy;
 end;
@@ -189,5 +220,12 @@ begin
   end;
 end;
 
-end.
+function TypeRelationshipKindName(AKind: TTypeRelationshipKind): string;
+begin
+  case AKind of
+    trkInheritance: Result := 'inherits';
+    trkImplementation: Result := 'implements';
+  end;
+end;
 
+end.
