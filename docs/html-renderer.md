@@ -8,12 +8,16 @@ html/
 ├── index.html
 ├── assets/
 │   ├── app.js
+│   ├── diagram.js
 │   ├── katex/
 │   │   ├── fonts/
 │   │   ├── katex.min.css
 │   │   ├── katex.min.js
 │   │   └── LICENSE
 │   ├── math.js
+│   ├── mermaid/
+│   │   ├── mermaid.tiny.js
+│   │   └── LICENSE
 │   ├── search-index.js
 │   └── site.css
 └── units/
@@ -36,8 +40,32 @@ rules for `file://` URLs do not disable search.
 - Documentation links reject active `javascript:`, `data:`, and `vbscript:`
   schemes.
 - Build diagnostics survive partial parsing and appear on the project index.
+- The index maps every parsed unit and every project-local interface
+  dependency into a linked flowchart. Dependencies outside the documented
+  project remain on unit pages and are not invented as graph nodes.
 - Every output is deterministic UTF-8 without a byte-order mark and uses LF
   line endings.
+
+## Unit dependency diagram
+
+The project index embeds deterministic Mermaid flowchart source. Units are
+sorted before receiving stable node identifiers; edges follow sorted source
+units and their already sorted interface dependency lists. Every graph node
+links to the corresponding generated unit page. The initializer also requests
+deterministic SVG identifiers from Mermaid.
+
+The text dependency list is ordinary linked HTML and starts expanded. After a
+successful diagram render it remains available in a collapsed `details`
+element. If JavaScript is disabled, the local runtime is missing, or Mermaid
+rejects the graph, the diagram stays hidden and the expanded text list remains
+usable. Isolated units are included explicitly.
+
+Only index pages load Mermaid. PasWeave uses the single-file Mermaid Tiny
+browser build, so opening `index.html` through `file://` neither requires a
+server nor requests lazy-loaded chunks. Mermaid's `securityLevel` is `loose`
+to enable node links; diagram source is generated solely from parsed unit
+names, fixed prose, and local unit filenames, never from documentation
+Markdown or arbitrary HTML.
 
 ## Search
 
@@ -94,6 +122,22 @@ contract.
 
 The initializer uses `throwOnError: true`, `strict: "warn"`, and
 `trust: false`. The generated asset set and page references are deterministic.
+
+## Mermaid assets
+
+The repository vendors Mermaid Tiny 11.16.0 under `assets/mermaid/` with the
+upstream MIT license. A build copies both files into
+`html/assets/mermaid/`; generated pages refer only to that local runtime. See
+[the third-party notices](../THIRD_PARTY_NOTICES.md) and
+[the vendoring record](../assets/mermaid/README.md) for provenance and
+checksums.
+
+Asset discovery follows the KaTeX strategy: repository builds find the
+directory relative to the executable or current working directory, packaged
+installations may place it beside the executable or under
+`share/pasweave/mermaid`, and `PASWEAVE_MERMAID_ASSETS` may specify the exact
+directory. Missing runtime or license files stop the build rather than
+silently weakening the offline-output contract.
 
 ## Source units
 

@@ -83,6 +83,10 @@ var
   MathSymbol: TDocSymbol;
   MathHTML: UTF8String;
   MathMarkdown: UTF8String;
+  DependencyProject: TDocProject;
+  DependencyGraph: UTF8String;
+  ExpectedDependencyGraph: UTF8String;
+  DependencyIndexHTML: UTF8String;
 begin
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -202,6 +206,13 @@ begin
       'HTML index should load the local KaTeX stylesheet');
     Check(Pos('src="assets/katex/katex.min.js"', string(IndexHTML)) > 0,
       'HTML index should load the local KaTeX runtime');
+    Check(Pos('src="assets/mermaid/mermaid.tiny.js"',
+      string(IndexHTML)) > 0,
+      'HTML index should load the local Mermaid runtime');
+    Check(Pos('src="assets/diagram.js"', string(IndexHTML)) > 0,
+      'HTML index should load the dependency diagram initializer');
+    Check(Pos('data-dependency-fallback open', string(IndexHTML)) > 0,
+      'HTML index should expose the text dependency fallback by default');
     Check(Pos('<pre class="declaration"><code class="language-pascal">' +
       #10 + 'function Add', string(UnitHTML)) > 0,
       'HTML unit page should contain an escaped Pascal declaration');
@@ -223,6 +234,8 @@ begin
       'HTML should exclude private members');
     Check(Pos('src="../assets/math.js"', string(UnitHTML)) > 0,
       'HTML unit pages should load the offline math initializer');
+    Check(Pos('mermaid.tiny.js', string(UnitHTML)) = 0,
+      'HTML unit pages without diagrams should not load Mermaid');
     Check(Pos('window.PASWEAVE_SEARCH_INDEX', string(SearchIndex)) = 1,
       'HTML search index should be an offline JavaScript asset');
     Check(Pos('"qualifiedName" : "SimpleUnit.Reset"',
@@ -269,6 +282,8 @@ begin
       'HTML renderer should write its application script');
     Check(FileExists('build/test-docs/html/assets/math.js'),
       'HTML renderer should write its math initializer');
+    Check(FileExists('build/test-docs/html/assets/diagram.js'),
+      'HTML renderer should write its diagram initializer');
     Check(FileExists('build/test-docs/html/assets/search-index.js'),
       'HTML renderer should write its offline search index');
     Check(FileExists('build/test-docs/html/assets/katex/katex.min.js'),
@@ -280,6 +295,10 @@ begin
     Check(FileExists('build/test-docs/html/assets/katex/fonts/' +
       'KaTeX_Main-Regular.woff2'),
       'HTML renderer should copy the KaTeX fonts');
+    Check(FileExists('build/test-docs/html/assets/mermaid/mermaid.tiny.js'),
+      'HTML renderer should copy the Mermaid runtime');
+    Check(FileExists('build/test-docs/html/assets/mermaid/LICENSE'),
+      'HTML renderer should copy the Mermaid license');
   finally
     Project.Free;
   end;
@@ -292,6 +311,77 @@ begin
     'math initialization should not trust active TeX commands');
   Check(Pos('data-math-error', string(HTMLMathScript)) > 0,
     'math initialization should visibly mark invalid expressions');
+  Check(MermaidVersion = '11.16.0',
+    'the tested Mermaid asset version should be explicit');
+  Check(Pos('startOnLoad: false', string(HTMLDiagramScript)) > 0,
+    'diagram initialization should be controlled by PasWeave');
+  Check(Pos('securityLevel: "loose"', string(HTMLDiagramScript)) > 0,
+    'diagram initialization should permit generated unit links');
+  Check(Pos('deterministicIds: true', string(HTMLDiagramScript)) > 0,
+    'diagram initialization should request deterministic SVG identifiers');
+  Check(Pos('suppressErrors: true', string(HTMLDiagramScript)) > 0,
+    'diagram initialization should retain the text fallback on errors');
+
+  DependencyProject := BuildProject('tests/fixtures/dependencies',
+    'DependencyFixture', AttemptedCount);
+  try
+    Check(AttemptedCount = 4,
+      'all dependency diagram fixtures should be attempted');
+    Check(DependencyProject.Errors.Count = 0,
+      'dependency diagram fixtures should parse without errors');
+    Check(DependencyProject.Units.Count = 4,
+      'dependency diagram fixtures should produce four units');
+    DependencyGraph := RenderMermaidDependencyGraph(DependencyProject);
+    ExpectedDependencyGraph :=
+      'flowchart LR' + #10 +
+      '  accTitle: Unit dependency graph' + #10 +
+      '  accDescr: Project units point to units imported by their interface ' +
+        'uses clauses.' + #10 +
+      '  unit0001["DependencyConsumer"]' + #10 +
+      '  unit0002["DependencyCore"]' + #10 +
+      '  unit0003["DependencyLeaf"]' + #10 +
+      '  unit0004["IndependentUnit"]' + #10 +
+      '  unit0001 --> unit0002' + #10 +
+      '  unit0003 --> unit0001' + #10 +
+      '  unit0003 --> unit0002' + #10 +
+      '  click unit0001 "units/DependencyConsumer.html" "Open ' +
+        'DependencyConsumer documentation" _self' + #10 +
+      '  click unit0002 "units/DependencyCore.html" "Open DependencyCore ' +
+        'documentation" _self' + #10 +
+      '  click unit0003 "units/DependencyLeaf.html" "Open DependencyLeaf ' +
+        'documentation" _self' + #10 +
+      '  click unit0004 "units/IndependentUnit.html" "Open IndependentUnit ' +
+        'documentation" _self' + #10;
+    Check(DependencyGraph = ExpectedDependencyGraph,
+      'Mermaid graph source should be complete and deterministic');
+    Check(Pos('Classes', string(DependencyGraph)) = 0,
+      'Mermaid graph should omit dependencies outside the documented project');
+    Check(DependencyGraph =
+      RenderMermaidDependencyGraph(DependencyProject),
+      'repeated Mermaid graph rendering should be deterministic');
+
+    DependencyIndexHTML := RenderHTMLIndex(DependencyProject);
+    Check(Pos('unit0001 --&gt; unit0002',
+      string(DependencyIndexHTML)) > 0,
+      'HTML should safely embed Mermaid graph source');
+    Check(Pos('<code>DependencyConsumer</code></a> uses <a href="units/' +
+      'DependencyCore.html"><code>DependencyCore</code></a>.',
+      string(DependencyIndexHTML)) > 0,
+      'text fallback should link both ends of each project dependency');
+    Check(Pos('<code>IndependentUnit</code></a> has no project-local ' +
+      'interface dependencies.', string(DependencyIndexHTML)) > 0,
+      'text fallback should include isolated units');
+    WriteHTMLDocumentation(DependencyProject,
+      'build/dependency-test-docs/html');
+    Check(FileExists('build/dependency-test-docs/html/assets/mermaid/' +
+      'mermaid.tiny.js'),
+      'dependency fixture site should contain its offline Mermaid runtime');
+    Check(FileExists('build/dependency-test-docs/html/units/' +
+      'DependencyCore.html'),
+      'dependency fixture diagram targets should be generated');
+  finally
+    DependencyProject.Free;
+  end;
 
   MathProject := BuildProject(
     'tests/fixtures/math/MathDocumentation.pas',

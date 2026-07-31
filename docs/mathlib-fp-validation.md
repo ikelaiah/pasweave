@@ -39,9 +39,12 @@ pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-brace-docs 
 | Duplicate Markdown anchors | 0 |
 | HTML index pages | 1 |
 | HTML unit pages | 45 |
-| HTML asset files | 67 |
-| HTML site size | 4,272,450 bytes |
+| HTML asset files | 70 |
+| HTML site size | 6,857,904 bytes |
 | Offline search entries | 2,227 |
+| Unit diagram nodes | 45 |
+| Project-local diagram edges | 97 |
+| Units without project-local outgoing edges | 9 |
 | Broken HTML links or asset references | 0 |
 | Broken search-result targets | 0 |
 | Duplicate HTML IDs | 0 |
@@ -77,18 +80,35 @@ calculated from each relative filename and file SHA-256, was:
 22E8488E113F2B6F1A5A373FC288480D1A77F69ABABC0F0250C0146CFC872CCD
 ```
 
-The static HTML tree was deterministic under the same manifest-hash method:
+The diagram-enabled static HTML tree was deterministic across two independent
+runs. Hashing the sorted, slash-normalized relative path and SHA-256 of every
+file produced this manifest hash:
 
 ```text
-38BA30E4F8B5ED36628FC84F9A34B21DB44CC37B24AA2D368A4EB74FA99CDFB6
+107D3D664FBC8E8A55A8F70208F638B440761C8C6DE803F8D55B20CD7EB1C65D
 ```
 
 The HTML audit covered all page links, stylesheet and script references,
 symbol fragments, and search-index URLs. Every PasWeave-authored text file is
-UTF-8 without a byte-order mark and uses LF line endings; vendored KaTeX files
-are copied byte for byte. The site contains 60 local KaTeX font files, has no
-remote page dependency, and all generated and vendored JavaScript assets pass
-`node --check`.
+UTF-8 without a byte-order mark and uses LF line endings; vendored KaTeX and
+Mermaid files are copied byte for byte. The site contains 60 local KaTeX font
+files, has no remote page dependency, and all generated and vendored
+JavaScript assets pass `node --check`.
+
+## Unit dependency diagram findings
+
+The graph contains all 45 parsed units, 97 project-local interface-dependency
+edges, and nine units without a project-local outgoing edge. A further 92
+interface-dependency references point outside the documented source set; they
+remain visible on unit pages and are deliberately not represented as invented
+graph nodes.
+
+A browser run opened the generated index directly through `file://` and
+rendered all 45 linked nodes and 97 edges from local assets. The SVG exposed
+the generated accessible title and description, repeat loads produced the same
+SVG identifier, and the linked text fallback collapsed only after successful
+rendering. The static fallback remains expanded in the source document for
+disabled or unavailable JavaScript.
 
 ## Default documentation coverage
 

@@ -27,6 +27,8 @@ The working parser-to-site pipeline includes:
 - shared styling with light and dark colour schemes, safe Markdown-to-HTML
   conversion, and offline KaTeX rendering for marked inline and display
   mathematics;
+- a deterministic, linked Mermaid diagram of project-local interface
+  dependencies with an accessible text fallback;
 - per-file error isolation, concise summaries, and meaningful exit codes.
 
 The Markdown renderer consumes only PasWeave's model. FPC parser classes remain
@@ -102,12 +104,16 @@ build/docs/
 │   ├── index.html
 │   ├── assets/
 │   │   ├── app.js
+│   │   ├── diagram.js
 │   │   ├── katex/
 │   │   │   ├── fonts/
 │   │   │   ├── katex.min.css
 │   │   │   ├── katex.min.js
 │   │   │   └── LICENSE
 │   │   ├── math.js
+│   │   ├── mermaid/
+│   │   │   ├── mermaid.tiny.js
+│   │   │   └── LICENSE
 │   │   ├── search-index.js
 │   │   └── site.css
 │   └── units/
@@ -202,14 +208,16 @@ from the generated API pages.
 ## Static HTML output
 
 Open `html/index.html` directly in a browser. The generated site requires no
-web server or network connection; its KaTeX runtime, stylesheet, fonts, and
-license are copied into the output. It contains:
+web server or network connection; its KaTeX and Mermaid runtimes, styles,
+fonts, and licenses are copied into the output. It contains:
 
 - a responsive project overview and linked unit pages;
 - the same stable symbol anchors and visibility filtering as Markdown;
 - escaped Pascal declarations and safely rendered documentation prose;
 - offline rendering of marked display and inline mathematics, with the
   original delimited source left readable when an expression is invalid;
+- a linked Mermaid graph of project-local interface dependencies on the index,
+  backed by an initially expanded textual list when diagrams are unavailable;
 - an offline search index covering names, qualified names, kinds, units, and
   documentation summaries;
 - keyboard search focus with `/` and dismissal with Escape;
@@ -225,7 +233,8 @@ for its offline-search, safety, and Markdown-subset contracts.
   LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
-- no Mermaid diagrams or diagram pan and zoom;
+- dependency diagrams do not yet support type relationships, pan, zoom, or
+  reset controls;
 - source directory discovery is non-recursive;
 - no project/package file reader or configurable compiler search paths;
 - no semantic type resolution or implementation-body analysis;
@@ -246,5 +255,5 @@ Bundled third-party components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The next milestone is deterministic Mermaid unit-dependency diagrams. See
+The next milestone is resolved class and interface relationship diagrams. See
 [ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.

@@ -86,7 +86,7 @@ invalid source readable, and avoids interpreting paired currency amounts as
 mathematics. Fixture and browser checks cover valid, invalid, inline, display,
 escaped-dollar, and offline-loading behavior.
 
-## Next: unit dependency diagrams
+### Unit dependency diagrams
 
 - Generate Mermaid graphs from interface dependencies.
 - Link diagram nodes to unit pages.
@@ -94,13 +94,20 @@ escaped-dollar, and offline-loading behavior.
 - Keep the generated site usable without a network connection.
 - Provide an accessible textual dependency list when diagrams are unavailable.
 
-## Planned: richer diagrams
+Mermaid Tiny 11.16.0 is vendored with its MIT license and copied into each
+generated site. Graph nodes and edges follow stable sorted model data, local
+unit links remain active, and an initially expanded linked text list survives
+disabled JavaScript or diagram errors.
+
+## Next: richer diagrams
 
 ### Type relationships
 
 - Expand semantic type resolution where required.
 - Generate class and interface relationship diagrams from resolved model data.
 - Avoid guessing relationships from declaration text alone.
+
+## Planned: diagram interaction
 
 ### Interaction
 

@@ -7,11 +7,14 @@ interface
 
 const
   KaTeXVersion = '0.18.1';
+  MermaidVersion = '11.16.0';
 
 function HTMLStylesheet: UTF8String;
 function HTMLApplicationScript: UTF8String;
 function HTMLMathScript: UTF8String;
+function HTMLDiagramScript: UTF8String;
 procedure WriteKaTeXAssets(const AAssetsDirectory: string);
+procedure WriteMermaidAssets(const AAssetsDirectory: string);
 
 implementation
 
@@ -138,6 +141,25 @@ begin
     'list-style: none; margin: 0; padding: 0; }');
   AppendLine(Result, '.dependency-list li { padding: 7px 11px; border: 1px solid ' +
     'var(--line); border-radius: 999px; background: var(--surface); }');
+  AppendLine(Result, '.dependency-overview { position: relative; }');
+  AppendLine(Result, '.dependency-diagram { overflow-x: auto; padding: 20px; ' +
+    'border: 1px solid var(--line); border-radius: 16px; background: ' +
+    'var(--surface); }');
+  AppendLine(Result, '.dependency-diagram[data-diagram-rendering] { position: ' +
+    'absolute; width: 100%; visibility: hidden; pointer-events: none; }');
+  AppendLine(Result, '.dependency-diagram pre.mermaid { overflow: visible; ' +
+    'margin: 0; padding: 0; background: transparent; color: inherit; ' +
+    'white-space: pre-wrap; }');
+  AppendLine(Result, '.dependency-diagram svg { display: block; max-width: 100%; ' +
+    'height: auto; margin: 0 auto; }');
+  AppendLine(Result, '.dependency-fallback { margin-top: 14px; padding: 0 16px; ' +
+    'border: 1px solid var(--line); border-radius: 12px; background: ' +
+    'var(--surface); }');
+  AppendLine(Result, '.dependency-fallback summary { padding: 12px 0; ' +
+    'font-weight: 700; cursor: pointer; }');
+  AppendLine(Result, '.dependency-fallback ul { margin: 0 0 16px; }');
+  AppendLine(Result, '.dependency-fallback p { margin: 0 0 16px; color: ' +
+    'var(--muted); }');
   AppendLine(Result, '.symbol { margin: 0 0 22px; padding: 28px; border: 1px solid ' +
     'var(--line); border-radius: 18px; background: var(--surface); ' +
     'box-shadow: 0 6px 18px rgba(31,42,68,.035); scroll-margin-top: 94px; }');
@@ -341,6 +363,76 @@ begin
   AppendLine(Result, '}());');
 end;
 
+function HTMLDiagramScript: UTF8String;
+begin
+  Result := '';
+  AppendLine(Result, '(function () {');
+  AppendLine(Result, '  "use strict";');
+  AppendLine(Result, '  var diagrams = Array.prototype.slice.call(' +
+    'document.querySelectorAll("[data-mermaid]"));');
+  AppendLine(Result, '  if (!diagrams.length) return;');
+  AppendLine(Result, '  function unavailable(error) {');
+  AppendLine(Result, '    document.documentElement.classList.add(' +
+    '"diagram-unavailable");');
+  AppendLine(Result, '    diagrams.forEach(function (diagram) {');
+  AppendLine(Result, '      var container = diagram.closest(' +
+    '"[data-dependency-diagram]");');
+  AppendLine(Result, '      if (container) {');
+  AppendLine(Result, '        container.hidden = true;');
+  AppendLine(Result, '        container.removeAttribute("data-diagram-rendering");');
+  AppendLine(Result, '        container.setAttribute("aria-hidden", "true");');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    console.warn("PasWeave could not render the unit dependency ' +
+    'diagram.", error || "local Mermaid runtime unavailable");');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  if (!window.mermaid || typeof window.mermaid.run !== "function") {');
+  AppendLine(Result, '    unavailable();');
+  AppendLine(Result, '    return;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  var dark = window.matchMedia && ' +
+    'window.matchMedia("(prefers-color-scheme: dark)").matches;');
+  AppendLine(Result, '  try {');
+  AppendLine(Result, '    window.mermaid.initialize({');
+  AppendLine(Result, '      startOnLoad: false,');
+  AppendLine(Result, '      securityLevel: "loose",');
+  AppendLine(Result, '      deterministicIds: true,');
+  AppendLine(Result, '      deterministicIDSeed: "pasweave-unit-dependencies",');
+  AppendLine(Result, '      theme: dark ? "dark" : "neutral",');
+  AppendLine(Result, '      flowchart: { htmlLabels: false, useMaxWidth: true }');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    diagrams.forEach(function (diagram) {');
+  AppendLine(Result, '      var container = diagram.closest(' +
+    '"[data-dependency-diagram]");');
+  AppendLine(Result, '      if (container) {');
+  AppendLine(Result, '        container.hidden = false;');
+  AppendLine(Result, '        container.setAttribute("data-diagram-rendering", "");');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    Promise.resolve(window.mermaid.run({');
+  AppendLine(Result, '      nodes: diagrams, suppressErrors: true');
+  AppendLine(Result, '    })).then(function () {');
+  AppendLine(Result, '      diagrams.forEach(function (diagram) {');
+  AppendLine(Result, '        var section = diagram.closest(' +
+    '"[data-dependency-overview]");');
+  AppendLine(Result, '        var container = diagram.closest(' +
+    '"[data-dependency-diagram]");');
+  AppendLine(Result, '        var fallback = section && section.querySelector(' +
+    '"[data-dependency-fallback]");');
+  AppendLine(Result, '        diagram.setAttribute("data-diagram-rendered", "true");');
+  AppendLine(Result, '        if (container) {');
+  AppendLine(Result, '          container.removeAttribute("data-diagram-rendering");');
+  AppendLine(Result, '          container.removeAttribute("aria-hidden");');
+  AppendLine(Result, '        }');
+  AppendLine(Result, '        if (fallback) fallback.removeAttribute("open");');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '    }).catch(unavailable);');
+  AppendLine(Result, '  } catch (error) {');
+  AppendLine(Result, '    unavailable(error);');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '}());');
+end;
+
 function HasAllKaTeXFontAssets(const ADirectory: string): Boolean;
 var
   CSS: TStringList;
@@ -425,6 +517,53 @@ begin
     ' assets; set PASWEAVE_KATEX_ASSETS or install assets/katex beside PasWeave');
 end;
 
+function IsMermaidAssetsDirectory(const ADirectory: string): Boolean;
+var
+  Root: string;
+begin
+  Root := IncludeTrailingPathDelimiter(ADirectory);
+  Result := FileExists(Root + 'mermaid.tiny.js') and
+    FileExists(Root + 'LICENSE');
+end;
+
+function FindMermaidAssetsDirectory: string;
+var
+  Candidates: TStringList;
+  ExecutableDirectory: string;
+  EnvironmentDirectory: string;
+  I: Integer;
+begin
+  Result := '';
+  Candidates := TStringList.Create;
+  try
+    EnvironmentDirectory := GetEnvironmentVariable(
+      'PASWEAVE_MERMAID_ASSETS');
+    if EnvironmentDirectory <> '' then
+      Candidates.Add(ExpandFileName(EnvironmentDirectory));
+
+    ExecutableDirectory := ExtractFileDir(ExpandFileName(ParamStr(0)));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim +
+      'assets' + PathDelim + 'mermaid'));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim + '..' +
+      PathDelim + 'assets' + PathDelim + 'mermaid'));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim + '..' +
+      PathDelim + 'share' + PathDelim + 'pasweave' + PathDelim + 'mermaid'));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim + '..' +
+      PathDelim + '..' + PathDelim + 'assets' + PathDelim + 'mermaid'));
+    Candidates.Add(ExpandFileName(GetCurrentDir + PathDelim + 'assets' +
+      PathDelim + 'mermaid'));
+
+    for I := 0 to Candidates.Count - 1 do
+      if IsMermaidAssetsDirectory(Candidates[I]) then
+        Exit(Candidates[I]);
+  finally
+    Candidates.Free;
+  end;
+  raise Exception.Create('cannot locate Mermaid ' + MermaidVersion +
+    ' assets; set PASWEAVE_MERMAID_ASSETS or install assets/mermaid beside ' +
+    'PasWeave');
+end;
+
 procedure CopyFileBytes(const ASourceFilename, ADestinationFilename: string);
 var
   SourceStream: TFileStream;
@@ -494,6 +633,24 @@ begin
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'LICENSE');
   CopyFontFiles(IncludeTrailingPathDelimiter(SourceDirectory) + 'fonts',
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'fonts');
+end;
+
+procedure WriteMermaidAssets(const AAssetsDirectory: string);
+var
+  SourceDirectory: string;
+  DestinationDirectory: string;
+begin
+  SourceDirectory := FindMermaidAssetsDirectory;
+  DestinationDirectory := IncludeTrailingPathDelimiter(AAssetsDirectory) +
+    'mermaid';
+  if not ForceDirectories(DestinationDirectory) then
+    raise EFCreateError.CreateFmt('cannot create Mermaid asset directory: %s',
+      [DestinationDirectory]);
+  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) +
+    'mermaid.tiny.js', IncludeTrailingPathDelimiter(DestinationDirectory) +
+    'mermaid.tiny.js');
+  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'LICENSE',
+    IncludeTrailingPathDelimiter(DestinationDirectory) + 'LICENSE');
 end;
 
 end.

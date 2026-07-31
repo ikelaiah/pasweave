@@ -11,5 +11,16 @@ distributed under the MIT License. The complete upstream license accompanies
 the vendored files at [`assets/katex/LICENSE`](assets/katex/LICENSE) and is
 copied into generated HTML sites.
 
-This notice covers the third-party KaTeX assets only. PasWeave's own project
-license remains a separate maintainer decision.
+## Mermaid
+
+PasWeave vendors the prebuilt Mermaid Tiny browser bundle from
+[Mermaid 11.16.0](https://github.com/mermaid-js/mermaid) for deterministic
+offline unit-dependency diagrams.
+
+Mermaid is Copyright © 2014–2022 Knut Sveidqvist and is distributed under the
+MIT License. The complete upstream license accompanies the vendored files at
+[`assets/mermaid/LICENSE`](assets/mermaid/LICENSE) and is copied into generated
+HTML sites.
+
+These notices cover only the third-party KaTeX and Mermaid assets. PasWeave's
+own project license remains a separate maintainer decision.

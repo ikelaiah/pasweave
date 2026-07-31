@@ -10,6 +10,7 @@ uses
 
 function HTMLUnitFilename(AUnit: TDocUnit): string;
 function HTMLSymbolAnchor(ASymbol: TDocSymbol): string;
+function RenderMermaidDependencyGraph(AProject: TDocProject): UTF8String;
 function RenderHTMLIndex(AProject: TDocProject): UTF8String;
 function RenderHTMLUnit(AProject: TDocProject; AUnit: TDocUnit): UTF8String;
 function RenderHTMLSearchIndex(AProject: TDocProject): UTF8String;
@@ -92,6 +93,78 @@ begin
   for I := 0 to AProject.Units.Count - 1 do
     if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
       Exit(TDocUnit(AProject.Units[I]));
+end;
+
+function SortedUnitIndex(AUnits: TStringList; AUnit: TDocUnit): Integer;
+begin
+  for Result := 0 to AUnits.Count - 1 do
+    if AUnits.Objects[Result] = AUnit then
+      Exit;
+  Result := -1;
+end;
+
+function MermaidNodeID(AIndex: Integer): string;
+begin
+  Result := Format('unit%.4d', [AIndex + 1]);
+end;
+
+function EscapeMermaidString(const AValue: string): string;
+begin
+  Result := StringReplace(AValue, '&', '&amp;', [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
+  Result := StringReplace(Result, '<', '&lt;', [rfReplaceAll]);
+  Result := StringReplace(Result, '>', '&gt;', [rfReplaceAll]);
+end;
+
+function RenderMermaidDependencyGraph(AProject: TDocProject): UTF8String;
+var
+  Units: TStringList;
+  I: Integer;
+  J: Integer;
+  DependencyIndex: Integer;
+  DependencyUnit: TDocUnit;
+  UnitModel: TDocUnit;
+begin
+  Result := '';
+  AppendLine(Result, 'flowchart LR');
+  AppendLine(Result, '  accTitle: Unit dependency graph');
+  AppendLine(Result, '  accDescr: Project units point to units imported by ' +
+    'their interface uses clauses.');
+  Units := SortedUnits(AProject);
+  try
+    for I := 0 to Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Units.Objects[I]);
+      AppendLine(Result, '  ' + MermaidNodeID(I) + '["' +
+        EscapeMermaidString(UnitModel.Name) + '"]');
+    end;
+
+    for I := 0 to Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Units.Objects[I]);
+      for J := 0 to UnitModel.InterfaceDependencies.Count - 1 do
+      begin
+        DependencyUnit := FindUnitByName(AProject,
+          UnitModel.InterfaceDependencies[J]);
+        if not Assigned(DependencyUnit) then
+          Continue;
+        DependencyIndex := SortedUnitIndex(Units, DependencyUnit);
+        if DependencyIndex >= 0 then
+          AppendLine(Result, '  ' + MermaidNodeID(I) + ' --> ' +
+            MermaidNodeID(DependencyIndex));
+      end;
+    end;
+
+    for I := 0 to Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Units.Objects[I]);
+      AppendLine(Result, '  click ' + MermaidNodeID(I) + ' "units/' +
+        EscapeMermaidString(HTMLUnitFilename(UnitModel)) + '" "Open ' +
+        EscapeMermaidString(UnitModel.Name) + ' documentation" _self');
+    end;
+  finally
+    Units.Free;
+  end;
 end;
 
 function IsDirectlyRenderable(ASymbol: TDocSymbol): Boolean;
@@ -419,7 +492,7 @@ begin
 end;
 
 function PageStart(AProject: TDocProject; const ATitle, ARoot,
-  ADescription: string): UTF8String;
+  ADescription: string; AIncludeDiagram: Boolean): UTF8String;
 begin
   Result := '';
   AppendLine(Result, '<!doctype html>');
@@ -440,6 +513,13 @@ begin
     'assets/katex/katex.min.js"></script>');
   AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
     'assets/math.js"></script>');
+  if AIncludeDiagram then
+  begin
+    AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
+      'assets/mermaid/mermaid.tiny.js"></script>');
+    AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
+      'assets/diagram.js"></script>');
+  end;
   AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
     'assets/search-index.js"></script>');
   AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
@@ -468,6 +548,72 @@ begin
   AppendLine(Result, '</div>');
   AppendLine(Result, '</header>');
   AppendLine(Result, '<main id="main-content" class="shell main-content">');
+end;
+
+procedure RenderDependencyFallback(var AOutput: UTF8String;
+  AProject: TDocProject);
+var
+  Units: TStringList;
+  I: Integer;
+  J: Integer;
+  DependencyUnit: TDocUnit;
+  UnitModel: TDocUnit;
+  HasProjectDependency: Boolean;
+begin
+  AppendLine(AOutput, '<details class="dependency-fallback" ' +
+    'data-dependency-fallback open>');
+  AppendLine(AOutput, '<summary>Text dependency list</summary>');
+  AppendLine(AOutput, '<ul>');
+  Units := SortedUnits(AProject);
+  try
+    for I := 0 to Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Units.Objects[I]);
+      HasProjectDependency := False;
+      for J := 0 to UnitModel.InterfaceDependencies.Count - 1 do
+      begin
+        DependencyUnit := FindUnitByName(AProject,
+          UnitModel.InterfaceDependencies[J]);
+        if not Assigned(DependencyUnit) then
+          Continue;
+        HasProjectDependency := True;
+        AppendLine(AOutput, '<li><a href="units/' +
+          EscapeHTML(HTMLUnitFilename(UnitModel)) + '"><code>' +
+          EscapeHTML(UnitModel.Name) + '</code></a> uses <a href="units/' +
+          EscapeHTML(HTMLUnitFilename(DependencyUnit)) + '"><code>' +
+          EscapeHTML(DependencyUnit.Name) + '</code></a>.</li>');
+      end;
+      if not HasProjectDependency then
+        AppendLine(AOutput, '<li><a href="units/' +
+          EscapeHTML(HTMLUnitFilename(UnitModel)) + '"><code>' +
+          EscapeHTML(UnitModel.Name) + '</code></a> has no project-local ' +
+          'interface dependencies.</li>');
+    end;
+  finally
+    Units.Free;
+  end;
+  AppendLine(AOutput, '</ul>');
+  AppendLine(AOutput, '</details>');
+end;
+
+procedure RenderDependencyOverview(var AOutput: UTF8String;
+  AProject: TDocProject);
+begin
+  if AProject.Units.Count = 0 then
+    Exit;
+  AppendLine(AOutput, '<section class="index-section dependency-overview" ' +
+    'data-dependency-overview aria-labelledby="unit-dependencies">');
+  AppendLine(AOutput, '<div class="section-heading"><div><p class="eyebrow">' +
+    'Architecture</p><h2 id="unit-dependencies">Unit dependencies</h2></div>' +
+    '<p>Arrows point from a unit to the project unit it imports.</p></div>');
+  AppendLine(AOutput, '<div class="dependency-diagram" ' +
+    'data-dependency-diagram aria-hidden="true" hidden>');
+  AppendLine(AOutput, '<pre class="mermaid" data-mermaid>');
+  AOutput := AOutput + EscapeHTML(RenderMermaidDependencyGraph(AProject));
+  AppendLine(AOutput, '</pre>');
+  AppendLine(AOutput, '</div>');
+  RenderDependencyFallback(AOutput, AProject);
+  AppendLine(AOutput, '</section>');
 end;
 
 procedure AppendPageEnd(var AOutput: UTF8String; AProject: TDocProject);
@@ -555,7 +701,7 @@ var
   Diagnostic: TDiagnostic;
 begin
   Result := PageStart(AProject, AProject.Name + ' API', '',
-    'API documentation for ' + AProject.Name);
+    'API documentation for ' + AProject.Name, AProject.Units.Count > 0);
   PublicCount := 0;
   DocumentedCount := 0;
   for I := 0 to AProject.Units.Count - 1 do
@@ -590,6 +736,8 @@ begin
     UTF8String(IntToStr(CoveragePercent)) +
     '%</strong><span>Documented</span></div>');
   AppendLine(Result, '</section>');
+
+  RenderDependencyOverview(Result, AProject);
 
   AppendLine(Result, '<section class="index-section">');
   AppendLine(Result, '<div class="section-heading"><div><p class="eyebrow">' +
@@ -652,7 +800,7 @@ var
   ThisUnitSymbol: TDocSymbol;
 begin
   Result := PageStart(AProject, AUnit.Name + ' - ' + AProject.Name, '../',
-    'API documentation for unit ' + AUnit.Name);
+    'API documentation for unit ' + AUnit.Name, False);
   AppendLine(Result, '<nav class="breadcrumb" aria-label="Breadcrumb">' +
     '<a href="../index.html">API index</a><span aria-hidden="true">/' +
     '</span><span>' + EscapeHTML(AUnit.Name) + '</span></nav>');
@@ -811,6 +959,7 @@ begin
       [AssetsDirectory]);
 
   WriteKaTeXAssets(AssetsDirectory);
+  WriteMermaidAssets(AssetsDirectory);
   WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.html',
     RenderHTMLIndex(AProject));
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'site.css',
@@ -819,6 +968,8 @@ begin
     HTMLApplicationScript);
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'math.js',
     HTMLMathScript);
+  WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'diagram.js',
+    HTMLDiagramScript);
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) +
     'search-index.js', RenderHTMLSearchIndex(AProject));
 
