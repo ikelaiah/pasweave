@@ -137,19 +137,38 @@ The 45-unit `mathlib-fp` site retained all 79 SVG links across its two
 diagrams. Browser checks reached both zoom bounds, panned, dragged, reset, and
 confirmed that interacting with one diagram leaves the other unchanged.
 
-## Next: project-aware source discovery
+### Project-aware source discovery
 
-- Add deterministic recursive discovery for Pascal source trees.
-- Define explicit include/exclude behavior so generated, vendored, and test
-  sources are not pulled into documentation accidentally.
-- Read Lazarus project and package inputs only after their compiler paths,
-  defines, and target settings can be represented honestly.
-- Preserve the current single-file and non-recursive directory behavior for
-  existing commands.
+- Preserve single-file input and top-level-only directory discovery by
+  default.
+- Add opt-in deterministic recursion for `.pas` and `.pp` source trees.
+- Support repeatable, root-relative include and exclude globs, with `*` and
+  `?` confined to one path segment and `**` spanning directories.
+- Make exclusions take precedence and prune matching generated, vendored, and
+  test directories.
+- Reject empty, absolute, and parent-traversing patterns.
+- Cover nested units, `.pp` files, filters, precedence, unsafe patterns,
+  deterministic output, and explicit-file compatibility in fixtures.
+- Confirm that default and recursive `mathlib-fp` builds remain identical for
+  its current flat source tree.
+
+Lazarus project and package readers remain deferred until their compiler
+paths, defines, and target settings can be represented honestly.
+
+## Next: compiler-aware parsing configuration
+
+- Expose repeatable unit paths, include paths, and conditional defines without
+  leaking `fcl-passrc` types into the documentation model.
+- Represent target OS and CPU settings explicitly instead of silently using
+  host defaults.
+- Normalize and validate compiler inputs with deterministic diagnostics.
+- Add fixtures for include files, conditional declarations, and dependencies
+  found through configured paths.
+- Preserve current builds when no compiler configuration is supplied.
+- Re-run `mathlib-fp` with explicit settings matching its supported build.
 
 ## Later opportunities
 
-- Configurable compiler search paths, defines, targets, and include paths.
 - Source-code links and repository URL templates.
 - Search filters for unit, kind, visibility, and documentation coverage.
 - Incremental builds and stale-output cleanup.

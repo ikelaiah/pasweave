@@ -91,6 +91,21 @@ zero per-file hash differences. Their HTML index SHA-256 was:
 AC4AB8E4C1281F62513E947C3622E0B3E057B9A8859AA65288D09E884B11D2C2
 ```
 
+## Source-discovery compatibility
+
+The tested `mathlib-fp/src` tree contains all 45 Pascal units at its top
+level. A default build and a build with `--recursive` each parsed all 45 units
+and generated the same 2,338 symbols with no warnings or errors. Their JSON
+files were byte-identical and retained the established SHA-256:
+
+```text
+18B8029D2ACC456D0A807507ADDF3C69442FC34F1C2247552449276DE12985B6
+```
+
+This confirms that recursive discovery is opt-in and does not perturb the
+existing flat-project result. The dedicated nested-tree fixture supplies the
+meaningful recursion and include/exclude coverage that this repository cannot.
+
 The HTML audit covered all page links, stylesheet and script references,
 symbol fragments, and search-index URLs. Every PasWeave-authored text file is
 UTF-8 without a byte-order mark and uses LF line endings; vendored KaTeX and

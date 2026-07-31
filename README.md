@@ -14,8 +14,8 @@ with FPC's reusable `fcl-passrc` parser libraries.
 
 The working parser-to-site pipeline includes:
 
-- a `pasweave build` command for one Pascal unit or a non-recursive directory
-  of `.pas` and `.pp` units;
+- a `pasweave build` command for one Pascal unit or a directory of `.pas` and
+  `.pp` units, with opt-in recursive discovery and include/exclude filters;
 - interface parsing through `fcl-passrc`;
 - parser-independent project, unit, symbol, directive, and diagnostic models;
 - source-backed association of enabled PasWeave `///`, Pascal `{ ... }`, and
@@ -112,6 +112,26 @@ build/bin/pasweave build examples/documented-api --output build/documented-api -
 
 Its HTML index reports `10 of 10 API symbols documented`, providing an
 immediate example of a fully populated `DOCUMENTED` column.
+
+You can also browse the checked-in
+[Markdown sample](examples/documented-api/sample-output/markdown/index.md) or
+clone the repository and open the
+[HTML sample](examples/documented-api/sample-output/html/index.html) directly.
+The snapshot shows the actual project index and both generated unit pages.
+
+For a nested source tree, enable recursive discovery explicitly and exclude
+trees that are not part of the public API:
+
+```text
+pasweave build src --recursive --exclude=generated/** --exclude=tests --exclude=vendor/**
+```
+
+`--include` and `--exclude` are repeatable, case-insensitive globs relative to
+the supplied source directory. `*` and `?` match within one path segment;
+`**` as a complete segment spans directories. Exclusions take precedence.
+Without `--recursive`, directory input retains the original top-level-only
+behavior. See [source discovery](docs/source-discovery.md) for the complete
+matching and safety contract.
 
 The command writes:
 
@@ -277,8 +297,8 @@ for its offline-search, safety, and Markdown-subset contracts.
   LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
-- source directory discovery is non-recursive;
-- no project/package file reader or configurable compiler search paths;
+- no project/package file reader or configurable compiler paths, defines, or
+  target settings;
 - type relationship resolution is limited to the current unit and its
   interface dependencies; ancestors outside the documented source set remain
   explicitly unresolved, and implementation bodies are not analysed;
@@ -299,5 +319,5 @@ Bundled third-party components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The next milestone is deterministic, project-aware source discovery. See
+The next milestone is compiler-aware parsing configuration. See
 [ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.

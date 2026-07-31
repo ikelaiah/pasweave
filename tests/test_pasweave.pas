@@ -71,6 +71,75 @@ begin
   end;
 end;
 
+function ReadUTF8File(const AFilename: string): UTF8String;
+var
+  InputStream: TFileStream;
+begin
+  InputStream := TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(Result, InputStream.Size);
+    if Length(Result) > 0 then
+      InputStream.ReadBuffer(Result[1], Length(Result));
+  finally
+    InputStream.Free;
+  end;
+end;
+
+function WithoutTrailingLineBreaks(const AText: UTF8String): UTF8String;
+begin
+  Result := AText;
+  while (Length(Result) > 0) and
+    (Result[Length(Result)] in [#10, #13]) do
+    Delete(Result, Length(Result), 1);
+end;
+
+function SampleOutputMatches(const AExpected, AFilename: UTF8String): Boolean;
+var
+  Actual: UTF8String;
+  Expected: UTF8String;
+  Position: Integer;
+begin
+  Expected := WithoutTrailingLineBreaks(AExpected);
+  Actual := WithoutTrailingLineBreaks(ReadUTF8File(string(AFilename)));
+  Result := Expected = Actual;
+  if not Result then
+  begin
+    Position := 1;
+    while (Position <= Length(Expected)) and
+      (Position <= Length(Actual)) and
+      (Expected[Position] = Actual[Position]) do
+      Inc(Position);
+    WriteLn(StdErr, 'sample mismatch: ', AFilename, ' expected=',
+      Length(Expected), ' actual=', Length(Actual), ' position=', Position);
+  end;
+end;
+
+function RetargetSampleIndexAssets(const AHTML: UTF8String): UTF8String;
+begin
+  Result := UTF8String(StringReplace(string(AHTML),
+    'href="assets/katex/', 'href="../../../../assets/katex/',
+    [rfReplaceAll]));
+  Result := UTF8String(StringReplace(string(Result),
+    'src="assets/katex/', 'src="../../../../assets/katex/',
+    [rfReplaceAll]));
+  Result := UTF8String(StringReplace(string(Result),
+    'src="assets/mermaid/', 'src="../../../../assets/mermaid/',
+    [rfReplaceAll]));
+end;
+
+function RetargetSampleUnitAssets(const AHTML: UTF8String): UTF8String;
+begin
+  Result := UTF8String(StringReplace(string(AHTML),
+    'href="../assets/katex/', 'href="../../../../../assets/katex/',
+    [rfReplaceAll]));
+  Result := UTF8String(StringReplace(string(Result),
+    'src="../assets/katex/', 'src="../../../../../assets/katex/',
+    [rfReplaceAll]));
+  Result := UTF8String(StringReplace(string(Result),
+    'src="../assets/mermaid/', 'src="../../../../../assets/mermaid/',
+    [rfReplaceAll]));
+end;
+
 procedure RunTests;
 var
   Project: TDocProject;
@@ -117,6 +186,12 @@ var
   RelationshipIndexHTML: UTF8String;
   ExampleProject: TDocProject;
   ExampleIndexHTML: UTF8String;
+  ExampleCoreUnit: TDocUnit;
+  ExampleServicesUnit: TDocUnit;
+  DiscoveryProject: TDocProject;
+  SecondDiscoveryProject: TDocProject;
+  DiscoveryOptions: TSourceDiscoveryOptions;
+  InputErrorRaised: Boolean;
 begin
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -743,8 +818,197 @@ begin
     DialectProject.Free;
   end;
 
+  DiscoveryProject := BuildProject('tests/fixtures/discovery',
+    'NonRecursiveDiscoveryFixture', AttemptedCount);
+  try
+    Check((AttemptedCount = 1) and (DiscoveryProject.Units.Count = 1),
+      'directory discovery should remain non-recursive by default');
+    Check(TDocUnit(DiscoveryProject.Units[0]).Name = 'RootUnit',
+      'non-recursive discovery should retain the root unit');
+  finally
+    DiscoveryProject.Free;
+  end;
+
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    DiscoveryOptions.Recursive := True;
+    DiscoveryProject := BuildProject('tests/fixtures/discovery',
+      'RecursiveDiscoveryFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, DiscoveryOptions);
+    try
+      Check((AttemptedCount = 6) and (DiscoveryProject.Units.Count = 6),
+        'recursive discovery should include nested .pas and .pp units');
+      Check(FindUnitModel(DiscoveryProject, 'BetaUnit').SourceFilename =
+        'src/deep/BetaUnit.pp',
+        'recursive source filenames should be root-relative and normalized');
+      SecondDiscoveryProject := BuildProject('tests/fixtures/discovery',
+        'RecursiveDiscoveryFixture', AttemptedCount,
+        DefaultDocumentationCommentStyles, DiscoveryOptions);
+      try
+        Check(ProjectToJSON(DiscoveryProject) =
+          ProjectToJSON(SecondDiscoveryProject),
+          'recursive discovery and model ordering should be deterministic');
+      finally
+        SecondDiscoveryProject.Free;
+      end;
+    finally
+      DiscoveryProject.Free;
+    end;
+  finally
+    DiscoveryOptions.Free;
+  end;
+
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    DiscoveryOptions.Recursive := True;
+    DiscoveryOptions.AddIncludePattern('src/**');
+    DiscoveryOptions.AddExcludePattern('src/deep/**');
+    DiscoveryProject := BuildProject('tests/fixtures/discovery',
+      'DiscoveryPrecedenceFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, DiscoveryOptions);
+    try
+      Check((AttemptedCount = 1) and
+        Assigned(FindUnitModel(DiscoveryProject, 'AlphaUnit')) and
+        not Assigned(FindUnitModel(DiscoveryProject, 'BetaUnit')),
+        'recursive exclusions should take precedence over includes');
+    finally
+      DiscoveryProject.Free;
+    end;
+  finally
+    DiscoveryOptions.Free;
+  end;
+
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    DiscoveryOptions.Recursive := True;
+    DiscoveryOptions.AddExcludePattern('generated/**');
+    DiscoveryOptions.AddExcludePattern('tests');
+    DiscoveryOptions.AddExcludePattern('vendor/**');
+    DiscoveryProject := BuildProject('tests/fixtures/discovery',
+      'ExcludedDiscoveryFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, DiscoveryOptions);
+    try
+      Check((AttemptedCount = 3) and (DiscoveryProject.Units.Count = 3),
+        'recursive exclusions should prune generated, test, and vendor trees');
+      Check(not Assigned(FindUnitModel(DiscoveryProject, 'GeneratedUnit')) and
+        not Assigned(FindUnitModel(DiscoveryProject, 'TestSupport')) and
+        not Assigned(FindUnitModel(DiscoveryProject, 'VendorUnit')),
+        'excluded directories should contribute no units');
+    finally
+      DiscoveryProject.Free;
+    end;
+  finally
+    DiscoveryOptions.Free;
+  end;
+
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    DiscoveryOptions.Recursive := True;
+    DiscoveryOptions.AddIncludePattern('src/**/*.pas');
+    DiscoveryProject := BuildProject('tests/fixtures/discovery',
+      'IncludedDiscoveryFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, DiscoveryOptions);
+    try
+      Check((AttemptedCount = 1) and
+        Assigned(FindUnitModel(DiscoveryProject, 'AlphaUnit')),
+        'recursive includes should support ** and extension filtering');
+    finally
+      DiscoveryProject.Free;
+    end;
+  finally
+    DiscoveryOptions.Free;
+  end;
+
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    DiscoveryOptions.Recursive := True;
+    DiscoveryOptions.AddIncludePattern('SRC/?LPHAUNIT.PAS');
+    DiscoveryProject := BuildProject('tests/fixtures/discovery',
+      'CaseInsensitiveDiscoveryFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, DiscoveryOptions);
+    try
+      Check((AttemptedCount = 1) and
+        Assigned(FindUnitModel(DiscoveryProject, 'AlphaUnit')),
+        'discovery globs should be case-insensitive and support ?');
+    finally
+      DiscoveryProject.Free;
+    end;
+  finally
+    DiscoveryOptions.Free;
+  end;
+
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    InputErrorRaised := False;
+    try
+      DiscoveryOptions.AddExcludePattern('../outside');
+    except
+      on E: EPasWeaveInputError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised,
+      'discovery patterns should not escape the source directory');
+
+    InputErrorRaised := False;
+    try
+      DiscoveryOptions.AddIncludePattern('/absolute');
+    except
+      on E: EPasWeaveInputError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised,
+      'discovery patterns should reject absolute paths');
+
+    InputErrorRaised := False;
+    try
+      DiscoveryOptions.AddIncludePattern('');
+    except
+      on E: EPasWeaveInputError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised,
+      'discovery patterns should reject empty values');
+
+    DiscoveryOptions.Recursive := True;
+    InputErrorRaised := False;
+    try
+      DiscoveryProject := BuildProject(
+        'tests/fixtures/discovery/RootUnit.pas',
+        'InvalidFileDiscoveryFixture', AttemptedCount,
+        DefaultDocumentationCommentStyles, DiscoveryOptions);
+      DiscoveryProject.Free;
+    except
+      on E: EPasWeaveInputError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised,
+      'discovery options should require a source directory');
+  finally
+    DiscoveryOptions.Free;
+  end;
+
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    DiscoveryOptions.Recursive := True;
+    DiscoveryOptions.AddIncludePattern('missing/**');
+    InputErrorRaised := False;
+    try
+      DiscoveryProject := BuildProject('tests/fixtures/discovery',
+        'EmptyDiscoveryFixture', AttemptedCount,
+        DefaultDocumentationCommentStyles, DiscoveryOptions);
+      DiscoveryProject.Free;
+    except
+      on E: EPasWeaveInputError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised,
+      'source discovery should reject an empty matched source set');
+  finally
+    DiscoveryOptions.Free;
+  end;
+
   ExampleProject := BuildProject('examples/documented-api',
-    'DocumentedAPIExample', AttemptedCount);
+    'Documented API example', AttemptedCount);
   try
     Check(AttemptedCount = 2,
       'both documented example units should be attempted');
@@ -755,6 +1019,43 @@ begin
     Check(Pos('10 of 10 API symbols documented',
       string(ExampleIndexHTML)) > 0,
       'the documented example should showcase complete /// coverage');
+    ExampleCoreUnit := FindUnitModel(ExampleProject, 'Demo.Core');
+    ExampleServicesUnit := FindUnitModel(ExampleProject, 'Demo.Services');
+    Check(Assigned(ExampleCoreUnit) and Assigned(ExampleServicesUnit),
+      'the documented example should expose both sample units');
+    Check(SampleOutputMatches(RenderMarkdownIndex(ExampleProject),
+      'examples/documented-api/sample-output/markdown/index.md'),
+      'the Markdown sample index should match current renderer output');
+    Check(SampleOutputMatches(RenderMarkdownUnit(ExampleProject,
+      ExampleCoreUnit),
+      'examples/documented-api/sample-output/markdown/units/Demo.Core.md'),
+      'the Demo.Core Markdown sample should match current renderer output');
+    Check(SampleOutputMatches(RenderMarkdownUnit(ExampleProject,
+      ExampleServicesUnit),
+      'examples/documented-api/sample-output/markdown/units/Demo.Services.md'),
+      'the Demo.Services Markdown sample should match current renderer output');
+    Check(SampleOutputMatches(RetargetSampleIndexAssets(ExampleIndexHTML),
+      'examples/documented-api/sample-output/html/index.html'),
+      'the HTML sample index should match current renderer output');
+    Check(SampleOutputMatches(RetargetSampleUnitAssets(RenderHTMLUnit(
+      ExampleProject, ExampleCoreUnit)),
+      'examples/documented-api/sample-output/html/units/Demo.Core.html'),
+      'the Demo.Core HTML sample should match current renderer output');
+    Check(SampleOutputMatches(RetargetSampleUnitAssets(RenderHTMLUnit(
+      ExampleProject, ExampleServicesUnit)),
+      'examples/documented-api/sample-output/html/units/Demo.Services.html'),
+      'the Demo.Services HTML sample should match current renderer output');
+    Check(SampleOutputMatches(HTMLStylesheet,
+      'examples/documented-api/sample-output/html/assets/site.css') and
+      SampleOutputMatches(HTMLApplicationScript,
+      'examples/documented-api/sample-output/html/assets/app.js') and
+      SampleOutputMatches(HTMLMathScript,
+      'examples/documented-api/sample-output/html/assets/math.js') and
+      SampleOutputMatches(HTMLDiagramScript,
+      'examples/documented-api/sample-output/html/assets/diagram.js') and
+      SampleOutputMatches(RenderHTMLSearchIndex(ExampleProject),
+      'examples/documented-api/sample-output/html/assets/search-index.js'),
+      'the HTML sample assets should match current renderer output');
   finally
     ExampleProject.Free;
   end;

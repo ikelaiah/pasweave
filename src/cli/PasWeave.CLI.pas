@@ -20,7 +20,14 @@ begin
   WriteLn('Usage:');
   WriteLn('  pasweave build <unit-or-directory> [--output <directory>]');
   WriteLn('                 [--project-name <name>] [--doc-comments=<styles>]');
+  WriteLn('                 [--recursive] [--include=<glob>] [--exclude=<glob>]');
   WriteLn('                 [--verbose]');
+  WriteLn;
+  WriteLn('Source discovery:');
+  WriteLn('  Directories are non-recursive unless --recursive is supplied');
+  WriteLn('  --include and --exclude are repeatable, source-root-relative globs');
+  WriteLn('  * and ? stay within one path segment; ** spans directories');
+  WriteLn('  Exclusions win when both an include and exclude match');
   WriteLn;
   WriteLn('Documentation comment styles:');
   WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
@@ -74,63 +81,83 @@ var
   HTMLOutputPath: string;
   CommentStyleValue: string;
   CommentStyles: TDocumentationCommentStyles;
+  DiscoveryOptions: TSourceDiscoveryOptions;
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
   ProjectName := '';
   Verbose := False;
   CommentStyles := DefaultDocumentationCommentStyles;
-  I := 2;
-  while I <= ParamCount do
-  begin
-    if ParamStr(I) = '--output' then
-      OutputPath := RequireOptionValue(I, '--output')
-    else if ParamStr(I) = '--project-name' then
-      ProjectName := RequireOptionValue(I, '--project-name')
-    else if ParamStr(I) = '--doc-comments' then
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  try
+    I := 2;
+    while I <= ParamCount do
     begin
-      CommentStyleValue := RequireOptionValue(I, '--doc-comments');
-      if not TryParseDocumentationCommentStyles(CommentStyleValue,
-        CommentStyles) then
-        raise EPasWeaveInputError.CreateFmt(
-          'invalid documentation comment styles: %s ' +
-          '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
-          'a comma-separated combination, or all)',
-          [CommentStyleValue]);
-    end
-    else if Pos('--doc-comments=', ParamStr(I)) = 1 then
-    begin
-      CommentStyleValue := Copy(ParamStr(I), Length('--doc-comments=') + 1,
-        MaxInt);
-      if not TryParseDocumentationCommentStyles(CommentStyleValue,
-        CommentStyles) then
-        raise EPasWeaveInputError.CreateFmt(
-          'invalid documentation comment styles: %s ' +
-          '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
-          'a comma-separated combination, or all)',
-          [CommentStyleValue]);
-    end
-    else if ParamStr(I) = '--verbose' then
-      Verbose := True
-    else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
-    begin
-      PrintUsage;
-      Exit(0);
-    end
-    else if (Length(ParamStr(I)) > 0) and (ParamStr(I)[1] = '-') then
-      raise EPasWeaveInputError.CreateFmt('unknown option: %s', [ParamStr(I)])
-    else if SourcePath = '' then
-      SourcePath := ParamStr(I)
-    else
-      raise EPasWeaveInputError.Create('only one source path may be supplied');
-    Inc(I);
+      if ParamStr(I) = '--output' then
+        OutputPath := RequireOptionValue(I, '--output')
+      else if ParamStr(I) = '--project-name' then
+        ProjectName := RequireOptionValue(I, '--project-name')
+      else if ParamStr(I) = '--doc-comments' then
+      begin
+        CommentStyleValue := RequireOptionValue(I, '--doc-comments');
+        if not TryParseDocumentationCommentStyles(CommentStyleValue,
+          CommentStyles) then
+          raise EPasWeaveInputError.CreateFmt(
+            'invalid documentation comment styles: %s ' +
+            '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
+            'a comma-separated combination, or all)',
+            [CommentStyleValue]);
+      end
+      else if Pos('--doc-comments=', ParamStr(I)) = 1 then
+      begin
+        CommentStyleValue := Copy(ParamStr(I), Length('--doc-comments=') + 1,
+          MaxInt);
+        if not TryParseDocumentationCommentStyles(CommentStyleValue,
+          CommentStyles) then
+          raise EPasWeaveInputError.CreateFmt(
+            'invalid documentation comment styles: %s ' +
+            '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
+            'a comma-separated combination, or all)',
+            [CommentStyleValue]);
+      end
+      else if ParamStr(I) = '--recursive' then
+        DiscoveryOptions.Recursive := True
+      else if ParamStr(I) = '--include' then
+        DiscoveryOptions.AddIncludePattern(
+          RequireOptionValue(I, '--include'))
+      else if Pos('--include=', ParamStr(I)) = 1 then
+        DiscoveryOptions.AddIncludePattern(Copy(ParamStr(I),
+          Length('--include=') + 1, MaxInt))
+      else if ParamStr(I) = '--exclude' then
+        DiscoveryOptions.AddExcludePattern(
+          RequireOptionValue(I, '--exclude'))
+      else if Pos('--exclude=', ParamStr(I)) = 1 then
+        DiscoveryOptions.AddExcludePattern(Copy(ParamStr(I),
+          Length('--exclude=') + 1, MaxInt))
+      else if ParamStr(I) = '--verbose' then
+        Verbose := True
+      else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
+      begin
+        PrintUsage;
+        Exit(0);
+      end
+      else if (Length(ParamStr(I)) > 0) and (ParamStr(I)[1] = '-') then
+        raise EPasWeaveInputError.CreateFmt('unknown option: %s', [ParamStr(I)])
+      else if SourcePath = '' then
+        SourcePath := ParamStr(I)
+      else
+        raise EPasWeaveInputError.Create('only one source path may be supplied');
+      Inc(I);
+    end;
+
+    if SourcePath = '' then
+      raise EPasWeaveInputError.Create('missing unit or source directory');
+
+    Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
+      CommentStyles, DiscoveryOptions);
+  finally
+    DiscoveryOptions.Free;
   end;
-
-  if SourcePath = '' then
-    raise EPasWeaveInputError.Create('missing unit or source directory');
-
-  Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
-    CommentStyles);
   try
     OutputFile := IncludeTrailingPathDelimiter(OutputPath) + 'api-model.json';
     WriteProjectJSON(Project, OutputFile);

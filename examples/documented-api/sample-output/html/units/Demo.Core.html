@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="API documentation for unit Demo.Core">
+<meta name="color-scheme" content="light dark">
+<title>Demo.Core - Documented API example</title>
+<link rel="stylesheet" href="../../../../../assets/katex/katex.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../../../../../assets/katex/katex.min.js"></script>
+<script defer src="../assets/math.js"></script>
+<script defer src="../assets/search-index.js"></script>
+<script defer src="../assets/app.js"></script>
+</head>
+<body data-site-root="../">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+<div class="shell header-inner">
+<a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Documented API example</strong><small>API documentation</small></span></a>
+<div class="site-search" data-search-container>
+<label class="sr-only" for="site-search">Search API</label>
+<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
+<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+</div>
+</div>
+</header>
+<main id="main-content" class="shell main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Demo.Core</span></nav>
+<section class="unit-heading">
+<p class="eyebrow">Unit</p><h1><code>Demo.Core</code></h1>
+<p>Declared in <code>Demo.Core.pas</code></p></section>
+<div class="prose">
+<p>Defines the core API for the documented PasWeave example. Every renderable declaration in this unit uses PasWeave&#39;s explicit <code>///</code> documentation marker.</p>
+</div>
+<section class="dependency-section">
+<div class="group-heading"><h2>Interface dependencies</h2><span>0</span></div>
+<p class="muted">None.</p>
+</section>
+<section class="symbol-group" aria-labelledby="types">
+<div class="group-heading"><h2 id="types">Types</h2><span>2</span></div>
+<article class="symbol" id="symbol-demo-core-tgreeter-fb605899cec8779b">
+<div class="symbol-heading">
+<div><span class="kind-badge">class</span><h3><code>Demo.Core.TGreeter</code></h3></div>
+<a class="permalink" href="#symbol-demo-core-tgreeter-fb605899cec8779b" aria-label="Permanent link to Demo.Core.TGreeter">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:16:11</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+TGreeter = class
+end
+</code></pre>
+<div class="prose">
+<p>Creates greetings for callers.</p>
+</div>
+</article>
+<article class="symbol" id="symbol-demo-core-tgreetingstyle-10cc0ecc6a6635c8">
+<div class="symbol-heading">
+<div><span class="kind-badge">enumeration</span><h3><code>Demo.Core.TGreetingStyle</code></h3></div>
+<a class="permalink" href="#symbol-demo-core-tgreetingstyle-10cc0ecc6a6635c8" aria-label="Permanent link to Demo.Core.TGreetingStyle">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:13:17</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+TGreetingStyle = (gsFriendly,gsExcited)
+</code></pre>
+<div class="prose">
+<p>Selects the punctuation used in a generated greeting.</p>
+</div>
+</article>
+</section>
+<section class="symbol-group" aria-labelledby="routines">
+<div class="group-heading"><h2 id="routines">Routines</h2><span>1</span></div>
+<article class="symbol" id="symbol-demo-core-add-ada12614b553c86d">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Demo.Core.Add</code></h3></div>
+<a class="permalink" href="#symbol-demo-core-add-ada12614b553c86d" aria-label="Permanent link to Demo.Core.Add">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:34:13</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Add(const A: Integer; const B: Integer) : Integer
+</code></pre>
+<div class="prose">
+<p>Adds two integer values. The operation is <span class="math-inline" data-math-inline>$A + B$</span>.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>A</code></td><td>Left operand.</td></tr>
+<tr><td><code>B</code></td><td>Right operand.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The sum of <code>A</code> and <code>B</code>.</p>
+</section>
+</article>
+</section>
+<section class="symbol-group" aria-labelledby="members">
+<div class="group-heading"><h2 id="members">Members</h2><span>1</span></div>
+<article class="symbol" id="symbol-demo-core-tgreeter-greetingfor-82c8855e62545192">
+<div class="symbol-heading">
+<div><span class="kind-badge">method</span><h3><code>Demo.Core.TGreeter.GreetingFor</code></h3></div>
+<a class="permalink" href="#symbol-demo-core-tgreeter-greetingfor-82c8855e62545192" aria-label="Permanent link to Demo.Core.TGreeter.GreetingFor">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:23:25</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-demo-core-tgreeter-fb605899cec8779b"><code>Demo.Core.TGreeter</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+function GreetingFor(const AName: string; AStyle: TGreetingStyle)
+                     : string
+</code></pre>
+<div class="prose">
+<p>Builds a greeting for one person.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>AName</code></td><td>Name to include in the greeting.</td></tr>
+<tr><td><code>AStyle</code></td><td>Punctuation style for the result.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>A friendly greeting containing <code>AName</code>.</p>
+</section>
+</article>
+</section>
+</main>
+<footer class="site-footer"><div class="shell">Generated by PasWeave from <code>examples/documented-api</code>.</div></footer>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="API documentation for unit Demo.Services">
+<meta name="color-scheme" content="light dark">
+<title>Demo.Services - Documented API example</title>
+<link rel="stylesheet" href="../../../../../assets/katex/katex.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../../../../../assets/katex/katex.min.js"></script>
+<script defer src="../assets/math.js"></script>
+<script defer src="../assets/search-index.js"></script>
+<script defer src="../assets/app.js"></script>
+</head>
+<body data-site-root="../">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+<div class="shell header-inner">
+<a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Documented API example</strong><small>API documentation</small></span></a>
+<div class="site-search" data-search-container>
+<label class="sr-only" for="site-search">Search API</label>
+<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
+<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+</div>
+</div>
+</header>
+<main id="main-content" class="shell main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Demo.Services</span></nav>
+<section class="unit-heading">
+<p class="eyebrow">Unit</p><h1><code>Demo.Services</code></h1>
+<p>Declared in <code>Demo.Services.pas</code></p></section>
+<div class="prose">
+<p>Demonstrates documented APIs that depend on another project unit.</p>
+</div>
+<section class="dependency-section">
+<div class="group-heading"><h2>Interface dependencies</h2><span>1</span></div>
+<ul class="dependency-list">
+<li><a href="Demo.Core.html"><code>Demo.Core</code></a></li>
+</ul>
+</section>
+<section class="symbol-group" aria-labelledby="types">
+<div class="group-heading"><h2 id="types">Types</h2><span>1</span></div>
+<article class="symbol" id="symbol-demo-services-tnamedgreeter-36c4f0e191f7812d">
+<div class="symbol-heading">
+<div><span class="kind-badge">class</span><h3><code>Demo.Services.TNamedGreeter</code></h3></div>
+<a class="permalink" href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d" aria-label="Permanent link to Demo.Services.TNamedGreeter">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:13:16</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+TNamedGreeter = class(TGreeter)
+end
+</code></pre>
+<div class="prose">
+<p>Associates a reusable greeter with one name.</p>
+</div>
+</article>
+</section>
+<section class="symbol-group" aria-labelledby="members">
+<div class="group-heading"><h2 id="members">Members</h2><span>3</span></div>
+<article class="symbol" id="symbol-demo-services-tnamedgreeter-create-495e8336f5e7fef9">
+<div class="symbol-heading">
+<div><span class="kind-badge">constructor</span><h3><code>Demo.Services.TNamedGreeter.Create</code></h3></div>
+<a class="permalink" href="#symbol-demo-services-tnamedgreeter-create-495e8336f5e7fef9" aria-label="Permanent link to Demo.Services.TNamedGreeter.Create">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:20:23</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d"><code>Demo.Services.TNamedGreeter</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+constructor Create(const AName: string)
+</code></pre>
+<div class="prose">
+<p>Creates a greeter for <code>AName</code>.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>AName</code></td><td>Name retained by this instance.</td></tr>
+</tbody></table></div></section>
+</article>
+<article class="symbol" id="symbol-demo-services-tnamedgreeter-name-65470d0c8492e87a">
+<div class="symbol-heading">
+<div><span class="kind-badge">property</span><h3><code>Demo.Services.TNamedGreeter.Name</code></h3></div>
+<a class="permalink" href="#symbol-demo-services-tnamedgreeter-name-65470d0c8492e87a" aria-label="Permanent link to Demo.Services.TNamedGreeter.Name">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:28:18</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d"><code>Demo.Services.TNamedGreeter</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+Name : string
+</code></pre>
+<div class="prose">
+<p>Name included by <code>Welcome</code>.</p>
+</div>
+</article>
+<article class="symbol" id="symbol-demo-services-tnamedgreeter-welcome-17bff199acaca720">
+<div class="symbol-heading">
+<div><span class="kind-badge">method</span><h3><code>Demo.Services.TNamedGreeter.Welcome</code></h3></div>
+<a class="permalink" href="#symbol-demo-services-tnamedgreeter-welcome-17bff199acaca720" aria-label="Permanent link to Demo.Services.TNamedGreeter.Welcome">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:25:21</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d"><code>Demo.Services.TNamedGreeter</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+function Welcome : string
+</code></pre>
+<div class="prose">
+<p>Builds an excited greeting for the retained name.</p>
+</div>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>A greeting produced by the inherited API.</p>
+</section>
+</article>
+</section>
+</main>
+<footer class="site-footer"><div class="shell">Generated by PasWeave from <code>examples/documented-api</code>.</div></footer>
+</body>
+</html>

@@ -45,6 +45,12 @@ The concrete integration is:
    `TPasSpecializeType.DestType` supplies the lookup name. After every unit is
    converted, PasWeave resolves those names against the declaring unit and its
    interface `uses` units and stores only stable model symbol IDs.
+8. Source discovery is implemented outside `fcl-passrc`. Directory input is
+   top-level-only by default; `--recursive` walks nested directories, then a
+   case-insensitive sorted list fixes parse and output order. Repeatable
+   root-relative include/exclude globs select `.pas` and `.pp` inputs before
+   parsing, with exclusions taking precedence. This keeps project enumeration
+   deterministic without asking the parser to guess a build system.
 
 The container's `FindElement` currently returns `nil`, matching the minimal
 bundled `parsepp` example. This allows unresolved type references to remain
@@ -74,6 +80,8 @@ explicitly unresolved.
   scanner mode in the normal FPC way.
 - Include paths, defines, and other compiler arguments are not exposed by the
   CLI yet.
+- Lazarus `.lpi` and `.lpk` files are not read yet because PasWeave cannot
+  faithfully represent all of their compiler settings.
 - The mapping covers the requested initial symbol categories, but unusual
   generic, helper, Objective-C, and compiler-extension nodes have not yet been
   validated with fixtures.
