@@ -8,6 +8,12 @@ html/
 ├── index.html
 ├── assets/
 │   ├── app.js
+│   ├── katex/
+│   │   ├── fonts/
+│   │   ├── katex.min.css
+│   │   ├── katex.min.js
+│   │   └── LICENSE
+│   ├── math.js
 │   ├── search-index.js
 │   └── site.css
 └── units/
@@ -45,14 +51,49 @@ Press `/` to focus search and Escape to close it.
 
 ## Markdown and mathematics
 
-The dependency-free HTML conversion currently covers paragraphs, headings,
-bullet and numbered lists, block quotes, fenced code, emphasis, strong text,
-inline code, links, and inline or display mathematical delimiters. It does not
+The dependency-free Markdown conversion covers paragraphs, headings, bullet
+and numbered lists, block quotes, fenced code, emphasis, strong text, inline
+code, links, and inline or display mathematical delimiters. It does not
 attempt to implement every Markdown extension.
 
-`$...$` and `$$...$$` source is retained in elements marked with
-`data-math-inline` and `data-math-display`. This is the integration point for
-the planned KaTeX phase; the current site does not load a remote renderer.
+`$...$` and standalone `$$...$$` fences are retained in elements marked with
+`data-math-inline` and `data-math-display`. A local initializer renders only
+those marked elements through KaTeX 0.18.1; PasWeave does not run a broad
+auto-render pass over prose or code. KaTeX's default HTML and MathML output is
+therefore available without a network connection.
+
+Successful rendering replaces the marked node's content and records
+`data-math-rendered="true"`. If KaTeX rejects an expression, its original
+delimiters and source remain visible with an error style, a title containing
+the parser message, and a console warning. A missing runtime likewise leaves
+all source readable. Neither case fails the documentation build.
+
+Inline dollar delimiters follow conservative boundaries to avoid confusing
+currency with mathematics: the opening dollar must touch the content on its
+right, the closing dollar must touch the content on its left, and the closing
+dollar cannot be followed immediately by a digit. Write `\$` for a literal
+dollar where the remaining text would otherwise be ambiguous. Double-dollar
+display fences must occupy their own lines.
+
+## KaTeX assets
+
+The repository vendors the official KaTeX 0.18.1 browser distribution under
+`assets/katex/`, including all CSS-referenced font formats and the upstream MIT
+license. A build copies those bytes into `html/assets/katex/`; generated pages
+refer only to local paths. See [the third-party notices](../THIRD_PARTY_NOTICES.md)
+and [the vendoring record](../assets/katex/README.md) for provenance and
+checksums.
+
+When running a repository build, PasWeave discovers `assets/katex/` relative
+to the executable or current working directory. A packaged installation may
+place the directory beside the executable, under `share/pasweave/katex`, or
+set `PASWEAVE_KATEX_ASSETS` to its exact location. The build stops with a clear
+error if the required runtime, stylesheet, license, or fonts are absent;
+silently producing a partially styled site would violate the offline-output
+contract.
+
+The initializer uses `throwOnError: true`, `strict: "warn"`, and
+`trust: false`. The generated asset set and page references are deterministic.
 
 ## Source units
 

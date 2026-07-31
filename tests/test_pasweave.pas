@@ -6,7 +6,7 @@ uses
   Classes, SysUtils, FPJSON, JSONParser,
   PasWeave.Comments, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
-  PasWeave.Render.HTML.Markdown;
+  PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
@@ -32,6 +32,22 @@ begin
   for I := 0 to ASymbol.Directives.Count - 1 do
     if TDocDirective(ASymbol.Directives[I]).Name = AName then
       Exit(True);
+end;
+
+function CountOccurrences(const AText, AValue: string): Integer;
+var
+  Position: Integer;
+  Offset: Integer;
+begin
+  Result := 0;
+  Offset := 1;
+  Position := Pos(AValue, Copy(AText, Offset, MaxInt));
+  while Position > 0 do
+  begin
+    Inc(Result);
+    Inc(Offset, Position + Length(AValue) - 1);
+    Position := Pos(AValue, Copy(AText, Offset, MaxInt));
+  end;
 end;
 
 procedure RunTests;
@@ -62,6 +78,11 @@ var
   SlashPosition: Integer;
   BracePosition: Integer;
   ParenPosition: Integer;
+  MathProject: TDocProject;
+  MathUnit: TDocUnit;
+  MathSymbol: TDocSymbol;
+  MathHTML: UTF8String;
+  MathMarkdown: UTF8String;
 begin
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -177,6 +198,10 @@ begin
       'HTML index should be a complete document');
     Check(Pos('href="units/SimpleUnit.html"', string(IndexHTML)) > 0,
       'HTML index should link to the unit page');
+    Check(Pos('href="assets/katex/katex.min.css"', string(IndexHTML)) > 0,
+      'HTML index should load the local KaTeX stylesheet');
+    Check(Pos('src="assets/katex/katex.min.js"', string(IndexHTML)) > 0,
+      'HTML index should load the local KaTeX runtime');
     Check(Pos('<pre class="declaration"><code class="language-pascal">' +
       #10 + 'function Add', string(UnitHTML)) > 0,
       'HTML unit page should contain an escaped Pascal declaration');
@@ -196,6 +221,8 @@ begin
       'HTML should warn about undocumented API symbols');
     Check(Pos('SimpleUnit.TCounter.FValue', string(UnitHTML)) = 0,
       'HTML should exclude private members');
+    Check(Pos('src="../assets/math.js"', string(UnitHTML)) > 0,
+      'HTML unit pages should load the offline math initializer');
     Check(Pos('window.PASWEAVE_SEARCH_INDEX', string(SearchIndex)) = 1,
       'HTML search index should be an offline JavaScript asset');
     Check(Pos('"qualifiedName" : "SimpleUnit.Reset"',
@@ -207,6 +234,24 @@ begin
     Check(Pos('href=', string(RenderInlineMarkdown(
       '[unsafe](javascript:alert(1))'))) = 0,
       'HTML Markdown rendering should reject active link schemes');
+    Check(Pos('data-math-inline', string(RenderInlineMarkdown(
+      'Price: \$5'))) = 0,
+      'escaped currency should not become inline mathematics');
+    Check(string(RenderInlineMarkdown('Price: \$5')) = 'Price: $5',
+      'escaped currency should render without its Markdown escape');
+    Check(Pos('data-math-inline', string(RenderInlineMarkdown(
+      'Costs $20 and $30.'))) = 0,
+      'paired currency amounts should not become inline mathematics');
+    Check(Pos('data-math-inline', string(RenderInlineMarkdown(
+      'Linear expression: $2x + 1$.'))) > 0,
+      'inline mathematics may start with a digit when its closing delimiter ' +
+      'is not followed by one');
+    Check(Pos('data-math-inline', string(RenderInlineMarkdown(
+      'Spaced delimiters: $ not math $.'))) = 0,
+      'inline math delimiters should touch their mathematical content');
+    Check(Pos('data-math-inline', string(RenderInlineMarkdown(
+      'Literal $$value$$'))) = 0,
+      'double dollar delimiters in prose should not become inline math');
 
     WriteMarkdownDocumentation(Project, 'build/test-docs/markdown');
     Check(FileExists('build/test-docs/markdown/index.md'),
@@ -222,10 +267,70 @@ begin
       'HTML renderer should write its stylesheet');
     Check(FileExists('build/test-docs/html/assets/app.js'),
       'HTML renderer should write its application script');
+    Check(FileExists('build/test-docs/html/assets/math.js'),
+      'HTML renderer should write its math initializer');
     Check(FileExists('build/test-docs/html/assets/search-index.js'),
       'HTML renderer should write its offline search index');
+    Check(FileExists('build/test-docs/html/assets/katex/katex.min.js'),
+      'HTML renderer should copy the KaTeX runtime');
+    Check(FileExists('build/test-docs/html/assets/katex/katex.min.css'),
+      'HTML renderer should copy the KaTeX stylesheet');
+    Check(FileExists('build/test-docs/html/assets/katex/LICENSE'),
+      'HTML renderer should copy the KaTeX license');
+    Check(FileExists('build/test-docs/html/assets/katex/fonts/' +
+      'KaTeX_Main-Regular.woff2'),
+      'HTML renderer should copy the KaTeX fonts');
   finally
     Project.Free;
+  end;
+
+  Check(KaTeXVersion = '0.18.1',
+    'the tested KaTeX asset version should be explicit');
+  Check(Pos('throwOnError: true', string(HTMLMathScript)) > 0,
+    'math initialization should detect invalid expressions');
+  Check(Pos('trust: false', string(HTMLMathScript)) > 0,
+    'math initialization should not trust active TeX commands');
+  Check(Pos('data-math-error', string(HTMLMathScript)) > 0,
+    'math initialization should visibly mark invalid expressions');
+
+  MathProject := BuildProject(
+    'tests/fixtures/math/MathDocumentation.pas',
+    'MathDocumentationFixture', AttemptedCount);
+  try
+    Check(MathProject.Errors.Count = 0,
+      'invalid KaTeX should not fail the documentation build');
+    MathUnit := TDocUnit(MathProject.Units[0]);
+    MathSymbol := FindSymbol(MathUnit, 'MathExamples');
+    Check(Assigned(MathSymbol), 'math fixture routine should be modeled');
+    Check(Pos('$a^2 + b^2 = c^2$', MathSymbol.MarkdownDocumentation) > 0,
+      'the model should preserve valid inline mathematical source');
+    Check(Pos('$\sqrt{$', MathSymbol.MarkdownDocumentation) > 0,
+      'the model should preserve invalid mathematical source');
+    Check(Pos('\$5', MathSymbol.MarkdownDocumentation) > 0,
+      'the model should preserve escaped currency source');
+
+    MathMarkdown := RenderMarkdownUnit(MathProject, MathUnit);
+    MathHTML := RenderHTMLUnit(MathProject, MathUnit);
+    Check(Pos('$a^2 + b^2 = c^2$', string(MathMarkdown)) > 0,
+      'Markdown output should preserve inline mathematical source');
+    Check(Pos('\frac{1}{', string(MathMarkdown)) > 0,
+      'Markdown output should preserve invalid display mathematical source');
+    Check(CountOccurrences(string(MathHTML), 'data-math-inline>') = 2,
+      'HTML should mark valid and invalid inline expressions');
+    Check(CountOccurrences(string(MathHTML), 'data-math-display>') = 2,
+      'HTML should mark valid and invalid display expressions');
+    Check(Pos('Escaped currency remains prose: $5.', string(MathHTML)) > 0,
+      'HTML should keep escaped currency as prose');
+    Check(Pos('$$not a display fence$$', string(MathHTML)) > 0,
+      'HTML should retain non-fence double delimiters as prose');
+    WriteHTMLDocumentation(MathProject, 'build/math-test-docs/html');
+    Check(FileExists('build/math-test-docs/html/assets/math.js'),
+      'math fixture site should contain the initializer');
+    Check(FileExists('build/math-test-docs/html/assets/katex/fonts/' +
+      'KaTeX_Math-Italic.woff2'),
+      'math fixture site should be independently usable offline');
+  finally
+    MathProject.Free;
   end;
 
   DialectProject := BuildProject(

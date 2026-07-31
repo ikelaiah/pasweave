@@ -71,7 +71,7 @@ may later be recognized independently of the ordinary-comment settings.
 The `mathlib-fp` brace-mode audit found useful API prose and expected
 false-positive section labels.
 
-## Next: mathematical rendering
+### Offline mathematical rendering
 
 - Integrate KaTeX with the elements already marked by `data-math-inline` and
   `data-math-display`.
@@ -80,13 +80,21 @@ false-positive section labels.
 - Report invalid expressions without failing the documentation build.
 - Define a clear asset and license strategy before vendoring KaTeX.
 
-## Planned: diagrams
+KaTeX 0.18.1 is vendored with its MIT license and copied into each generated
+site with its fonts. PasWeave renders only explicitly marked math nodes, keeps
+invalid source readable, and avoids interpreting paired currency amounts as
+mathematics. Fixture and browser checks cover valid, invalid, inline, display,
+escaped-dollar, and offline-loading behavior.
 
-### Unit dependencies
+## Next: unit dependency diagrams
 
 - Generate Mermaid graphs from interface dependencies.
 - Link diagram nodes to unit pages.
 - Keep graph output deterministic.
+- Keep the generated site usable without a network connection.
+- Provide an accessible textual dependency list when diagrams are unavailable.
+
+## Planned: richer diagrams
 
 ### Type relationships
 

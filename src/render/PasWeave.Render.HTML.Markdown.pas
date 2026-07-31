@@ -41,6 +41,39 @@ begin
     (Pos('vbscript:', LowerTarget) <> 1);
 end;
 
+function IsEscaped(const AText: string; APosition: Integer): Boolean;
+var
+  BackslashCount: Integer;
+begin
+  BackslashCount := 0;
+  Dec(APosition);
+  while (APosition > 0) and (AText[APosition] = '\') do
+  begin
+    Inc(BackslashCount);
+    Dec(APosition);
+  end;
+  Result := Odd(BackslashCount);
+end;
+
+function FindInlineMathEnd(const AText: string; AStart: Integer): Integer;
+begin
+  { Conservative dollar boundaries keep paired currency amounts such as
+    $20 and $30 from consuming the prose between them. }
+  Result := AStart;
+  while Result <= Length(AText) do
+  begin
+    if (AText[Result] = '$') and not IsEscaped(AText, Result) and
+      (Result > 1) and (AText[Result - 1] > ' ') and
+      (AText[Result - 1] <> '$') and
+      ((Result = Length(AText)) or
+        ((AText[Result + 1] <> '$') and
+          not (AText[Result + 1] in ['0'..'9']))) then
+      Exit;
+    Inc(Result);
+  end;
+  Result := 0;
+end;
+
 function RenderInlineMarkdown(const AText: string): UTF8String;
 var
   I: Integer;
@@ -54,6 +87,14 @@ begin
   I := 1;
   while I <= Length(AText) do
   begin
+    if (AText[I] = '\') and (I < Length(AText)) and
+      (AText[I + 1] = '$') and not IsEscaped(AText, I) then
+    begin
+      Result := Result + '$';
+      Inc(I, 2);
+      Continue;
+    end;
+
     if AText[I] = '`' then
     begin
       CloseAt := PosEx('`', AText, I + 1);
@@ -114,9 +155,12 @@ begin
     end;
 
     if (AText[I] = '$') and
-      ((I = Length(AText)) or (AText[I + 1] <> '$')) then
+      not IsEscaped(AText, I) and
+      ((I = 1) or (AText[I - 1] <> '$')) and
+      (I < Length(AText)) and (AText[I + 1] > ' ') and
+      (AText[I + 1] <> '$') then
     begin
-      CloseAt := PosEx('$', AText, I + 1);
+      CloseAt := FindInlineMathEnd(AText, I + 1);
       if CloseAt > 0 then
       begin
         Result := Result + '<span class="math-inline" data-math-inline>' +

@@ -5,10 +5,18 @@ unit PasWeave.Render.HTML.Assets;
 
 interface
 
+const
+  KaTeXVersion = '0.18.1';
+
 function HTMLStylesheet: UTF8String;
 function HTMLApplicationScript: UTF8String;
+function HTMLMathScript: UTF8String;
+procedure WriteKaTeXAssets(const AAssetsDirectory: string);
 
 implementation
+
+uses
+  Classes, SysUtils, StrUtils;
 
 procedure AppendLine(var AOutput: UTF8String; const ALine: UTF8String = '');
 begin
@@ -163,6 +171,11 @@ begin
     'border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); ' +
     'font-family: "Cambria Math", serif; white-space: pre-wrap; text-align: center; }');
   AppendLine(Result, '.math-inline { font-family: "Cambria Math", serif; }');
+  AppendLine(Result, '.math-display[data-math-rendered="true"] { white-space: normal; }');
+  AppendLine(Result, '.math-inline[data-math-rendered="true"] { font-family: inherit; }');
+  AppendLine(Result, '.math-error { color: #b42318; text-decoration: underline dotted; ' +
+    'text-underline-offset: .18em; }');
+  AppendLine(Result, '.math-display.math-error { text-align: left; }');
   AppendLine(Result, '.directive-section { margin-top: 22px; }');
   AppendLine(Result, '.directive-section h4 { margin-bottom: 9px; }');
   AppendLine(Result, '.directive-section .table-shell { border-radius: 11px; }');
@@ -278,6 +291,209 @@ begin
   AppendLine(Result, '    if (!event.target.closest("[data-search-container]")) closeSearch();');
   AppendLine(Result, '  });');
   AppendLine(Result, '}());');
+end;
+
+function HTMLMathScript: UTF8String;
+begin
+  Result := '';
+  AppendLine(Result, '(function () {');
+  AppendLine(Result, '  "use strict";');
+  AppendLine(Result, '  function sourceText(element, displayMode) {');
+  AppendLine(Result, '    var source = element.textContent.trim();');
+  AppendLine(Result, '    var delimiter = displayMode ? "$$" : "$";');
+  AppendLine(Result, '    if (source.indexOf(delimiter) === 0 && ' +
+    'source.slice(-delimiter.length) === delimiter) {');
+  AppendLine(Result, '      source = source.slice(delimiter.length, ' +
+    '-delimiter.length);');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    return source.trim();');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function renderElement(element) {');
+  AppendLine(Result, '    var displayMode = element.hasAttribute("data-math-display");');
+  AppendLine(Result, '    var original = element.textContent;');
+  AppendLine(Result, '    var source = sourceText(element, displayMode);');
+  AppendLine(Result, '    try {');
+  AppendLine(Result, '      window.katex.render(source, element, {');
+  AppendLine(Result, '        displayMode: displayMode,');
+  AppendLine(Result, '        throwOnError: true,');
+  AppendLine(Result, '        strict: "warn",');
+  AppendLine(Result, '        trust: false');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '      element.setAttribute("data-math-rendered", "true");');
+  AppendLine(Result, '    } catch (error) {');
+  AppendLine(Result, '      var message = error && error.message ? error.message : ' +
+    '"unknown KaTeX error";');
+  AppendLine(Result, '      element.textContent = original;');
+  AppendLine(Result, '      element.classList.add("math-error");');
+  AppendLine(Result, '      element.setAttribute("data-math-error", "true");');
+  AppendLine(Result, '      element.setAttribute("title", "KaTeX: " + message);');
+  AppendLine(Result, '      console.warn("PasWeave could not render mathematics:", ' +
+    'source, error);');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  if (!window.katex || typeof window.katex.render !== "function") {');
+  AppendLine(Result, '    document.documentElement.classList.add("math-unavailable");');
+  AppendLine(Result, '    console.warn("PasWeave could not load the local KaTeX runtime.");');
+  AppendLine(Result, '    return;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  document.querySelectorAll(' +
+    '"[data-math-inline], [data-math-display]").forEach(renderElement);');
+  AppendLine(Result, '}());');
+end;
+
+function HasAllKaTeXFontAssets(const ADirectory: string): Boolean;
+var
+  CSS: TStringList;
+  CSSContent: string;
+  CloseAt: Integer;
+  FontCount: Integer;
+  FontFilename: string;
+  OpenAt: Integer;
+  Root: string;
+begin
+  Root := IncludeTrailingPathDelimiter(ADirectory);
+  CSS := TStringList.Create;
+  try
+    CSS.LoadFromFile(Root + 'katex.min.css');
+    CSSContent := CSS.Text;
+  finally
+    CSS.Free;
+  end;
+
+  FontCount := 0;
+  OpenAt := PosEx('url(fonts/', CSSContent, 1);
+  while OpenAt > 0 do
+  begin
+    Inc(OpenAt, Length('url(fonts/'));
+    CloseAt := PosEx(')', CSSContent, OpenAt);
+    if CloseAt = 0 then
+      Exit(False);
+    FontFilename := Copy(CSSContent, OpenAt, CloseAt - OpenAt);
+    if (FontFilename = '') or not FileExists(Root + 'fonts' + PathDelim +
+      FontFilename) then
+      Exit(False);
+    Inc(FontCount);
+    OpenAt := PosEx('url(fonts/', CSSContent, CloseAt + 1);
+  end;
+  Result := FontCount > 0;
+end;
+
+function IsKaTeXAssetsDirectory(const ADirectory: string): Boolean;
+var
+  Root: string;
+begin
+  Root := IncludeTrailingPathDelimiter(ADirectory);
+  Result := FileExists(Root + 'katex.min.js') and
+    FileExists(Root + 'katex.min.css') and FileExists(Root + 'LICENSE');
+  if Result then
+    Result := HasAllKaTeXFontAssets(ADirectory);
+end;
+
+function FindKaTeXAssetsDirectory: string;
+var
+  Candidates: TStringList;
+  ExecutableDirectory: string;
+  EnvironmentDirectory: string;
+  I: Integer;
+begin
+  Result := '';
+  Candidates := TStringList.Create;
+  try
+    EnvironmentDirectory := GetEnvironmentVariable('PASWEAVE_KATEX_ASSETS');
+    if EnvironmentDirectory <> '' then
+      Candidates.Add(ExpandFileName(EnvironmentDirectory));
+
+    ExecutableDirectory := ExtractFileDir(ExpandFileName(ParamStr(0)));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim +
+      'assets' + PathDelim + 'katex'));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim + '..' +
+      PathDelim + 'assets' + PathDelim + 'katex'));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim + '..' +
+      PathDelim + 'share' + PathDelim + 'pasweave' + PathDelim + 'katex'));
+    Candidates.Add(ExpandFileName(ExecutableDirectory + PathDelim + '..' +
+      PathDelim + '..' + PathDelim + 'assets' + PathDelim + 'katex'));
+    Candidates.Add(ExpandFileName(GetCurrentDir + PathDelim + 'assets' +
+      PathDelim + 'katex'));
+
+    for I := 0 to Candidates.Count - 1 do
+      if IsKaTeXAssetsDirectory(Candidates[I]) then
+        Exit(Candidates[I]);
+  finally
+    Candidates.Free;
+  end;
+  raise Exception.Create('cannot locate KaTeX ' + KaTeXVersion +
+    ' assets; set PASWEAVE_KATEX_ASSETS or install assets/katex beside PasWeave');
+end;
+
+procedure CopyFileBytes(const ASourceFilename, ADestinationFilename: string);
+var
+  SourceStream: TFileStream;
+  DestinationStream: TFileStream;
+begin
+  SourceStream := TFileStream.Create(ASourceFilename,
+    fmOpenRead or fmShareDenyWrite);
+  try
+    DestinationStream := TFileStream.Create(ADestinationFilename, fmCreate);
+    try
+      DestinationStream.CopyFrom(SourceStream, 0);
+    finally
+      DestinationStream.Free;
+    end;
+  finally
+    SourceStream.Free;
+  end;
+end;
+
+procedure CopyFontFiles(const ASourceDirectory, ADestinationDirectory: string);
+var
+  Search: TSearchRec;
+  Filenames: TStringList;
+  I: Integer;
+begin
+  if not ForceDirectories(ADestinationDirectory) then
+    raise EFCreateError.CreateFmt('cannot create KaTeX font directory: %s',
+      [ADestinationDirectory]);
+  Filenames := TStringList.Create;
+  try
+    Filenames.Sorted := True;
+    if FindFirst(IncludeTrailingPathDelimiter(ASourceDirectory) + '*',
+      faAnyFile, Search) = 0 then
+    try
+      repeat
+        if (Search.Attr and faDirectory) = 0 then
+          Filenames.Add(Search.Name);
+      until FindNext(Search) <> 0;
+    finally
+      FindClose(Search);
+    end;
+    for I := 0 to Filenames.Count - 1 do
+      CopyFileBytes(IncludeTrailingPathDelimiter(ASourceDirectory) +
+        Filenames[I], IncludeTrailingPathDelimiter(ADestinationDirectory) +
+        Filenames[I]);
+  finally
+    Filenames.Free;
+  end;
+end;
+
+procedure WriteKaTeXAssets(const AAssetsDirectory: string);
+var
+  SourceDirectory: string;
+  DestinationDirectory: string;
+begin
+  SourceDirectory := FindKaTeXAssetsDirectory;
+  DestinationDirectory := IncludeTrailingPathDelimiter(AAssetsDirectory) +
+    'katex';
+  if not ForceDirectories(DestinationDirectory) then
+    raise EFCreateError.CreateFmt('cannot create KaTeX asset directory: %s',
+      [DestinationDirectory]);
+  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'katex.min.js',
+    IncludeTrailingPathDelimiter(DestinationDirectory) + 'katex.min.js');
+  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'katex.min.css',
+    IncludeTrailingPathDelimiter(DestinationDirectory) + 'katex.min.css');
+  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'LICENSE',
+    IncludeTrailingPathDelimiter(DestinationDirectory) + 'LICENSE');
+  CopyFontFiles(IncludeTrailingPathDelimiter(SourceDirectory) + 'fonts',
+    IncludeTrailingPathDelimiter(DestinationDirectory) + 'fonts');
 end;
 
 end.

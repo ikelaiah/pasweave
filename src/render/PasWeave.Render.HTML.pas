@@ -433,7 +433,13 @@ begin
   AppendLine(Result, '<meta name="color-scheme" content="light dark">');
   AppendLine(Result, '<title>' + EscapeHTML(ATitle) + '</title>');
   AppendLine(Result, '<link rel="stylesheet" href="' + EscapeHTML(ARoot) +
+    'assets/katex/katex.min.css">');
+  AppendLine(Result, '<link rel="stylesheet" href="' + EscapeHTML(ARoot) +
     'assets/site.css">');
+  AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
+    'assets/katex/katex.min.js"></script>');
+  AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
+    'assets/math.js"></script>');
   AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
     'assets/search-index.js"></script>');
   AppendLine(Result, '<script defer src="' + EscapeHTML(ARoot) +
@@ -804,12 +810,15 @@ begin
     raise EFCreateError.CreateFmt('cannot create HTML asset directory: %s',
       [AssetsDirectory]);
 
+  WriteKaTeXAssets(AssetsDirectory);
   WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.html',
     RenderHTMLIndex(AProject));
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'site.css',
     HTMLStylesheet);
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'app.js',
     HTMLApplicationScript);
+  WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'math.js',
+    HTMLMathScript);
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) +
     'search-index.js', RenderHTMLSearchIndex(AProject));
 

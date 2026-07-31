@@ -39,8 +39,8 @@ pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-brace-docs 
 | Duplicate Markdown anchors | 0 |
 | HTML index pages | 1 |
 | HTML unit pages | 45 |
-| HTML asset files | 3 |
-| HTML site size | 2,888,844 bytes |
+| HTML asset files | 67 |
+| HTML site size | 4,272,450 bytes |
 | Offline search entries | 2,227 |
 | Broken HTML links or asset references | 0 |
 | Broken search-result targets | 0 |
@@ -70,22 +70,24 @@ Two independent runs produced the same JSON SHA-256:
 C76154919F7CD8D92E4F9D604AD87334BE983907845F8A2617C10859B32CE655
 ```
 
-The Markdown tree was also deterministic. Its manifest hash, calculated from
-each relative filename and file SHA-256, was:
+The Markdown tree was also deterministic. Its current manifest hash,
+calculated from each relative filename and file SHA-256, was:
 
 ```text
-3A4EEB5419332F50B70EB52D7C4E63652F10A843D61DB7BB4E216F2F78D21162
+22E8488E113F2B6F1A5A373FC288480D1A77F69ABABC0F0250C0146CFC872CCD
 ```
 
 The static HTML tree was deterministic under the same manifest-hash method:
 
 ```text
-BDB77DAD0F2DD25662130A2697067D0CF6C783FB5B72426B3E14364035C64036
+38BA30E4F8B5ED36628FC84F9A34B21DB44CC37B24AA2D368A4EB74FA99CDFB6
 ```
 
 The HTML audit covered all page links, stylesheet and script references,
-symbol fragments, and search-index URLs. Every generated file is UTF-8 without
-a byte-order mark and uses LF line endings. Both JavaScript assets pass
+symbol fragments, and search-index URLs. Every PasWeave-authored text file is
+UTF-8 without a byte-order mark and uses LF line endings; vendored KaTeX files
+are copied byte for byte. The site contains 60 local KaTeX font files, has no
+remote page dependency, and all generated and vendored JavaScript assets pass
 `node --check`.
 
 ## Default documentation coverage
@@ -136,8 +138,14 @@ Another 200 symbols retain project-specific tags such as `@description`,
 currently part of PasWeave's structured-directive contract. No compiler
 directive was captured as documentation.
 
-Two brace-mode runs produced 96 files each with no per-file hash differences.
-Their JSON SHA-256 was:
+Two brace-mode runs after the KaTeX integration produced 160 files each with
+no per-file hash differences. Their whole-output manifest hash was:
+
+```text
+230DE21081E6730C477CEDDE605DD96503C7F0ED5CE6B1F7BC04BD4DCD97A25A
+```
+
+Their JSON SHA-256 remained:
 
 ```text
 35FCD3424EA61662AAA0D918CD829825931847C8FCA9E127888EC87AC3E47548
@@ -146,6 +154,21 @@ Their JSON SHA-256 was:
 The brace JSON is 2,306,190 bytes. The default JSON hash remains the earlier
 `C76154919F7CD8D92E4F9D604AD87334BE983907845F8A2617C10859B32CE655`,
 confirming that the new feature does not alter default output for this source.
+
+### Mathematical-delimiter findings
+
+The first HTML pass marked 23 apparent inline expressions, all in
+`FinanceLib.Interest` examples. Inspection showed that every one was a false
+positive formed by two currency amounts, such as `$10,000 and returned
+$12,500`. KaTeX is permissive enough to render this prose as TeX rather than
+rejecting it, so error fallback alone could not protect the examples.
+
+PasWeave now applies conservative inline-dollar boundaries: a closing dollar
+followed immediately by a digit cannot end an expression, and delimiter-adjacent
+whitespace is rejected. The repeated 45-unit brace-mode run contains zero math
+markers, correctly reflecting that this revision has currency examples but no
+delimited formulas. Dedicated fixtures still cover valid and invalid inline
+and display mathematics, including a valid numeric-leading expression.
 
 ### False-positive findings
 

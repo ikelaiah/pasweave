@@ -25,7 +25,8 @@ The working parser-to-site pipeline includes:
 - dependency-free, offline client-side search across every renderable API
   symbol;
 - shared styling with light and dark colour schemes, safe Markdown-to-HTML
-  conversion, and mathematical delimiters preserved for later rendering;
+  conversion, and offline KaTeX rendering for marked inline and display
+  mathematics;
 - per-file error isolation, concise summaries, and meaningful exit codes.
 
 The Markdown renderer consumes only PasWeave's model. FPC parser classes remain
@@ -101,6 +102,12 @@ build/docs/
 │   ├── index.html
 │   ├── assets/
 │   │   ├── app.js
+│   │   ├── katex/
+│   │   │   ├── fonts/
+│   │   │   ├── katex.min.css
+│   │   │   ├── katex.min.js
+│   │   │   └── LICENSE
+│   │   ├── math.js
 │   │   ├── search-index.js
 │   │   └── site.css
 │   └── units/
@@ -195,12 +202,14 @@ from the generated API pages.
 ## Static HTML output
 
 Open `html/index.html` directly in a browser. The generated site requires no
-web server and no third-party runtime dependencies. It contains:
+web server or network connection; its KaTeX runtime, stylesheet, fonts, and
+license are copied into the output. It contains:
 
 - a responsive project overview and linked unit pages;
 - the same stable symbol anchors and visibility filtering as Markdown;
 - escaped Pascal declarations and safely rendered documentation prose;
-- preserved display and inline mathematical delimiters;
+- offline rendering of marked display and inline mathematics, with the
+  original delimited source left readable when an expression is invalid;
 - an offline search index covering names, qualified names, kinds, units, and
   documentation summaries;
 - keyboard search focus with `/` and dismissal with Escape;
@@ -212,8 +221,8 @@ for its offline-search, safety, and Markdown-subset contracts.
 
 ## ⚠️ Current limitations
 
-- no KaTeX rendering yet; mathematical source is preserved and marked in the
-  HTML for the next renderer phase;
+- mathematical rendering supports KaTeX's TeX subset rather than arbitrary
+  LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
 - no Mermaid diagrams or diagram pan and zoom;
@@ -232,9 +241,10 @@ for its offline-search, safety, and Markdown-subset contracts.
 
 The absence of a license is intentional in this bootstrap commit: choosing an
 open-source license is a maintainer decision, not a code-generation default.
+Bundled third-party components retain their own licenses; see
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## 🧭 Roadmap
 
-The next milestone is offline mathematical rendering with KaTeX. Mermaid
-diagrams follow. See [ROADMAP.md](ROADMAP.md) for acceptance criteria and the
-longer-term sequence.
+The next milestone is deterministic Mermaid unit-dependency diagrams. See
+[ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.
