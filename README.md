@@ -1,10 +1,12 @@
-# PasWeave
+# PasWeave 🧵
 
 PasWeave is an early-stage documentation generator designed primarily for
 Free Pascal projects. It is written in Free Pascal and builds its source model
 with FPC's reusable `fcl-passrc` parser libraries.
 
-This repository currently contains a working parser-to-site pipeline:
+## ✅ Current features
+
+The working parser-to-site pipeline includes:
 
 - a `pasweave build` command for one Pascal unit or a non-recursive directory
   of `.pas` and `.pp` units;
@@ -172,7 +174,7 @@ The HTML, stylesheet, JavaScript, and search index are deterministic UTF-8
 files with LF line endings. See [the HTML renderer notes](docs/html-renderer.md)
 for its offline-search, safety, and Markdown-subset contracts.
 
-## Current limitations
+## ⚠️ Current limitations
 
 - no KaTeX rendering yet; mathematical source is preserved and marked in the
   HTML for the next renderer phase;
@@ -193,7 +195,7 @@ for its offline-search, safety, and Markdown-subset contracts.
 The absence of a license is intentional in this bootstrap commit: choosing an
 open-source license is a maintainer decision, not a code-generation default.
 
-## Roadmap
+## 🧭 Roadmap
 
 The next renderer milestone is KaTeX integration for the mathematical source
 already marked in the HTML. Mermaid class and unit-dependency diagrams,
