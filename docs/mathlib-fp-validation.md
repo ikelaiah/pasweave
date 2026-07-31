@@ -40,7 +40,7 @@ pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-brace-docs 
 | HTML index pages | 1 |
 | HTML unit pages | 45 |
 | HTML asset files | 70 |
-| HTML site size | 6,879,567 bytes |
+| HTML site size | 6,892,668 bytes |
 | Offline search entries | 2,227 |
 | Unit diagram nodes | 45 |
 | Project-local diagram edges | 97 |
@@ -84,11 +84,11 @@ calculated from each relative filename and file SHA-256, was:
 22E8488E113F2B6F1A5A373FC288480D1A77F69ABABC0F0250C0146CFC872CCD
 ```
 
-The relationship-enabled build produced 163 files. Two independent runs had
+The interaction-enabled build produced 163 files. Two independent runs had
 zero per-file hash differences. Their HTML index SHA-256 was:
 
 ```text
-4B821D9761ABCBE9C206131A0DE02003E9D3A2ADF7526551370E165AB15626CD
+AC4AB8E4C1281F62513E947C3622E0B3E057B9A8859AA65288D09E884B11D2C2
 ```
 
 The HTML audit covered all page links, stylesheet and script references,
@@ -137,6 +137,22 @@ rendered solid, the accessible relationship title was present, and its text
 fallback collapsed only after successful rendering. Inspection found no
 relationship false positives: every edge corresponds to an explicit typed AST
 ancestor or interface entry.
+
+## Diagram interaction findings
+
+The same direct `file://` browser run exposed two labelled, keyboard-focusable
+diagram regions and two independent toolbars only after Mermaid succeeded.
+Together the SVGs retained 79 working links: 45 unit nodes and 34 source type
+nodes. The relationship diagram reached both its 50% and 300% bounds, disabled
+further zoom at each limit, accepted keyboard zoom and panning, moved 100
+pixels through an actual mouse drag, and reset to 100% at the origin without
+changing the dependency diagram's scale.
+
+The browser also reported the help text and live scale output for both
+diagrams. A separate run with JavaScript disabled found both toolbars and both
+diagram containers hidden, both linked text fallbacks expanded, and no SVGs.
+This verifies the interaction layer does not weaken the non-interactive
+fallback contract.
 
 ## Default documentation coverage
 
@@ -190,7 +206,7 @@ Two current brace-mode runs produced 163 files each with no per-file hash
 differences. The HTML index SHA-256 was:
 
 ```text
-6067960B853AD444D23C2EAF03867C3AA4F970846D82F666837220C774F31D4E
+C7FFAA3D3B0C023374F7C6E7C4F4A09802ADE8EFFCEDC045AE84229E3E1801E1
 ```
 
 Their JSON SHA-256 was:

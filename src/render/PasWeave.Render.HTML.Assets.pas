@@ -142,16 +142,49 @@ begin
   AppendLine(Result, '.dependency-list li { padding: 7px 11px; border: 1px solid ' +
     'var(--line); border-radius: 999px; background: var(--surface); }');
   AppendLine(Result, '.diagram-overview { position: relative; }');
-  AppendLine(Result, '.architecture-diagram { overflow-x: auto; padding: 20px; ' +
-    'border: 1px solid var(--line); border-radius: 16px; background: ' +
-    'var(--surface); }');
+  AppendLine(Result, '.diagram-toolbar { display: flex; flex-wrap: wrap; ' +
+    'align-items: center; gap: 8px 12px; margin: 0 0 12px; }');
+  AppendLine(Result, '.diagram-toolbar[hidden], .diagram-help[hidden] { ' +
+    'display: none; }');
+  AppendLine(Result, '.diagram-control-group { display: inline-flex; ' +
+    'align-items: center; gap: 6px; }');
+  AppendLine(Result, '.diagram-tool-label { color: var(--muted); ' +
+    'font-size: .78rem; font-weight: 750; letter-spacing: .04em; ' +
+    'text-transform: uppercase; }');
+  AppendLine(Result, '.diagram-toolbar button { min-height: 36px; padding: ' +
+    '6px 10px; border: 1px solid var(--line); border-radius: 9px; ' +
+    'background: var(--surface); color: var(--text); font: inherit; ' +
+    'font-size: .82rem; font-weight: 700; cursor: pointer; }');
+  AppendLine(Result, '.diagram-toolbar button:hover:not(:disabled) { ' +
+    'border-color: var(--accent); color: var(--accent); }');
+  AppendLine(Result, '.diagram-toolbar button:focus-visible, ' +
+    '.architecture-diagram:focus-visible { outline: 3px solid ' +
+    'color-mix(in srgb, var(--accent) 45%, transparent); ' +
+    'outline-offset: 2px; }');
+  AppendLine(Result, '.diagram-toolbar button:disabled { opacity: .42; ' +
+    'cursor: not-allowed; }');
+  AppendLine(Result, '.diagram-icon-button { width: 36px; padding-inline: ' +
+    '0 !important; }');
+  AppendLine(Result, '.diagram-zoom-status { min-width: 4.25rem; color: ' +
+    'var(--muted); font-size: .82rem; font-variant-numeric: tabular-nums; ' +
+    'text-align: center; }');
+  AppendLine(Result, '.diagram-help { margin: 0 0 12px; color: ' +
+    'var(--muted); font-size: .82rem; }');
+  AppendLine(Result, '.architecture-diagram { overflow: auto; max-height: ' +
+    'min(72vh, 720px); padding: 20px; border: 1px solid var(--line); ' +
+    'border-radius: 16px; background: var(--surface); ' +
+    'overscroll-behavior: contain; }');
+  AppendLine(Result, '.architecture-diagram[data-diagram-interactive] { ' +
+    'cursor: grab; }');
+  AppendLine(Result, '.architecture-diagram[data-diagram-dragging] { ' +
+    'cursor: grabbing; user-select: none; }');
   AppendLine(Result, '.architecture-diagram[data-diagram-rendering] { position: ' +
     'absolute; width: 100%; visibility: hidden; pointer-events: none; }');
   AppendLine(Result, '.architecture-diagram pre.mermaid { overflow: visible; ' +
     'margin: 0; padding: 0; background: transparent; color: inherit; ' +
     'white-space: pre-wrap; }');
   AppendLine(Result, '.architecture-diagram svg { display: block; max-width: 100%; ' +
-    'height: auto; margin: 0 auto; }');
+    'height: auto; margin: 0 auto; transform-origin: top left; }');
   AppendLine(Result, '.diagram-fallback { margin-top: 14px; padding: 0 16px; ' +
     'border: 1px solid var(--line); border-radius: 12px; background: ' +
     'var(--surface); }');
@@ -218,6 +251,9 @@ begin
   AppendLine(Result, '  .section-heading { align-items: start; flex-direction: column; }');
   AppendLine(Result, '  .symbol { padding: 20px; }');
   AppendLine(Result, '  .symbol-meta { display: grid; }');
+  AppendLine(Result, '  .diagram-toolbar { align-items: flex-start; }');
+  AppendLine(Result, '  .diagram-control-group { flex-wrap: wrap; }');
+  AppendLine(Result, '  .architecture-diagram { max-height: 65vh; padding: 12px; }');
   AppendLine(Result, '}');
   AppendLine(Result, '@media (prefers-color-scheme: dark) {');
   AppendLine(Result, '  :root { --bg: #10131c; --surface: #171c28; ' +
@@ -368,17 +404,206 @@ begin
   Result := '';
   AppendLine(Result, '(function () {');
   AppendLine(Result, '  "use strict";');
+  AppendLine(Result, '  var MIN_SCALE = 0.5;');
+  AppendLine(Result, '  var MAX_SCALE = 3;');
+  AppendLine(Result, '  var SCALE_STEP = 0.25;');
+  AppendLine(Result, '  var PAN_STEP = 96;');
   AppendLine(Result, '  var diagrams = Array.prototype.slice.call(' +
     'document.querySelectorAll("[data-mermaid]"));');
   AppendLine(Result, '  if (!diagrams.length) return;');
+  AppendLine(Result, '  var reducedMotion = window.matchMedia && ' +
+    'window.matchMedia("(prefers-reduced-motion: reduce)").matches;');
+  AppendLine(Result, '  function interactionElements(diagram) {');
+  AppendLine(Result, '    var section = diagram.closest(' +
+    '"[data-diagram-section]");');
+  AppendLine(Result, '    return {');
+  AppendLine(Result, '      section: section,');
+  AppendLine(Result, '      toolbar: section && section.querySelector(' +
+    '"[data-diagram-toolbar]"),');
+  AppendLine(Result, '      help: section && section.querySelector(' +
+    '"[data-diagram-help]")');
+  AppendLine(Result, '    };');
+  AppendLine(Result, '  }');
   AppendLine(Result, '  function hideDiagram(diagram) {');
   AppendLine(Result, '    var container = diagram.closest(' +
     '"[data-diagram-container]");');
+  AppendLine(Result, '    var elements = interactionElements(diagram);');
   AppendLine(Result, '    if (container) {');
   AppendLine(Result, '      container.hidden = true;');
   AppendLine(Result, '      container.removeAttribute("data-diagram-rendering");');
   AppendLine(Result, '      container.setAttribute("aria-hidden", "true");');
   AppendLine(Result, '    }');
+  AppendLine(Result, '    if (elements.toolbar) elements.toolbar.hidden = true;');
+  AppendLine(Result, '    if (elements.help) elements.help.hidden = true;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function setDisabled(control, disabled) {');
+  AppendLine(Result, '    if (control) control.disabled = disabled;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function setupInteraction(diagram, container, section) {');
+  AppendLine(Result, '    var svg = diagram.querySelector("svg");');
+  AppendLine(Result, '    var toolbar = section && section.querySelector(' +
+    '"[data-diagram-toolbar]");');
+  AppendLine(Result, '    var help = section && section.querySelector(' +
+    '"[data-diagram-help]");');
+  AppendLine(Result, '    if (!svg || !container || !toolbar) return;');
+  AppendLine(Result, '    var zoomOut = toolbar.querySelector(' +
+    '"[data-diagram-zoom-out]");');
+  AppendLine(Result, '    var zoomIn = toolbar.querySelector(' +
+    '"[data-diagram-zoom-in]");');
+  AppendLine(Result, '    var scaleOutput = toolbar.querySelector(' +
+    '"[data-diagram-scale]");');
+  AppendLine(Result, '    var panLeft = toolbar.querySelector(' +
+    '"[data-diagram-pan-left]");');
+  AppendLine(Result, '    var panUp = toolbar.querySelector(' +
+    '"[data-diagram-pan-up]");');
+  AppendLine(Result, '    var panDown = toolbar.querySelector(' +
+    '"[data-diagram-pan-down]");');
+  AppendLine(Result, '    var panRight = toolbar.querySelector(' +
+    '"[data-diagram-pan-right]");');
+  AppendLine(Result, '    var reset = toolbar.querySelector(' +
+    '"[data-diagram-reset]");');
+  AppendLine(Result, '    var panControls = [panLeft, panUp, panDown, panRight];');
+  AppendLine(Result, '    var scale = 1;');
+  AppendLine(Result, '    var drag = null;');
+  AppendLine(Result, '    var suppressClick = false;');
+  AppendLine(Result, '    function updateControls() {');
+  AppendLine(Result, '      var maxLeft = Math.max(0, container.scrollWidth - ' +
+    'container.clientWidth);');
+  AppendLine(Result, '      var maxTop = Math.max(0, container.scrollHeight - ' +
+    'container.clientHeight);');
+  AppendLine(Result, '      var left = Math.max(0, Math.min(maxLeft, ' +
+    'container.scrollLeft));');
+  AppendLine(Result, '      var top = Math.max(0, Math.min(maxTop, ' +
+    'container.scrollTop));');
+  AppendLine(Result, '      if (scaleOutput) scaleOutput.textContent = ' +
+    'Math.round(scale * 100) + "%";');
+  AppendLine(Result, '      container.setAttribute("data-diagram-scale", ' +
+    'String(Math.round(scale * 100)));');
+  AppendLine(Result, '      container.setAttribute("data-diagram-pan-x", ' +
+    'String(Math.round(left)));');
+  AppendLine(Result, '      container.setAttribute("data-diagram-pan-y", ' +
+    'String(Math.round(top)));');
+  AppendLine(Result, '      setDisabled(zoomOut, scale <= MIN_SCALE);');
+  AppendLine(Result, '      setDisabled(zoomIn, scale >= MAX_SCALE);');
+  AppendLine(Result, '      setDisabled(panLeft, left <= 1);');
+  AppendLine(Result, '      setDisabled(panUp, top <= 1);');
+  AppendLine(Result, '      setDisabled(panRight, left >= maxLeft - 1);');
+  AppendLine(Result, '      setDisabled(panDown, top >= maxTop - 1);');
+  AppendLine(Result, '      setDisabled(reset, scale === 1 && left <= 1 && top <= 1);');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    function applyScale(nextScale) {');
+  AppendLine(Result, '      nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, ' +
+    'Math.round(nextScale * 100) / 100));');
+  AppendLine(Result, '      if (nextScale === scale) return;');
+  AppendLine(Result, '      var oldWidth = Math.max(1, container.scrollWidth);');
+  AppendLine(Result, '      var oldHeight = Math.max(1, container.scrollHeight);');
+  AppendLine(Result, '      var centerX = (container.scrollLeft + ' +
+    'container.clientWidth / 2) / oldWidth;');
+  AppendLine(Result, '      var centerY = (container.scrollTop + ' +
+    'container.clientHeight / 2) / oldHeight;');
+  AppendLine(Result, '      scale = nextScale;');
+  AppendLine(Result, '      svg.style.maxWidth = "none";');
+  AppendLine(Result, '      svg.style.width = Math.round(scale * 100) + "%";');
+  AppendLine(Result, '      container.scrollLeft = Math.max(0, centerX * ' +
+    'container.scrollWidth - container.clientWidth / 2);');
+  AppendLine(Result, '      container.scrollTop = Math.max(0, centerY * ' +
+    'container.scrollHeight - container.clientHeight / 2);');
+  AppendLine(Result, '      updateControls();');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    function pan(left, top) {');
+  AppendLine(Result, '      container.scrollBy({');
+  AppendLine(Result, '        left: left, top: top,');
+  AppendLine(Result, '        behavior: reducedMotion ? "auto" : "smooth"');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    function resetView() {');
+  AppendLine(Result, '      scale = 1;');
+  AppendLine(Result, '      svg.style.maxWidth = "none";');
+  AppendLine(Result, '      svg.style.width = "100%";');
+  AppendLine(Result, '      container.scrollLeft = 0;');
+  AppendLine(Result, '      container.scrollTop = 0;');
+  AppendLine(Result, '      updateControls();');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    if (zoomOut) zoomOut.addEventListener("click", ' +
+    'function () { applyScale(scale - SCALE_STEP); });');
+  AppendLine(Result, '    if (zoomIn) zoomIn.addEventListener("click", ' +
+    'function () { applyScale(scale + SCALE_STEP); });');
+  AppendLine(Result, '    if (panLeft) panLeft.addEventListener("click", ' +
+    'function () { pan(-PAN_STEP, 0); });');
+  AppendLine(Result, '    if (panUp) panUp.addEventListener("click", ' +
+    'function () { pan(0, -PAN_STEP); });');
+  AppendLine(Result, '    if (panDown) panDown.addEventListener("click", ' +
+    'function () { pan(0, PAN_STEP); });');
+  AppendLine(Result, '    if (panRight) panRight.addEventListener("click", ' +
+    'function () { pan(PAN_STEP, 0); });');
+  AppendLine(Result, '    if (reset) reset.addEventListener("click", resetView);');
+  AppendLine(Result, '    container.addEventListener("keydown", function (event) {');
+  AppendLine(Result, '      if (event.target !== container) return;');
+  AppendLine(Result, '      if (event.altKey || event.ctrlKey || event.metaKey) return;');
+  AppendLine(Result, '      var handled = true;');
+  AppendLine(Result, '      if (event.key === "ArrowLeft") pan(-PAN_STEP, 0);');
+  AppendLine(Result, '      else if (event.key === "ArrowRight") pan(PAN_STEP, 0);');
+  AppendLine(Result, '      else if (event.key === "ArrowUp") pan(0, -PAN_STEP);');
+  AppendLine(Result, '      else if (event.key === "ArrowDown") pan(0, PAN_STEP);');
+  AppendLine(Result, '      else if (event.key === "+" || event.key === "=") ' +
+    'applyScale(scale + SCALE_STEP);');
+  AppendLine(Result, '      else if (event.key === "-" || event.key === "_") ' +
+    'applyScale(scale - SCALE_STEP);');
+  AppendLine(Result, '      else if (event.key === "0") resetView();');
+  AppendLine(Result, '      else handled = false;');
+  AppendLine(Result, '      if (handled) event.preventDefault();');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    container.addEventListener("scroll", updateControls, ' +
+    '{ passive: true });');
+  AppendLine(Result, '    container.addEventListener("pointerdown", function (event) {');
+  AppendLine(Result, '      if (event.button !== 0 || event.pointerType === "touch" || ' +
+    'event.target.closest("a, button")) return;');
+  AppendLine(Result, '      drag = { id: event.pointerId, x: event.clientX, ' +
+    'y: event.clientY, left: container.scrollLeft, ' +
+    'top: container.scrollTop };');
+  AppendLine(Result, '      suppressClick = false;');
+  AppendLine(Result, '      container.setPointerCapture(event.pointerId);');
+  AppendLine(Result, '      container.setAttribute("data-diagram-dragging", "");');
+  AppendLine(Result, '      event.preventDefault();');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    container.addEventListener("pointermove", function (event) {');
+  AppendLine(Result, '      if (!drag || drag.id !== event.pointerId) return;');
+  AppendLine(Result, '      var deltaX = event.clientX - drag.x;');
+  AppendLine(Result, '      var deltaY = event.clientY - drag.y;');
+  AppendLine(Result, '      if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) ' +
+    'suppressClick = true;');
+  AppendLine(Result, '      container.scrollLeft = drag.left - deltaX;');
+  AppendLine(Result, '      container.scrollTop = drag.top - deltaY;');
+  AppendLine(Result, '      event.preventDefault();');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    function endDrag(event) {');
+  AppendLine(Result, '      if (!drag || drag.id !== event.pointerId) return;');
+  AppendLine(Result, '      drag = null;');
+  AppendLine(Result, '      container.removeAttribute("data-diagram-dragging");');
+  AppendLine(Result, '      if (container.hasPointerCapture(event.pointerId)) ' +
+    'container.releasePointerCapture(event.pointerId);');
+  AppendLine(Result, '      window.setTimeout(function () { suppressClick = false; }, 0);');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    container.addEventListener("pointerup", endDrag);');
+  AppendLine(Result, '    container.addEventListener("pointercancel", endDrag);');
+  AppendLine(Result, '    container.addEventListener("click", function (event) {');
+  AppendLine(Result, '      if (!suppressClick) return;');
+  AppendLine(Result, '      event.preventDefault();');
+  AppendLine(Result, '      event.stopPropagation();');
+  AppendLine(Result, '    }, true);');
+  AppendLine(Result, '    svg.style.maxWidth = "none";');
+  AppendLine(Result, '    svg.style.width = "100%";');
+  AppendLine(Result, '    container.setAttribute("data-diagram-interactive", "");');
+  AppendLine(Result, '    container.setAttribute("aria-keyshortcuts", ' +
+    '"ArrowLeft ArrowRight ArrowUp ArrowDown + - 0");');
+  AppendLine(Result, '    panControls.forEach(function (control) {');
+  AppendLine(Result, '      if (control) control.removeAttribute("aria-hidden");');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    toolbar.hidden = false;');
+  AppendLine(Result, '    if (help) help.hidden = false;');
+  AppendLine(Result, '    if (window.ResizeObserver) ' +
+    'new window.ResizeObserver(updateControls).observe(container);');
+  AppendLine(Result, '    updateControls();');
   AppendLine(Result, '  }');
   AppendLine(Result, '  function unavailable(error) {');
   AppendLine(Result, '    document.documentElement.classList.add(' +
@@ -429,6 +654,7 @@ begin
   AppendLine(Result, '          container.removeAttribute("data-diagram-rendering");');
   AppendLine(Result, '          container.removeAttribute("aria-hidden");');
   AppendLine(Result, '        }');
+  AppendLine(Result, '        setupInteraction(diagram, container, section);');
   AppendLine(Result, '        if (fallback) fallback.removeAttribute("open");');
   AppendLine(Result, '      });');
   AppendLine(Result, '    }).catch(unavailable);');

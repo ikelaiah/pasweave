@@ -115,16 +115,36 @@ The `mathlib-fp` audit found 34 explicit relationships. Seven resolve inside
 the documented project; 27 standard-library ancestors remain honest
 unresolved nodes because their declaring units are outside the source set.
 
-## Next: diagram interaction
+### Diagram interaction
 
-### Interaction
+- Provide independent zoom, directional pan, and reset controls for every
+  successfully rendered architecture diagram.
+- Support keyboard panning, zooming, and reset while the diagram region has
+  focus, plus mouse and pen dragging without intercepting linked nodes.
+- Bound zoom to 50–300%, report the current scale to assistive technology,
+  and respect reduced-motion preferences.
+- Keep controls hidden when Mermaid is unavailable and retain the initially
+  expanded linked text fallback when JavaScript is disabled or rendering
+  fails.
+- Exercise the controls, linked SVGs, independent diagram state, and fallback
+  behavior in a real browser against fixtures and `mathlib-fp`.
 
-- Add accessible zooming, panning, and reset controls.
-- Provide a readable non-interactive fallback.
+The 45-unit `mathlib-fp` site retained all 79 SVG links across its two
+diagrams. Browser checks reached both zoom bounds, panned, dragged, reset, and
+confirmed that interacting with one diagram leaves the other unchanged.
+
+## Next: project-aware source discovery
+
+- Add deterministic recursive discovery for Pascal source trees.
+- Define explicit include/exclude behavior so generated, vendored, and test
+  sources are not pulled into documentation accidentally.
+- Read Lazarus project and package inputs only after their compiler paths,
+  defines, and target settings can be represented honestly.
+- Preserve the current single-file and non-recursive directory behavior for
+  existing commands.
 
 ## Later opportunities
 
-- Recursive source discovery and project/package file readers.
 - Configurable compiler search paths, defines, targets, and include paths.
 - Source-code links and repository URL templates.
 - Search filters for unit, kind, visibility, and documentation coverage.

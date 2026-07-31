@@ -91,6 +91,31 @@ linked HTML list. The shared initializer collapses each fallback only after
 that particular Mermaid source has produced an SVG; one failed diagram cannot
 hide another diagram's fallback.
 
+## Diagram interaction and fallback
+
+Each successfully rendered diagram receives its own toolbar and view state.
+Zoom changes in 25% steps between 50% and 300%; the live percentage is exposed
+through an `output` element. Directional buttons pan by 96 pixels, and reset
+returns the diagram to 100% at its top-left origin. Controls disable at their
+current limits.
+
+The rendered diagram is a labelled, focusable region. With that region
+focused, the arrow keys pan, `+` and `-` zoom, and `0` resets. Mouse and pen
+users can drag empty diagram space; dragging starts neither from link targets
+nor controls, so Mermaid node links retain their normal behavior. Touch input
+keeps the browser's native scrolling behavior. Each diagram remains
+independent when both architecture views appear on the index.
+
+Both axes can scroll within a height-bounded diagram viewport. Smooth button
+and keyboard panning is disabled when the browser reports
+`prefers-reduced-motion: reduce`.
+
+The toolbar, help text, and focusable diagram remain hidden until Mermaid has
+produced an SVG. The ordinary linked HTML fallback starts expanded in source
+markup. It is collapsed only for a successfully rendered diagram, so disabled
+JavaScript, a missing runtime, or an individual render failure leaves a
+readable non-interactive view without exposing inert controls.
+
 ## Search
 
 The offline search index contains one entry per renderable API symbol. Entries

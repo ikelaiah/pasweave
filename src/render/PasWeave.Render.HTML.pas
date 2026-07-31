@@ -803,6 +803,55 @@ begin
   AppendLine(AOutput, '</details>');
 end;
 
+procedure RenderDiagramControls(var AOutput: UTF8String;
+  const ADiagramID, ALabel: string);
+var
+  HelpID: string;
+begin
+  HelpID := ADiagramID + '-help';
+  AppendLine(AOutput, '<div class="diagram-toolbar" data-diagram-toolbar ' +
+    'role="toolbar" aria-label="' + EscapeHTML(ALabel) +
+    ' controls" hidden>');
+  AppendLine(AOutput, '<div class="diagram-control-group" role="group" ' +
+    'aria-label="Zoom controls"><span class="diagram-tool-label" ' +
+    'aria-hidden="true">Zoom</span>');
+  AppendLine(AOutput, '<button type="button" data-diagram-zoom-out ' +
+    'aria-controls="' + EscapeHTML(ADiagramID) + '">Zoom out</button>');
+  AppendLine(AOutput, '<output class="diagram-zoom-status" ' +
+    'data-diagram-scale aria-label="Current zoom" aria-live="polite" ' +
+    'aria-atomic="true">100%</output>');
+  AppendLine(AOutput, '<button type="button" data-diagram-zoom-in ' +
+    'aria-controls="' + EscapeHTML(ADiagramID) + '">Zoom in</button>');
+  AppendLine(AOutput, '</div>');
+  AppendLine(AOutput, '<div class="diagram-control-group" role="group" ' +
+    'aria-label="Pan controls"><span class="diagram-tool-label" ' +
+    'aria-hidden="true">Pan</span>');
+  AppendLine(AOutput, '<button type="button" class="diagram-icon-button" ' +
+    'data-diagram-pan-left aria-label="Pan left" title="Pan left" ' +
+    'aria-controls="' + EscapeHTML(ADiagramID) +
+    '" disabled aria-hidden="true">&larr;</button>');
+  AppendLine(AOutput, '<button type="button" class="diagram-icon-button" ' +
+    'data-diagram-pan-up aria-label="Pan up" title="Pan up" ' +
+    'aria-controls="' + EscapeHTML(ADiagramID) +
+    '" disabled aria-hidden="true">&uarr;</button>');
+  AppendLine(AOutput, '<button type="button" class="diagram-icon-button" ' +
+    'data-diagram-pan-down aria-label="Pan down" title="Pan down" ' +
+    'aria-controls="' + EscapeHTML(ADiagramID) +
+    '" disabled aria-hidden="true">&darr;</button>');
+  AppendLine(AOutput, '<button type="button" class="diagram-icon-button" ' +
+    'data-diagram-pan-right aria-label="Pan right" title="Pan right" ' +
+    'aria-controls="' + EscapeHTML(ADiagramID) +
+    '" disabled aria-hidden="true">&rarr;</button>');
+  AppendLine(AOutput, '</div>');
+  AppendLine(AOutput, '<button type="button" data-diagram-reset ' +
+    'aria-controls="' + EscapeHTML(ADiagramID) + '" disabled>Reset</button>');
+  AppendLine(AOutput, '</div>');
+  AppendLine(AOutput, '<p id="' + EscapeHTML(HelpID) +
+    '" class="diagram-help" data-diagram-help hidden>Use the controls or ' +
+    'focus the diagram: arrow keys pan, plus and minus zoom, and 0 resets. ' +
+    'You can also drag with a mouse or use the scrollbars.</p>');
+end;
+
 function RelationshipSymbolLink(AUnit: TDocUnit;
   ASymbol: TDocSymbol): UTF8String;
 begin
@@ -887,9 +936,14 @@ begin
   AppendLine(AOutput, '<div class="section-heading"><div><p class="eyebrow">' +
     'Architecture</p><h2 id="unit-dependencies">Unit dependencies</h2></div>' +
     '<p>Arrows point from a unit to the project unit it imports.</p></div>');
+  RenderDiagramControls(AOutput, 'unit-dependency-diagram',
+    'Unit dependency diagram');
   AppendLine(AOutput, '<div class="architecture-diagram ' +
     'dependency-diagram" data-diagram-container ' +
-    'data-dependency-diagram aria-hidden="true" hidden>');
+    'data-dependency-diagram id="unit-dependency-diagram" role="region" ' +
+    'aria-label="Interactive unit dependency diagram" ' +
+    'aria-describedby="unit-dependency-diagram-help" tabindex="0" ' +
+    'aria-hidden="true" hidden>');
   AppendLine(AOutput, '<pre class="mermaid" data-mermaid>');
   AOutput := AOutput + EscapeHTML(RenderMermaidDependencyGraph(AProject));
   AppendLine(AOutput, '</pre>');
@@ -913,9 +967,14 @@ begin
     'class="eyebrow">Architecture</p><h2 id="type-relationships">' +
     'Class and interface relationships</h2></div><p>Solid arrows show ' +
     'inheritance; dotted arrows show interface implementation.</p></div>');
+  RenderDiagramControls(AOutput, 'type-relationship-diagram',
+    'Class and interface relationship diagram');
   AppendLine(AOutput, '<div class="architecture-diagram ' +
-    'relationship-diagram" data-diagram-container aria-hidden="true" ' +
-    'hidden>');
+    'relationship-diagram" data-diagram-container ' +
+    'id="type-relationship-diagram" role="region" ' +
+    'aria-label="Interactive class and interface relationship diagram" ' +
+    'aria-describedby="type-relationship-diagram-help" tabindex="0" ' +
+    'aria-hidden="true" hidden>');
   AppendLine(AOutput, '<pre class="mermaid" data-mermaid>');
   AOutput := AOutput + EscapeHTML(Graph);
   AppendLine(AOutput, '</pre>');

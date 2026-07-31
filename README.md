@@ -29,7 +29,7 @@ The working parser-to-site pipeline includes:
   mathematics;
 - deterministic, linked Mermaid diagrams of project-local interface
   dependencies and semantically resolved class/interface relationships, each
-  with an accessible text fallback;
+  with independent accessible zoom, pan, reset, and linked text fallback;
 - per-file error isolation, concise summaries, and meaningful exit codes.
 
 The Markdown renderer consumes only PasWeave's model. FPC parser classes remain
@@ -227,6 +227,9 @@ fonts, and licenses are copied into the output. It contains:
   backed by an initially expanded textual list when diagrams are unavailable;
 - a linked class/interface relationship graph generated from resolved model
   data, with generic and unresolved targets preserved in its text fallback;
+- per-diagram controls for bounded zoom, directional pan, and reset, with
+  keyboard shortcuts, mouse dragging, reduced-motion support, and independent
+  view state;
 - an offline search index covering names, qualified names, kinds, units, and
   documentation summaries;
 - keyboard search focus with `/` and dismissal with Escape;
@@ -242,7 +245,6 @@ for its offline-search, safety, and Markdown-subset contracts.
   LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
-- architecture diagrams do not yet support pan, zoom, or reset controls;
 - source directory discovery is non-recursive;
 - no project/package file reader or configurable compiler search paths;
 - type relationship resolution is limited to the current unit and its
@@ -265,5 +267,5 @@ Bundled third-party components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The next milestone is accessible diagram zoom, pan, and reset controls. See
+The next milestone is deterministic, project-aware source discovery. See
 [ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.

@@ -349,6 +349,23 @@ begin
     'diagram initialization should request deterministic SVG identifiers');
   Check(Pos('suppressErrors: true', string(HTMLDiagramScript)) > 0,
     'diagram initialization should retain the text fallback on errors');
+  Check((Pos('var MIN_SCALE = 0.5;', string(HTMLDiagramScript)) > 0) and
+    (Pos('var MAX_SCALE = 3;', string(HTMLDiagramScript)) > 0),
+    'diagram zoom should have explicit accessible bounds');
+  Check(Pos('data-diagram-scale', string(HTMLDiagramScript)) > 0,
+    'diagram controls should expose their current view state');
+  Check(Pos('event.key === "ArrowLeft"',
+    string(HTMLDiagramScript)) > 0,
+    'diagram interaction should include keyboard panning');
+  Check(Pos('container.addEventListener("pointerdown"',
+    string(HTMLDiagramScript)) > 0,
+    'diagram interaction should include mouse and pen dragging');
+  Check(Pos('prefers-reduced-motion: reduce',
+    string(HTMLDiagramScript)) > 0,
+    'diagram interaction should respect reduced-motion preferences');
+  Check(Pos('overscroll-behavior: contain; scroll-behavior: smooth',
+    string(HTMLStylesheet)) = 0,
+    'pointer dragging should not inherit delayed smooth scrolling');
 
   DependencyProject := BuildProject('tests/fixtures/dependencies',
     'DependencyFixture', AttemptedCount);
@@ -389,6 +406,21 @@ begin
       'repeated Mermaid graph rendering should be deterministic');
 
     DependencyIndexHTML := RenderHTMLIndex(DependencyProject);
+    Check(Pos('<div class="diagram-toolbar" data-diagram-toolbar ' +
+      'role="toolbar" aria-label="Unit dependency diagram controls" ' +
+      'hidden>', string(DependencyIndexHTML)) > 0,
+      'dependency diagrams should provide controls hidden until rendering');
+    Check(Pos('id="unit-dependency-diagram" role="region" ' +
+      'aria-label="Interactive unit dependency diagram"',
+      string(DependencyIndexHTML)) > 0,
+      'dependency diagrams should expose a labelled interactive region');
+    Check(Pos('aria-describedby="unit-dependency-diagram-help" ' +
+      'tabindex="0" aria-hidden="true" hidden>',
+      string(DependencyIndexHTML)) > 0,
+      'dependency diagrams should be keyboard focusable after rendering');
+    Check(Pos('data-diagram-zoom-in aria-controls=' +
+      '"unit-dependency-diagram"', string(DependencyIndexHTML)) > 0,
+      'dependency zoom controls should identify their diagram');
     Check(Pos('unit0001 --&gt; unit0002',
       string(DependencyIndexHTML)) > 0,
       'HTML should safely embed Mermaid graph source');
@@ -516,6 +548,17 @@ begin
     Check(Pos('<details class="diagram-fallback relationship-fallback" ' +
       'data-diagram-fallback open>', string(RelationshipIndexHTML)) > 0,
       'relationship fallback should start expanded without JavaScript');
+    Check(Pos('aria-label="Class and interface relationship diagram ' +
+      'controls" hidden>', string(RelationshipIndexHTML)) > 0,
+      'relationship diagrams should have an independent toolbar');
+    Check(Pos('id="type-relationship-diagram" role="region" ' +
+      'aria-label="Interactive class and interface relationship diagram"',
+      string(RelationshipIndexHTML)) > 0,
+      'relationship diagrams should expose a labelled interactive region');
+    Check(Pos('id="type-relationship-diagram-help" ' +
+      'class="diagram-help" data-diagram-help hidden>',
+      string(RelationshipIndexHTML)) > 0,
+      'relationship diagrams should describe keyboard and pointer controls');
     Check(Pos('as <code>specialize TGenericBase&lt;T&gt;</code>',
       string(RelationshipIndexHTML)) > 0,
       'text fallback should preserve a generic relationship display name');
