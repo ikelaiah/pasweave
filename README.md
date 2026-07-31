@@ -102,6 +102,17 @@ build/tests/test_pasweave
 build/bin/pasweave build tests/fixtures --output build/docs
 ```
 
+For a small project whose public API is deliberately documented with
+PasWeave `///` comments, generate the
+[documented API example](examples/documented-api/README.md):
+
+```text
+build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example"
+```
+
+Its HTML index reports `10 of 10 API symbols documented`, providing an
+immediate example of a fully populated `DOCUMENTED` column.
+
 The command writes:
 
 ```text

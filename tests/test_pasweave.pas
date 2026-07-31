@@ -115,6 +115,8 @@ var
   TypeRelationship: TDocTypeRelationship;
   RelationshipGraph: UTF8String;
   RelationshipIndexHTML: UTF8String;
+  ExampleProject: TDocProject;
+  ExampleIndexHTML: UTF8String;
 begin
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -739,6 +741,22 @@ begin
       'mixed comment JSON should be deterministic');
   finally
     DialectProject.Free;
+  end;
+
+  ExampleProject := BuildProject('examples/documented-api',
+    'DocumentedAPIExample', AttemptedCount);
+  try
+    Check(AttemptedCount = 2,
+      'both documented example units should be attempted');
+    Check((ExampleProject.Errors.Count = 0) and
+      (ExampleProject.Units.Count = 2),
+      'the documented example should parse both units without errors');
+    ExampleIndexHTML := RenderHTMLIndex(ExampleProject);
+    Check(Pos('10 of 10 API symbols documented',
+      string(ExampleIndexHTML)) > 0,
+      'the documented example should showcase complete /// coverage');
+  finally
+    ExampleProject.Free;
   end;
 
   PartialProject := BuildProject('tests/fixtures/partial',
