@@ -620,6 +620,9 @@ begin
     DialectUnit := TDocUnit(DialectProject.Units[0]);
     Check(FindSymbol(DialectUnit, 'SlashOnly').MarkdownDocumentation =
       'Slash documentation.', 'slash comments should remain the default');
+    Check(FindSymbol(DialectUnit,
+      'PlainSlashOnly').MarkdownDocumentation = '',
+      'slash mode should mean /// and never capture ordinary // comments');
     Check(FindSymbol(DialectUnit, 'BraceOnly').MarkdownDocumentation = '',
       'brace comments should be disabled by default');
     Check(FindSymbol(DialectUnit, 'ParenOnly').MarkdownDocumentation = '',
@@ -691,6 +694,9 @@ begin
       'mixed Markdown should include the brace body');
     Check(Pos('Mixed paren detail.', MixedSymbol.MarkdownDocumentation) > 0,
       'mixed Markdown should include the paren body');
+    Check(FindSymbol(DialectUnit,
+      'PlainSlashOnly').MarkdownDocumentation = '',
+      'all mode should never capture ordinary // comments');
     Check(Pos('@param', MixedSymbol.MarkdownDocumentation) = 0,
       'structured directives should be removed from mixed Markdown');
     Check((MixedSymbol.Directives.Count = 3) and

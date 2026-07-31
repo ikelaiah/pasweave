@@ -33,8 +33,11 @@ when real Free Pascal projects expose a more immediate compatibility need.
 
 ### Documentation comment dialects
 
-PasWeave recognizes consecutive `///` comments by default and lets a project
-opt into the Pascal block-comment forms it uses for API documentation.
+PasWeave defines consecutive `///` comments as its explicit documentation
+marker and recognizes them by default. This is a PasWeave convention, not a
+special Free Pascal or `fcl-passrc` comment form: FPC sees `///` as an ordinary
+`//` comment whose body starts with `/`. A project can opt into the Pascal
+block-comment forms it uses for API documentation.
 
 Command-line forms:
 
@@ -46,8 +49,9 @@ Command-line forms:
 --doc-comments=all
 ```
 
-The default remains `slash` so ordinary source comments do not silently
-become public documentation.
+The CLI name `slash` means exactly consecutive `///` lines, never ordinary
+`//` comments. It remains the default so ordinary source comments do not
+silently become public documentation.
 
 Completed acceptance criteria:
 

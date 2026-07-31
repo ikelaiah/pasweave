@@ -18,7 +18,7 @@ pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-docs --proj
 pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\mathlib-brace-docs --project-name mathlib-fp --doc-comments=brace
 ```
 
-## Default `slash` results
+## Default `slash` (`///` only) results
 
 | Check | Result |
 |---|---:|
@@ -164,10 +164,11 @@ comment-association or parser error:
 - 496 lines use one of PasWeave's initially recognised directive names, but
   those lines occur inside brace comments.
 
-The default intentionally recognises only consecutive `///` comments. Treating
-every plain `{ ... }` block as public API documentation would also capture
-section labels and implementation notes, so PasWeave does not do that
-implicitly.
+The CLI name `slash` means only PasWeave's consecutive `///` documentation
+marker, not ordinary `//` comments. FPC treats `///` as a normal `//` comment;
+the documentation meaning belongs to PasWeave. Treating every plain `{ ... }`
+block as public API documentation would also capture section labels and
+implementation notes, so PasWeave does not do that implicitly.
 
 The Markdown renderer therefore emits 2,227 explicit undocumented warnings:
 45 unit-level warnings and 2,182 symbol-level warnings. It omits 111 private

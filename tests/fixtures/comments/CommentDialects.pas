@@ -7,6 +7,9 @@ interface
 /// Slash documentation.
 procedure SlashOnly;
 
+// Ordinary line comment, not PasWeave documentation.
+procedure PlainSlashOnly;
+
 { Brace documentation. }
 procedure BraceOnly;
 
@@ -71,6 +74,10 @@ type
 implementation
 
 procedure SlashOnly;
+begin
+end;
+
+procedure PlainSlashOnly;
 begin
 end;
 

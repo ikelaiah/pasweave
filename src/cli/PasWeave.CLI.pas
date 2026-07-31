@@ -23,8 +23,10 @@ begin
   WriteLn('                 [--verbose]');
   WriteLn;
   WriteLn('Documentation comment styles:');
-  WriteLn('  slash, brace, paren, a comma-separated combination, or all');
-  WriteLn('  Default: slash');
+  WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
+  WriteLn('  brace = { ... }; paren = (* ... *)');
+  WriteLn('  Styles may be comma-separated; all enables all three styles');
+  WriteLn('  Default: slash (/// only)');
 end;
 
 function RequireOptionValue(var AIndex: Integer; const AOption: string): string;
@@ -92,7 +94,8 @@ begin
         CommentStyles) then
         raise EPasWeaveInputError.CreateFmt(
           'invalid documentation comment styles: %s ' +
-          '(expected slash, brace, paren, a comma-separated combination, or all)',
+          '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
+          'a comma-separated combination, or all)',
           [CommentStyleValue]);
     end
     else if Pos('--doc-comments=', ParamStr(I)) = 1 then
@@ -103,7 +106,8 @@ begin
         CommentStyles) then
         raise EPasWeaveInputError.CreateFmt(
           'invalid documentation comment styles: %s ' +
-          '(expected slash, brace, paren, a comma-separated combination, or all)',
+          '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
+          'a comma-separated combination, or all)',
           [CommentStyleValue]);
     end
     else if ParamStr(I) = '--verbose' then

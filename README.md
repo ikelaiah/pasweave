@@ -4,6 +4,12 @@ PasWeave is an early-stage documentation generator designed primarily for
 Free Pascal projects. It is written in Free Pascal and builds its source model
 with FPC's reusable `fcl-passrc` parser libraries.
 
+> **Documentation syntax:** `///` is PasWeave's own explicit documentation
+> marker, not a special Free Pascal or `fcl-passrc` feature. FPC reads it as an
+> ordinary `//` comment; PasWeave gives the third slash its documentation
+> meaning. Accordingly, `--doc-comments=slash` means consecutive `///` lines
+> only. Ordinary `//` comments are never treated as API documentation.
+
 ## ✅ Current features
 
 The working parser-to-site pipeline includes:
@@ -12,8 +18,8 @@ The working parser-to-site pipeline includes:
   of `.pas` and `.pp` units;
 - interface parsing through `fcl-passrc`;
 - parser-independent project, unit, symbol, directive, and diagnostic models;
-- source-backed association of enabled `///`, `{ ... }`, and `(* ... *)`
-  documentation groups, with `///` as the safe default;
+- source-backed association of enabled PasWeave `///`, Pascal `{ ... }`, and
+  Pascal `(* ... *)` documentation groups, with `///` as the safe default;
 - structural extraction of `@param`, `@returns`, `@raises`, `@deprecated`,
   `@see`, and `@since`;
 - deterministic, human-readable UTF-8 JSON;
@@ -138,8 +144,15 @@ project. An empty target ID is an explicit unresolved result.
 
 ## Documentation comments
 
-By default, place consecutive `///` lines immediately before an interface
-declaration:
+PasWeave deliberately defines `///` as its explicit documentation marker.
+`fcl-passrc` does not classify triple-slash comments as documentation: it
+parses the declaration structure and supplies source positions, then PasWeave
+reads the original source and associates enabled comments itself. In the CLI,
+the style name `slash` therefore means exactly `///`; it does not mean ordinary
+`//` comments.
+
+By default, place consecutive PasWeave `///` lines immediately before an
+interface declaration:
 
 ```pascal
 /// Returns the standard normal probability density.
@@ -161,7 +174,15 @@ objects.
 Projects that deliberately use ordinary Pascal comments for API documentation
 can opt into one or both block forms:
 
+| `--doc-comments` value | Source form treated as documentation |
+|---|---|
+| `slash` | Consecutive `///` lines only; plain `//` is ignored |
+| `brace` | Standalone `{ ... }` comments |
+| `paren` | Standalone `(* ... *)` comments |
+| `all` | `slash`, `brace`, and `paren` together |
+
 ```text
+pasweave build src --doc-comments=slash
 pasweave build src --doc-comments=brace
 pasweave build src --doc-comments=paren
 pasweave build src --doc-comments=slash,brace,paren

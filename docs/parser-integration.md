@@ -23,7 +23,9 @@ The concrete integration is:
    standalone comment forms. This retains exact delimiters, enforces blank-line
    gaps, merges mixed forms in source order, and treats compiler directives as
    barriers. `fcl-passrc` still supplies declaration identity and positions;
-   PasWeave is not parsing Pascal declarations itself.
+   PasWeave is not parsing Pascal declarations itself. The meaning of `///` is
+   defined by PasWeave; FPC tokenizes it as an ordinary `//` comment and does
+   not classify it as API documentation.
 4. `TPasTreeContainer.InterfaceOnly := True` stops before implementation
    parsing. Interface declarations are read from
    `TPasModule.InterfaceSection.Declarations`, and dependencies come from
@@ -55,9 +57,10 @@ explicitly unresolved.
 
 ## Known behaviour and uncertainty
 
-- Documentation comment styles are selected per build. `slash` is the default;
-  `brace`, `paren`, comma-separated combinations, and `all` are explicit
-  opt-ins.
+- Documentation comment styles are selected per build. `slash` means exactly
+  consecutive `///` lines and is the default; it never includes ordinary `//`
+  comments. `brace`, `paren`, comma-separated combinations, and `all` are
+  explicit opt-ins.
 - A blank line, compiler directive, disabled comment form, or source token
   ends a documentation group. The earliest block in a group must begin on an
   otherwise blank source line, preventing a trailing comment on one
