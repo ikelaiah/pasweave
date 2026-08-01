@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$Fpc = 'fpc',
+  [string]$Windres = 'windres',
   [string]$ExpectedVersion = '0.1.0-alpha.1'
 )
 
@@ -42,7 +43,7 @@ try {
     "PASWEAVE_ASSETS RCDATA `"$archiveForResource`"`n",
     [Text.UTF8Encoding]::new($false))
 
-  $windres = (Get-Command windres -ErrorAction Stop).Source
+  $windres = (Get-Command $Windres -ErrorAction Stop).Source
   & $windres -i $resourceScript -o $resourceFile -O coff `
     --target=pe-x86-64
   Assert-LastExitCode 'resource compilation'
@@ -52,7 +53,7 @@ try {
     '-Fusrc/render'
   )
   $testCompilerArguments = @(
-    '-Px86_64', '-B', '-O2', '-Mobjfpc', '-Sh'
+    '-Twin64', '-Px86_64', '-B', '-O2', '-Mobjfpc', '-Sh'
   ) + $unitPaths + @(
     "-FU$testUnitDirectory", "-FE$testDirectory", 'tests/test_pasweave.pas'
   )
@@ -62,7 +63,7 @@ try {
   Assert-LastExitCode 'test suite'
 
   $compilerArguments = @(
-    '-Px86_64', '-B', '-O2', '-Xs', '-CX', '-XX', '-Mobjfpc', '-Sh',
+    '-Twin64', '-Px86_64', '-B', '-O2', '-Xs', '-CX', '-XX', '-Mobjfpc', '-Sh',
     '-dPASWEAVE_PORTABLE_ASSETS'
   ) + $unitPaths + @(
     "-FU$unitDirectory", "-FE$distDirectory",
