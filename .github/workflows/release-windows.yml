@@ -27,15 +27,36 @@ jobs:
         shell: powershell
         run: |
           choco install freepascal --version=3.2.2 --yes --no-progress
+          $fpcBin = 'C:\tools\freepascal\bin\x86_64-win64'
+          $requiredTools = @('fpc.exe', 'ppcx64.exe', 'windres.exe')
+          $missingTools = @(
+            $requiredTools | Where-Object {
+              -not (Test-Path -LiteralPath (Join-Path $fpcBin $_))
+            }
+          )
+          if ($missingTools.Count -gt 0) {
+            throw "Free Pascal x86-64 installation is missing: $($missingTools -join ', ')"
+          }
+          $installedVersion = (& (Join-Path $fpcBin 'fpc.exe') -iV |
+            Out-String).Trim()
+          $installedTarget = (& (Join-Path $fpcBin 'fpc.exe') -iTP |
+            Out-String).Trim()
+          if ($installedVersion -ne '3.2.2' -or $installedTarget -ne 'x86_64') {
+            throw "Expected Free Pascal 3.2.2 for x86_64; found $installedVersion for $installedTarget"
+          }
           [IO.File]::AppendAllText($env:GITHUB_PATH,
-            "C:\tools\freepascal\bin\i386-win32`n",
+            "$fpcBin`n",
+            [Text.UTF8Encoding]::new($false))
+          [IO.File]::AppendAllText($env:GITHUB_ENV,
+            "PASWEAVE_FPC=$fpcBin\fpc.exe`n",
             [Text.UTF8Encoding]::new($false))
 
       - name: Build and smoke-test the portable executable
         shell: pwsh
         run: |
           $version = $env:GITHUB_REF_NAME.TrimStart('v')
-          .\scripts\build-portable-windows.ps1 -ExpectedVersion $version
+          .\scripts\build-portable-windows.ps1 `
+            -Fpc $env:PASWEAVE_FPC -ExpectedVersion $version
 
       - name: Publish the raw executable and checksum
         shell: pwsh
