@@ -31,16 +31,23 @@ The script:
 
 ## Publish
 
-1. Update `PasWeaveVersion` and its regression assertion.
-2. Run the complete test suite and the portable release build.
-3. Commit the release-ready source.
-4. Create and push a matching tag such as `v0.1.0-alpha.1`.
+1. Update `PasWeaveVersion`, its regression assertion, and the README version
+   badge.
+2. Update `CHANGELOG.md` and add `RELEASE_NOTE_<tag>.md`, including the leading
+   `v` in the tag name.
+3. Run the complete test suite and the portable release build.
+4. Commit the release-ready source.
+5. Create and push a matching tag such as `v0.1.0-alpha.1`.
 
 The tag workflow repeats the standalone build and smoke test, then creates a
 GitHub release containing only:
 
 - `pasweave.exe`
 - `pasweave.exe.sha256`
+
+When `RELEASE_NOTE_<tag>.md` exists, its contents become the GitHub release
+description. Otherwise, GitHub generates release notes from the repository
+history.
 
 Tags containing a hyphen, including alpha and beta versions, are published as
 GitHub pre-releases.
