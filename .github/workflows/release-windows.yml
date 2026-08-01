@@ -41,9 +41,14 @@ jobs:
           }
 
           $fpcRoot = Join-Path $env:RUNNER_TEMP 'fpc-3.2.2'
+          $components = @(
+            'base', 'x86', 'x86\base', 'x86\binutils', 'x86\units',
+            'x64', 'x64\base', 'x64\binutils', 'x64\units', 'utils'
+          ) -join ','
           $installerArguments = @(
             '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/NOICONS',
-            "/DIR=$fpcRoot", '/TYPE=minimum', '/TASKS=createcfg'
+            "/DIR=$fpcRoot", '/TYPE=custom', "/COMPONENTS=$components",
+            '/TASKS=createcfg'
           )
           $installerProcess = Start-Process -FilePath $installer `
             -ArgumentList $installerArguments -Wait -PassThru
@@ -53,8 +58,8 @@ jobs:
 
           $fpcBin = Join-Path $fpcRoot 'bin\i386-win32'
           $requiredTools = @(
-            'fpc.exe', 'ppcrossx64.exe', 'x86_64-win64-windres.exe',
-            'x86_64-win64-ld.exe'
+            'fpc.exe', 'fpcres.exe', 'ppcrossx64.exe',
+            'x86_64-win64-windres.exe', 'x86_64-win64-ld.exe'
           )
           $missingTools = @(
             $requiredTools | Where-Object {
@@ -77,6 +82,7 @@ jobs:
             [Text.UTF8Encoding]::new($false))
           [IO.File]::AppendAllText($env:GITHUB_ENV,
             "PASWEAVE_FPC=$fpc`n" +
+            "PASWEAVE_FPCRES=$fpcBin\fpcres.exe`n" +
             "PASWEAVE_WINDRES=$fpcBin\x86_64-win64-windres.exe`n",
             [Text.UTF8Encoding]::new($false))
 
@@ -85,6 +91,7 @@ jobs:
         run: |
           $buildArguments = @{
             Fpc = $env:PASWEAVE_FPC
+            FpcRes = $env:PASWEAVE_FPCRES
             Windres = $env:PASWEAVE_WINDRES
           }
           if ($env:GITHUB_REF.StartsWith('refs/tags/v')) {

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
   [string]$Fpc = 'fpc',
+  [string]$FpcRes = 'fpcres',
   [string]$Windres = 'windres',
   [string]$ExpectedVersion = '0.1.0-alpha.1'
 )
@@ -43,6 +44,7 @@ try {
     "PASWEAVE_ASSETS RCDATA `"$archiveForResource`"`n",
     [Text.UTF8Encoding]::new($false))
 
+  $fpcResExecutable = (Get-Command $FpcRes -ErrorAction Stop).Source
   $windres = (Get-Command $Windres -ErrorAction Stop).Source
   & $windres -i $resourceScript -o $resourceFile -O coff `
     --target=pe-x86-64
@@ -64,7 +66,7 @@ try {
 
   $compilerArguments = @(
     '-Twin64', '-Px86_64', '-B', '-O2', '-Xs', '-CX', '-XX', '-Mobjfpc', '-Sh',
-    '-dPASWEAVE_PORTABLE_ASSETS'
+    '-dPASWEAVE_PORTABLE_ASSETS', "-FC$fpcResExecutable"
   ) + $unitPaths + @(
     "-FU$unitDirectory", "-FE$distDirectory",
     '-opasweave.exe', 'src/pasweave.lpr'
