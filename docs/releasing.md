@@ -9,6 +9,10 @@ A public release requires a project `LICENSE`. The release workflow refuses to
 publish while that file is absent. PasWeave is distributed under the MIT
 License committed at the repository root.
 
+The Windows workflow runs the complete portable build on pull requests, pushes
+to `main`, and manual dispatches. Only a pushed `v*` tag enables its publishing
+step. This keeps ordinary CI validation separate from the decision to publish.
+
 ## Build locally
 
 From PowerShell at the repository root:
@@ -36,8 +40,9 @@ The script:
 2. Update `CHANGELOG.md` and add `RELEASE_NOTE_<tag>.md`, including the leading
    `v` in the tag name.
 3. Run the complete test suite and the portable release build.
-4. Commit the release-ready source.
-5. Create and push a matching tag such as `v0.1.0-alpha.1`.
+4. Commit the release-ready source and merge it into `main`.
+5. Wait for the Windows build on `main` to pass.
+6. Create and push a matching tag such as `v0.1.0-alpha.1`.
 
 The tag workflow repeats the standalone build and smoke test, then creates a
 GitHub release containing only:
@@ -51,3 +56,10 @@ history.
 
 Tags containing a hyphen, including alpha and beta versions, are published as
 GitHub pre-releases.
+
+Do not draft the GitHub release manually. Pushing the tag starts the validated
+build, and the workflow creates the release only after that build succeeds.
+
+If a Windows build fails, consult the
+[Windows CI troubleshooting guide](windows-ci-troubleshooting.md) before
+changing or recreating a release tag.

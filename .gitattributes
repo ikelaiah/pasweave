@@ -1,0 +1,2 @@
+# Golden documentation output is compared byte-for-byte by the test suite.
+* text=auto eol=lf
