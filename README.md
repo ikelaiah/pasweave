@@ -119,6 +119,13 @@ clone the repository and open the
 [HTML sample](examples/documented-api/sample-output/html/index.html) directly.
 The snapshot shows the actual project index and both generated unit pages.
 
+For a more substantial equation-rich demonstration, see the runnable
+[scientific API example](examples/scientific-api/README.md). Its checked-in
+[Markdown output](examples/scientific-api/sample-output/markdown/index.md) and
+[HTML output](examples/scientific-api/sample-output/html/index.html) document
+30 of 30 public API symbols with 16 display equations and 65 inline
+mathematical expressions.
+
 For a nested source tree, enable recursive discovery explicitly and exclude
 trees that are not part of the public API:
 

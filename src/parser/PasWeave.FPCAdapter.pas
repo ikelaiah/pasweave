@@ -370,34 +370,39 @@ begin
 end;
 
 function ProcedureDeclaration(AProcedure: TPasProcedure): string;
+const
+  PreferredDeclarationWidth = 80;
 var
   I: Integer;
   Modifier: TProcedureModifier;
+  ProcTypeModifier: TProcTypeModifier;
+  ArgumentsText: string;
+  HeadText: string;
+  SingleLineText: string;
+  SuffixText: string;
   ResultType: TPasType;
 begin
   if AProcedure is TPasOperator then
-    Result := TPasOperator(AProcedure).GetOperatorDeclaration(False)
+    HeadText := TPasOperator(AProcedure).GetOperatorDeclaration(False)
   else
   begin
-    Result := AProcedure.TypeName;
+    HeadText := AProcedure.TypeName;
     if AProcedure.Name <> '' then
-      Result := Result + ' ' + ProcedureNameText(AProcedure);
+      HeadText := HeadText + ' ' + ProcedureNameText(AProcedure);
   end;
 
+  ArgumentsText := '';
   if Assigned(AProcedure.ProcType) and
     (AProcedure.ProcType.Args.Count > 0) then
-  begin
-    Result := Result + '(';
     for I := 0 to AProcedure.ProcType.Args.Count - 1 do
     begin
       if I > 0 then
-        Result := Result + '; ';
-      Result := Result + ArgumentDeclaration(
+        ArgumentsText := ArgumentsText + '; ';
+      ArgumentsText := ArgumentsText + ArgumentDeclaration(
         TPasArgument(AProcedure.ProcType.Args[I]));
     end;
-    Result := Result + ')';
-  end;
 
+  SuffixText := '';
   if AProcedure is TPasFunction then
   begin
     ResultType := nil;
@@ -405,15 +410,40 @@ begin
       Assigned(TPasFunction(AProcedure).FuncType.ResultEl) then
       ResultType := TPasFunction(AProcedure).FuncType.ResultEl.ResultType;
     if Assigned(ResultType) then
-      Result := Result + ': ' + TypeReferenceText(ResultType);
+      SuffixText := SuffixText + ': ' + TypeReferenceText(ResultType);
   end;
 
   if AProcedure.CallingConvention <> ccDefault then
-    Result := Result + '; ' +
-      cCallingConventions[AProcedure.CallingConvention];
+    SuffixText := SuffixText + '; ' +
+      LowerCase(cCallingConventions[AProcedure.CallingConvention]);
+  if Assigned(AProcedure.ProcType) then
+    for ProcTypeModifier := Low(TProcTypeModifier) to
+      High(TProcTypeModifier) do
+      if ProcTypeModifier in AProcedure.ProcType.Modifiers then
+        SuffixText := SuffixText + '; ' +
+          LowerCase(ProcTypeModifiers[ProcTypeModifier]);
   for Modifier := Low(TProcedureModifier) to High(TProcedureModifier) do
     if Modifier in AProcedure.Modifiers then
-      Result := Result + '; ' + ModifierNames[Modifier];
+      SuffixText := SuffixText + '; ' + ModifierNames[Modifier];
+
+  SingleLineText := HeadText;
+  if ArgumentsText <> '' then
+    SingleLineText := SingleLineText + '(' + ArgumentsText + ')';
+  SingleLineText := SingleLineText + SuffixText;
+  if (ArgumentsText = '') or
+    (Length(SingleLineText) <= PreferredDeclarationWidth) then
+    Exit(SingleLineText);
+
+  Result := HeadText + '(' + #10;
+  for I := 0 to AProcedure.ProcType.Args.Count - 1 do
+  begin
+    Result := Result + '  ' + ArgumentDeclaration(
+      TPasArgument(AProcedure.ProcType.Args[I]));
+    if I < AProcedure.ProcType.Args.Count - 1 then
+      Result := Result + ';';
+    Result := Result + #10;
+  end;
+  Result := Result + ')' + SuffixText;
 end;
 
 function PropertyDeclaration(AProperty: TPasProperty): string;
@@ -555,15 +585,14 @@ begin
     else if AElement is TPasSpecializeType then
       Result := NormaliseDeclaration(
         SpecializeTypeText(TPasSpecializeType(AElement), True))
+    else if AElement is TPasProcedure then
+      Result := NormaliseDeclaration(
+        ProcedureDeclaration(TPasProcedure(AElement)))
     else
     begin
       ParserDeclaration := NormaliseDeclaration(
         AElement.GetDeclaration(True));
       if not AngleBracketsBalanced(ParserDeclaration) and
-        (AElement is TPasProcedure) then
-        Result := NormaliseDeclaration(
-          ProcedureDeclaration(TPasProcedure(AElement)))
-      else if not AngleBracketsBalanced(ParserDeclaration) and
         (AElement is TPasProperty) then
         Result := NormaliseDeclaration(
           PropertyDeclaration(TPasProperty(AElement)))

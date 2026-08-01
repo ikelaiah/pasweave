@@ -188,6 +188,14 @@ var
   ExampleIndexHTML: UTF8String;
   ExampleCoreUnit: TDocUnit;
   ExampleServicesUnit: TDocUnit;
+  ExampleGreetingSymbol: TDocSymbol;
+  ScientificProject: TDocProject;
+  ScientificCoreUnit: TDocUnit;
+  ScientificAnalysisUnit: TDocUnit;
+  ScientificIndexHTML: UTF8String;
+  ScientificCoreHTML: UTF8String;
+  ScientificAnalysisHTML: UTF8String;
+  ScientificSymbol: TDocSymbol;
   DiscoveryProject: TDocProject;
   SecondDiscoveryProject: TDocProject;
   DiscoveryOptions: TSourceDiscoveryOptions;
@@ -226,8 +234,9 @@ begin
     Check(Assigned(AddSymbol), 'Add routine should be in the model');
     Check(AddSymbol.QualifiedName = 'SimpleUnit.Add',
       'routine should have a qualified name');
-    Check(Pos('function Add', AddSymbol.DeclarationText) = 1,
-      'declaration should include the routine kind and name');
+    Check(AddSymbol.DeclarationText =
+      'function Add(const A: Integer; const B: Integer): Integer',
+      'short routine declarations should use canonical Pascal spacing');
     Check(Pos('routine:simpleunit.add#', AddSymbol.ID) = 1,
       'routine ID should derive from its qualified name and signature');
     Check(AddSymbol.SourceLine > 0, 'source line should be captured');
@@ -1023,6 +1032,15 @@ begin
     ExampleServicesUnit := FindUnitModel(ExampleProject, 'Demo.Services');
     Check(Assigned(ExampleCoreUnit) and Assigned(ExampleServicesUnit),
       'the documented example should expose both sample units');
+    ExampleGreetingSymbol := FindSymbol(ExampleCoreUnit, 'GreetingFor');
+    Check(Assigned(ExampleGreetingSymbol),
+      'the documented example should expose its greeting method');
+    Check(ExampleGreetingSymbol.DeclarationText =
+      'function GreetingFor(' + #10 +
+      '  const AName: string;' + #10 +
+      '  AStyle: TGreetingStyle = gsFriendly' + #10 +
+      '): string',
+      'long declarations should wrap intentionally and retain defaults');
     Check(SampleOutputMatches(RenderMarkdownIndex(ExampleProject),
       'examples/documented-api/sample-output/markdown/index.md'),
       'the Markdown sample index should match current renderer output');
@@ -1058,6 +1076,92 @@ begin
       'the HTML sample assets should match current renderer output');
   finally
     ExampleProject.Free;
+  end;
+
+  ScientificProject := BuildProject('examples/scientific-api',
+    'Scientific API showcase', AttemptedCount);
+  try
+    Check((AttemptedCount = 2) and (ScientificProject.Units.Count = 2) and
+      (ScientificProject.Errors.Count = 0),
+      'the scientific example should parse both units without errors');
+    Check(ScientificProject.SymbolCount = 32,
+      'the scientific example should expose its complete model');
+    ScientificCoreUnit := FindUnitModel(ScientificProject,
+      'Scientific.Core');
+    ScientificAnalysisUnit := FindUnitModel(ScientificProject,
+      'Scientific.Analysis');
+    Check(Assigned(ScientificCoreUnit) and Assigned(ScientificAnalysisUnit),
+      'the scientific example should expose both documented units');
+
+    ScientificIndexHTML := RenderHTMLIndex(ScientificProject);
+    ScientificCoreHTML := RenderHTMLUnit(ScientificProject,
+      ScientificCoreUnit);
+    ScientificAnalysisHTML := RenderHTMLUnit(ScientificProject,
+      ScientificAnalysisUnit);
+    Check(Pos('30 of 30 API symbols documented',
+      string(ScientificIndexHTML)) > 0,
+      'the scientific example should have complete public API coverage');
+    Check(CountOccurrences(string(ScientificCoreHTML),
+      'data-math-inline>') + CountOccurrences(string(ScientificAnalysisHTML),
+      'data-math-inline>') = 65,
+      'the scientific example should showcase 65 inline expressions');
+    Check(CountOccurrences(string(ScientificCoreHTML),
+      'data-math-display>') + CountOccurrences(
+      string(ScientificAnalysisHTML), 'data-math-display>') = 16,
+      'the scientific example should showcase 16 display equations');
+
+    ScientificSymbol := FindSymbol(ScientificCoreUnit, 'TRealFunction');
+    Check(Assigned(ScientificSymbol),
+      'the scientific real-function base should be present');
+    TypeRelationship := FindTypeRelationship(ScientificSymbol,
+      trkImplementation);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetSymbolID <> ''),
+      'the scientific function interface should resolve semantically');
+    ScientificSymbol := FindSymbol(ScientificAnalysisUnit,
+      'TGaussianFunction');
+    Check(Assigned(ScientificSymbol),
+      'the scientific Gaussian function should be present');
+    TypeRelationship := FindTypeRelationship(ScientificSymbol,
+      trkInheritance);
+    Check(Assigned(TypeRelationship) and
+      (TypeRelationship.TargetSymbolID <> ''),
+      'the scientific cross-unit inheritance should resolve semantically');
+
+    Check(SampleOutputMatches(RenderMarkdownIndex(ScientificProject),
+      'examples/scientific-api/sample-output/markdown/index.md'),
+      'the scientific Markdown index should match current renderer output');
+    Check(SampleOutputMatches(RenderMarkdownUnit(ScientificProject,
+      ScientificCoreUnit),
+      'examples/scientific-api/sample-output/markdown/units/Scientific.Core.md'),
+      'the Scientific.Core Markdown sample should remain synchronized');
+    Check(SampleOutputMatches(RenderMarkdownUnit(ScientificProject,
+      ScientificAnalysisUnit),
+      'examples/scientific-api/sample-output/markdown/units/Scientific.Analysis.md'),
+      'the Scientific.Analysis Markdown sample should remain synchronized');
+    Check(SampleOutputMatches(RetargetSampleIndexAssets(ScientificIndexHTML),
+      'examples/scientific-api/sample-output/html/index.html'),
+      'the scientific HTML index should match current renderer output');
+    Check(SampleOutputMatches(RetargetSampleUnitAssets(ScientificCoreHTML),
+      'examples/scientific-api/sample-output/html/units/Scientific.Core.html'),
+      'the Scientific.Core HTML sample should remain synchronized');
+    Check(SampleOutputMatches(RetargetSampleUnitAssets(
+      ScientificAnalysisHTML),
+      'examples/scientific-api/sample-output/html/units/Scientific.Analysis.html'),
+      'the Scientific.Analysis HTML sample should remain synchronized');
+    Check(SampleOutputMatches(HTMLStylesheet,
+      'examples/scientific-api/sample-output/html/assets/site.css') and
+      SampleOutputMatches(HTMLApplicationScript,
+      'examples/scientific-api/sample-output/html/assets/app.js') and
+      SampleOutputMatches(HTMLMathScript,
+      'examples/scientific-api/sample-output/html/assets/math.js') and
+      SampleOutputMatches(HTMLDiagramScript,
+      'examples/scientific-api/sample-output/html/assets/diagram.js') and
+      SampleOutputMatches(RenderHTMLSearchIndex(ScientificProject),
+      'examples/scientific-api/sample-output/html/assets/search-index.js'),
+      'the scientific HTML sample assets should remain synchronized');
+  finally
+    ScientificProject.Free;
   end;
 
   PartialProject := BuildProject('tests/fixtures/partial',

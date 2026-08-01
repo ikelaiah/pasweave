@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="API documentation for unit Scientific.Core">
+<meta name="color-scheme" content="light dark">
+<title>Scientific.Core - Scientific API showcase</title>
+<link rel="stylesheet" href="../../../../../assets/katex/katex.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../../../../../assets/katex/katex.min.js"></script>
+<script defer src="../assets/math.js"></script>
+<script defer src="../assets/search-index.js"></script>
+<script defer src="../assets/app.js"></script>
+</head>
+<body data-site-root="../">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+<div class="shell header-inner">
+<a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Scientific API showcase</strong><small>API documentation</small></span></a>
+<div class="site-search" data-search-container>
+<label class="sr-only" for="site-search">Search API</label>
+<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
+<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+</div>
+</div>
+</header>
+<main id="main-content" class="shell main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Scientific.Core</span></nav>
+<section class="unit-heading">
+<p class="eyebrow">Unit</p><h1><code>Scientific.Core</code></h1>
+<p>Declared in <code>Scientific.Core.pas</code></p></section>
+<div class="prose">
+<p>Defines geometric primitives and scalar-function abstractions. Vectors use Cartesian coordinates:</p>
+<div class="math-display" data-math-display>
+$$
+\mathbf{v} = \begin{bmatrix}v_x \\ v_y\end{bmatrix} \in \mathbb{R}^2.
+$$
+</div>
+</div>
+<section class="dependency-section">
+<div class="group-heading"><h2>Interface dependencies</h2><span>0</span></div>
+<p class="muted">None.</p>
+</section>
+<section class="symbol-group" aria-labelledby="types">
+<div class="group-heading"><h2 id="types">Types</h2><span>3</span></div>
+<article class="symbol" id="symbol-scientific-core-irealfunction-7542e455abe9e55d">
+<div class="symbol-heading">
+<div><span class="kind-badge">interface</span><h3><code>Scientific.Core.IRealFunction</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-irealfunction-7542e455abe9e55d" aria-label="Permanent link to Scientific.Core.IRealFunction">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:16:16</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+IRealFunction = interface
+end
+</code></pre>
+<div class="prose">
+<p>Represents a real-valued function <span class="math-inline" data-math-inline>$f\colon\mathbb{R}\to\mathbb{R}$</span>.</p>
+</div>
+</article>
+<article class="symbol" id="symbol-scientific-core-trealfunction-58d841dcd63cc0c9">
+<div class="symbol-heading">
+<div><span class="kind-badge">class</span><h3><code>Scientific.Core.TRealFunction</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-trealfunction-58d841dcd63cc0c9" aria-label="Permanent link to Scientific.Core.TRealFunction">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:26:16</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+TRealFunction = class(TInterfacedObject, IRealFunction)
+end
+</code></pre>
+<div class="prose">
+<p>Supplies reference counting for concrete real-valued functions.</p>
+</div>
+</article>
+<article class="symbol" id="symbol-scientific-core-tvector2-75d9385235314a7d">
+<div class="symbol-heading">
+<div><span class="kind-badge">record</span><h3><code>Scientific.Core.TVector2</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-tvector2-75d9385235314a7d" aria-label="Permanent link to Scientific.Core.TVector2">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:36:11</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+TVector2 = record
+end
+</code></pre>
+<div class="prose">
+<p>Stores a vector <span class="math-inline" data-math-inline>$\mathbf{v}=(v_x,v_y)$</span> in the Euclidean plane.</p>
+</div>
+</article>
+</section>
+<section class="symbol-group" aria-labelledby="routines">
+<div class="group-heading"><h2 id="routines">Routines</h2><span>7</span></div>
+<article class="symbol" id="symbol-scientific-core-anglebetween-b9e1c2e554d472b6">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Core.AngleBetween</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-anglebetween-b9e1c2e554d472b6" aria-label="Permanent link to Scientific.Core.AngleBetween">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:123:22</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function AngleBetween(const A: TVector2; const B: TVector2): Double
+</code></pre>
+<div class="prose">
+<p>Measures the unsigned angle between two non-zero vectors.</p>
+<div class="math-display" data-math-display>
+$$
+\theta=\arccos\!\left(
+\frac{\mathbf{a}\cdot\mathbf{b}}
+{\lVert\mathbf{a}\rVert_2\lVert\mathbf{b}\rVert_2}
+\right).
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>A</code></td><td>First vector <span class="math-inline" data-math-inline>$\mathbf{a}$</span>.</td></tr>
+<tr><td><code>B</code></td><td>Second vector <span class="math-inline" data-math-inline>$\mathbf{b}$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The angle <span class="math-inline" data-math-inline>$\theta\in[0,\pi]$</span>, or zero for a zero input.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-distance-b680cb2a8a7a51be">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Distance</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-distance-b680cb2a8a7a51be" aria-label="Permanent link to Scientific.Core.Distance">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:80:18</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Distance(const A: TVector2; const B: TVector2): Double
+</code></pre>
+<div class="prose">
+<p>Computes the distance between two points.</p>
+<div class="math-display" data-math-display>
+$$
+d(\mathbf{a},\mathbf{b})=\lVert\mathbf{a}-\mathbf{b}\rVert_2.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>A</code></td><td>First point <span class="math-inline" data-math-inline>$\mathbf{a}$</span>.</td></tr>
+<tr><td><code>B</code></td><td>Second point <span class="math-inline" data-math-inline>$\mathbf{b}$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>Their Euclidean distance.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-dot-8ee6776b6c79d1ca">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Dot</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-dot-8ee6776b6c79d1ca" aria-label="Permanent link to Scientific.Core.Dot">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:59:13</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Dot(const A: TVector2; const B: TVector2): Double
+</code></pre>
+<div class="prose">
+<p>Computes the Euclidean inner product.</p>
+<div class="math-display" data-math-display>
+$$
+\mathbf{a}\cdot\mathbf{b}=a_xb_x+a_yb_y.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>A</code></td><td>Left vector <span class="math-inline" data-math-inline>$\mathbf{a}$</span>.</td></tr>
+<tr><td><code>B</code></td><td>Right vector <span class="math-inline" data-math-inline>$\mathbf{b}$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The scalar inner product.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-magnitude-29282b0347b7cb87">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Magnitude</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-magnitude-29282b0347b7cb87" aria-label="Permanent link to Scientific.Core.Magnitude">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:69:19</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Magnitude(const Value: TVector2): Double
+</code></pre>
+<div class="prose">
+<p>Computes the Euclidean magnitude of a vector.</p>
+<div class="math-display" data-math-display>
+$$
+\lVert\mathbf{v}\rVert_2=\sqrt{v_x^2+v_y^2}.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Value</code></td><td>Vector <span class="math-inline" data-math-inline>$\mathbf{v}$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>Its non-negative magnitude.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-normalize-8422b95fea32ee9b">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Normalize</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-normalize-8422b95fea32ee9b" aria-label="Permanent link to Scientific.Core.Normalize">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:93:19</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Normalize(const Value: TVector2): TVector2
+</code></pre>
+<div class="prose">
+<p>Produces a unit vector with the same direction.</p>
+<div class="math-display" data-math-display>
+$$
+\widehat{\mathbf{v}}=
+\frac{\mathbf{v}}{\lVert\mathbf{v}\rVert_2}.
+$$
+</div>
+<p>The zero vector maps to itself rather than dividing by zero.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Value</code></td><td>Vector <span class="math-inline" data-math-inline>$\mathbf{v}$</span> to normalize.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p><span class="math-inline" data-math-inline>$\widehat{\mathbf{v}}$</span> or <span class="math-inline" data-math-inline>$(0,0)$</span> for a zero input.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-rotate-55b28a27294a60c3">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Rotate</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-rotate-55b28a27294a60c3" aria-label="Permanent link to Scientific.Core.Rotate">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:109:16</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Rotate(const Value: TVector2; const Angle: Double): TVector2
+</code></pre>
+<div class="prose">
+<p>Rotates a vector counter-clockwise by <span class="math-inline" data-math-inline>$\theta$</span> radians.</p>
+<div class="math-display" data-math-display>
+$$
+R(\theta)=
+\begin{bmatrix}
+\cos\theta &amp; -\sin\theta \\
+\sin\theta &amp;  \cos\theta
+\end{bmatrix},
+\qquad \mathbf{v}&#39;=R(\theta)\mathbf{v}.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Value</code></td><td>Vector <span class="math-inline" data-math-inline>$\mathbf{v}$</span> to rotate.</td></tr>
+<tr><td><code>Angle</code></td><td>Rotation angle <span class="math-inline" data-math-inline>$\theta$</span> in radians.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The rotated vector <span class="math-inline" data-math-inline>$\mathbf{v}&#39;$</span>.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-vector2-21cc96d192844bf4">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Vector2</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-vector2-21cc96d192844bf4" aria-label="Permanent link to Scientific.Core.Vector2">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:48:17</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Vector2(const X: Double; const Y: Double): TVector2
+</code></pre>
+<div class="prose">
+<p>Constructs the vector <span class="math-inline" data-math-inline>$\mathbf{v}=(x,y)$</span>.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>X</code></td><td>Horizontal component <span class="math-inline" data-math-inline>$v_x$</span>.</td></tr>
+<tr><td><code>Y</code></td><td>Vertical component <span class="math-inline" data-math-inline>$v_y$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>A vector containing both components.</p>
+</section>
+</article>
+</section>
+<section class="symbol-group" aria-labelledby="members">
+<div class="group-heading"><h2 id="members">Members</h2><span>4</span></div>
+<article class="symbol" id="symbol-scientific-core-irealfunction-evaluate-1d445661aa025b6e">
+<div class="symbol-heading">
+<div><span class="kind-badge">method</span><h3><code>Scientific.Core.IRealFunction.Evaluate</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-irealfunction-evaluate-1d445661aa025b6e" aria-label="Permanent link to Scientific.Core.IRealFunction.Evaluate">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:22:22</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-core-irealfunction-7542e455abe9e55d"><code>Scientific.Core.IRealFunction</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+function Evaluate(const X: Double): Double
+</code></pre>
+<div class="prose">
+<p>Evaluates <span class="math-inline" data-math-inline>$f(x)$</span> at one real argument.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>X</code></td><td>Argument supplied to the function.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The scalar value <span class="math-inline" data-math-inline>$f(X)$</span>.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-trealfunction-evaluate-93e4b8afef78467c">
+<div class="symbol-heading">
+<div><span class="kind-badge">method</span><h3><code>Scientific.Core.TRealFunction.Evaluate</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-trealfunction-evaluate-93e4b8afef78467c" aria-label="Permanent link to Scientific.Core.TRealFunction.Evaluate">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:32:22</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-core-trealfunction-58d841dcd63cc0c9"><code>Scientific.Core.TRealFunction</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+function Evaluate(const X: Double): Double; virtual; abstract
+</code></pre>
+<div class="prose">
+<p>Evaluates the concrete function at <span class="math-inline" data-math-inline>$x$</span>.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>X</code></td><td>Argument supplied to the function.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The scalar value <span class="math-inline" data-math-inline>$f(X)$</span>.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-core-tvector2-x-06c946e523114366">
+<div class="symbol-heading">
+<div><span class="kind-badge">field</span><h3><code>Scientific.Core.TVector2.X</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-tvector2-x-06c946e523114366" aria-label="Permanent link to Scientific.Core.TVector2.X">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>default</code></span><span>Source <code>Scientific.Core.pas:38:5</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-core-tvector2-75d9385235314a7d"><code>Scientific.Core.TVector2</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+X : Double
+</code></pre>
+<div class="prose">
+<p>Horizontal component <span class="math-inline" data-math-inline>$v_x$</span>.</p>
+</div>
+</article>
+<article class="symbol" id="symbol-scientific-core-tvector2-y-06c947e523114519">
+<div class="symbol-heading">
+<div><span class="kind-badge">field</span><h3><code>Scientific.Core.TVector2.Y</code></h3></div>
+<a class="permalink" href="#symbol-scientific-core-tvector2-y-06c947e523114519" aria-label="Permanent link to Scientific.Core.TVector2.Y">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>default</code></span><span>Source <code>Scientific.Core.pas:40:5</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-core-tvector2-75d9385235314a7d"><code>Scientific.Core.TVector2</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+Y : Double
+</code></pre>
+<div class="prose">
+<p>Vertical component <span class="math-inline" data-math-inline>$v_y$</span>.</p>
+</div>
+</article>
+</section>
+</main>
+<footer class="site-footer"><div class="shell">Generated by PasWeave from <code>examples/scientific-api</code>.</div></footer>
+</body>
+</html>

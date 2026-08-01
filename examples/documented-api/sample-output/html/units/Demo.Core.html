@@ -69,14 +69,14 @@ TGreetingStyle = (gsFriendly,gsExcited)
 </section>
 <section class="symbol-group" aria-labelledby="routines">
 <div class="group-heading"><h2 id="routines">Routines</h2><span>1</span></div>
-<article class="symbol" id="symbol-demo-core-add-ada12614b553c86d">
+<article class="symbol" id="symbol-demo-core-add-ce92e6099fa0d067">
 <div class="symbol-heading">
 <div><span class="kind-badge">routine</span><h3><code>Demo.Core.Add</code></h3></div>
-<a class="permalink" href="#symbol-demo-core-add-ada12614b553c86d" aria-label="Permanent link to Demo.Core.Add">#</a>
+<a class="permalink" href="#symbol-demo-core-add-ce92e6099fa0d067" aria-label="Permanent link to Demo.Core.Add">#</a>
 </div>
 <p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:34:13</code></span></p>
 <pre class="declaration"><code class="language-pascal">
-function Add(const A: Integer; const B: Integer) : Integer
+function Add(const A: Integer; const B: Integer): Integer
 </code></pre>
 <div class="prose">
 <p>Adds two integer values. The operation is <span class="math-inline" data-math-inline>$A + B$</span>.</p>
@@ -96,16 +96,18 @@ function Add(const A: Integer; const B: Integer) : Integer
 </section>
 <section class="symbol-group" aria-labelledby="members">
 <div class="group-heading"><h2 id="members">Members</h2><span>1</span></div>
-<article class="symbol" id="symbol-demo-core-tgreeter-greetingfor-82c8855e62545192">
+<article class="symbol" id="symbol-demo-core-tgreeter-greetingfor-26da7ea6d7daae6a">
 <div class="symbol-heading">
 <div><span class="kind-badge">method</span><h3><code>Demo.Core.TGreeter.GreetingFor</code></h3></div>
-<a class="permalink" href="#symbol-demo-core-tgreeter-greetingfor-82c8855e62545192" aria-label="Permanent link to Demo.Core.TGreeter.GreetingFor">#</a>
+<a class="permalink" href="#symbol-demo-core-tgreeter-greetingfor-26da7ea6d7daae6a" aria-label="Permanent link to Demo.Core.TGreeter.GreetingFor">#</a>
 </div>
 <p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:23:25</code></span></p>
 <p class="parent-link">Parent: <a href="#symbol-demo-core-tgreeter-fb605899cec8779b"><code>Demo.Core.TGreeter</code></a></p>
 <pre class="declaration"><code class="language-pascal">
-function GreetingFor(const AName: string; AStyle: TGreetingStyle)
-                     : string
+function GreetingFor(
+  const AName: string;
+  AStyle: TGreetingStyle = gsFriendly
+): string
 </code></pre>
 <div class="prose">
 <p>Builds a greeting for one person.</p>

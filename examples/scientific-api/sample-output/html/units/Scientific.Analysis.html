@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="API documentation for unit Scientific.Analysis">
+<meta name="color-scheme" content="light dark">
+<title>Scientific.Analysis - Scientific API showcase</title>
+<link rel="stylesheet" href="../../../../../assets/katex/katex.min.css">
+<link rel="stylesheet" href="../assets/site.css">
+<script defer src="../../../../../assets/katex/katex.min.js"></script>
+<script defer src="../assets/math.js"></script>
+<script defer src="../assets/search-index.js"></script>
+<script defer src="../assets/app.js"></script>
+</head>
+<body data-site-root="../">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+<div class="shell header-inner">
+<a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Scientific API showcase</strong><small>API documentation</small></span></a>
+<div class="site-search" data-search-container>
+<label class="sr-only" for="site-search">Search API</label>
+<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
+<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+</div>
+</div>
+</header>
+<main id="main-content" class="shell main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Scientific.Analysis</span></nav>
+<section class="unit-heading">
+<p class="eyebrow">Unit</p><h1><code>Scientific.Analysis</code></h1>
+<p>Declared in <code>Scientific.Analysis.pas</code></p></section>
+<div class="prose">
+<p>Provides numerical methods and elementary statistical transforms. The routines illustrate documentation ranging from short inline symbols such as <span class="math-inline" data-math-inline>$\mu$</span> and <span class="math-inline" data-math-inline>$\sigma$</span> to complete display equations.</p>
+</div>
+<section class="dependency-section">
+<div class="group-heading"><h2>Interface dependencies</h2><span>1</span></div>
+<ul class="dependency-list">
+<li><a href="Scientific.Core.html"><code>Scientific.Core</code></a></li>
+</ul>
+</section>
+<section class="symbol-group" aria-labelledby="types">
+<div class="group-heading"><h2 id="types">Types</h2><span>2</span></div>
+<article class="symbol" id="symbol-scientific-analysis-tdoublearray-62038572069cc187">
+<div class="symbol-heading">
+<div><span class="kind-badge">type-alias</span><h3><code>Scientific.Analysis.TDoubleArray</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-tdoublearray-62038572069cc187" aria-label="Permanent link to Scientific.Analysis.TDoubleArray">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:16:15</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+TDoubleArray = Array of Double
+</code></pre>
+<div class="prose">
+<p>Owns a finite sequence <span class="math-inline" data-math-inline>$(x_1,\ldots,x_n)$</span> of real values.</p>
+</div>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487">
+<div class="symbol-heading">
+<div><span class="kind-badge">class</span><h3><code>Scientific.Analysis.TGaussianFunction</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:25:20</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+TGaussianFunction = class(TRealFunction)
+end
+</code></pre>
+<div class="prose">
+<p>Represents a Gaussian density with mean <span class="math-inline" data-math-inline>$\mu$</span> and deviation <span class="math-inline" data-math-inline>$\sigma$</span>.</p>
+<div class="math-display" data-math-display>
+$$
+\mathcal{N}(x\mid\mu,\sigma^2)=
+\frac{1}{\sigma\sqrt{2\pi}}
+\exp\!\left[-\frac{(x-\mu)^2}{2\sigma^2}\right].
+$$
+</div>
+</div>
+</article>
+</section>
+<section class="symbol-group" aria-labelledby="routines">
+<div class="group-heading"><h2 id="routines">Routines</h2><span>8</span></div>
+<article class="symbol" id="symbol-scientific-analysis-arithmeticmean-32bb31d6362baf9d">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.ArithmeticMean</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-arithmeticmean-32bb31d6362baf9d" aria-label="Permanent link to Scientific.Analysis.ArithmeticMean">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:113:24</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function ArithmeticMean(const Values: Array of Double): Double
+</code></pre>
+<div class="prose">
+<p>Computes the arithmetic mean of <span class="math-inline" data-math-inline>$n$</span> observations.</p>
+<div class="math-display" data-math-display>
+$$
+\bar{x}=\frac{1}{n}\sum_{i=1}^{n}x_i.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Values</code></td><td>Observations <span class="math-inline" data-math-inline>$(x_1,\ldots,x_n)$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>Their arithmetic mean <span class="math-inline" data-math-inline>$\bar{x}$</span>.</p>
+</section>
+<section class="directive-section">
+<h4>Raises</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Exception</th><th>Condition</th></tr></thead><tbody>
+<tr><td><code>Exception</code></td><td>When the sequence is empty.</td></tr>
+</tbody></table></div></section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-entropy-d5b13cab52c688ec">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.Entropy</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-entropy-d5b13cab52c688ec" aria-label="Permanent link to Scientific.Analysis.Entropy">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:151:17</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Entropy(const Probabilities: Array of Double): Double
+</code></pre>
+<div class="prose">
+<p>Computes Shannon entropy in bits.</p>
+<div class="math-display" data-math-display>
+$$
+H(P)=-\sum_{i=1}^{n}p_i\log_2 p_i,
+\qquad 0\log_2 0:=0.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Probabilities</code></td><td>Values <span class="math-inline" data-math-inline>$p_i\in[0,1]$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The information entropy <span class="math-inline" data-math-inline>$H(P)$</span> in bits.</p>
+</section>
+<section class="directive-section">
+<h4>Raises</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Exception</th><th>Condition</th></tr></thead><tbody>
+<tr><td><code>Exception</code></td><td>When a probability lies outside <span class="math-inline" data-math-inline>$[0,1]$</span>.</td></tr>
+</tbody></table></div></section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-logistic-82af6173e9041dc9">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.Logistic</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-logistic-82af6173e9041dc9" aria-label="Permanent link to Scientific.Analysis.Logistic">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:58:18</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Logistic(const X: Double): Double
+</code></pre>
+<div class="prose">
+<p>Evaluates the logistic sigmoid.</p>
+<div class="math-display" data-math-display>
+$$
+\operatorname{sigmoid}(x)=\frac{1}{1+e^{-x}}.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>X</code></td><td>Real argument <span class="math-inline" data-math-inline>$x$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>A value strictly between zero and one.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-newtonstep-06f8729a1729c0f4">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.NewtonStep</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-newtonstep-06f8729a1729c0f4" aria-label="Permanent link to Scientific.Analysis.NewtonStep">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:85:20</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function NewtonStep(
+  const F: IRealFunction;
+  const Derivative: IRealFunction;
+  const X: Double
+): Double
+</code></pre>
+<div class="prose">
+<p>Performs one Newton-Raphson root update.</p>
+<div class="math-display" data-math-display>
+$$
+x_{k+1}=x_k-\frac{f(x_k)}{f&#39;(x_k)}.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>F</code></td><td>Function <span class="math-inline" data-math-inline>$f$</span> whose root is sought.</td></tr>
+<tr><td><code>Derivative</code></td><td>Derivative function <span class="math-inline" data-math-inline>$f&#39;$</span>.</td></tr>
+<tr><td><code>X</code></td><td>Current approximation <span class="math-inline" data-math-inline>$x_k$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The next approximation <span class="math-inline" data-math-inline>$x_{k+1}$</span>.</p>
+</section>
+<section class="directive-section">
+<h4>Raises</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Exception</th><th>Condition</th></tr></thead><tbody>
+<tr><td><code>Exception</code></td><td>When <span class="math-inline" data-math-inline>$f&#39;(x_k)$</span> is numerically zero.</td></tr>
+</tbody></table></div></section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-normalpdf-e5fe8f59d32c3ffa">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.NormalPDF</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-normalpdf-e5fe8f59d32c3ffa" aria-label="Permanent link to Scientific.Analysis.NormalPDF">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:72:19</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function NormalPDF(
+  const X: Double;
+  const Mean: Double;
+  const StandardDeviation: Double
+): Double
+</code></pre>
+<div class="prose">
+<p>Evaluates a normal probability density without constructing an object.</p>
+<div class="math-display" data-math-display>
+$$
+p(x)=\frac{e^{-z^2/2}}{\sigma\sqrt{2\pi}},
+\qquad z=\frac{x-\mu}{\sigma}.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>X</code></td><td>Observation <span class="math-inline" data-math-inline>$x$</span>.</td></tr>
+<tr><td><code>Mean</code></td><td>Distribution mean <span class="math-inline" data-math-inline>$\mu$</span>.</td></tr>
+<tr><td><code>StandardDeviation</code></td><td>Positive standard deviation <span class="math-inline" data-math-inline>$\sigma$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The normal density <span class="math-inline" data-math-inline>$p(x)$</span>.</p>
+</section>
+<section class="directive-section">
+<h4>Raises</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Exception</th><th>Condition</th></tr></thead><tbody>
+<tr><td><code>Exception</code></td><td>When <span class="math-inline" data-math-inline>$\sigma\leq 0$</span>.</td></tr>
+</tbody></table></div></section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-populationvariance-58d817a56398aab5">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.PopulationVariance</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-populationvariance-58d817a56398aab5" aria-label="Permanent link to Scientific.Analysis.PopulationVariance">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:124:28</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function PopulationVariance(const Values: Array of Double): Double
+</code></pre>
+<div class="prose">
+<p>Computes population variance around the arithmetic mean.</p>
+<div class="math-display" data-math-display>
+$$
+\sigma^2=\frac{1}{n}\sum_{i=1}^{n}(x_i-\bar{x})^2.
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Values</code></td><td>Observations <span class="math-inline" data-math-inline>$(x_1,\ldots,x_n)$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>Their population variance <span class="math-inline" data-math-inline>$\sigma^2$</span>.</p>
+</section>
+<section class="directive-section">
+<h4>Raises</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Exception</th><th>Condition</th></tr></thead><tbody>
+<tr><td><code>Exception</code></td><td>When the sequence is empty.</td></tr>
+</tbody></table></div></section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-simpsonestimate-49bedd72e6d0699c">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.SimpsonEstimate</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-simpsonestimate-49bedd72e6d0699c" aria-label="Permanent link to Scientific.Analysis.SimpsonEstimate">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:101:25</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function SimpsonEstimate(
+  const F: IRealFunction;
+  const A: Double;
+  const B: Double
+): Double
+</code></pre>
+<div class="prose">
+<p>Estimates an integral with one Simpson panel.</p>
+<div class="math-display" data-math-display>
+$$
+\int_a^b f(x)\,dx \approx
+\frac{b-a}{6}\left[
+f(a)+4f\!\left(\frac{a+b}{2}\right)+f(b)
+\right].
+$$
+</div>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>F</code></td><td>Integrand <span class="math-inline" data-math-inline>$f$</span>.</td></tr>
+<tr><td><code>A</code></td><td>Lower bound <span class="math-inline" data-math-inline>$a$</span>.</td></tr>
+<tr><td><code>B</code></td><td>Upper bound <span class="math-inline" data-math-inline>$b$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The Simpson estimate of the definite integral.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-softmax-9058366060f8b88c">
+<div class="symbol-heading">
+<div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.Softmax</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-softmax-9058366060f8b88c" aria-label="Permanent link to Scientific.Analysis.Softmax">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:139:17</code></span></p>
+<pre class="declaration"><code class="language-pascal">
+function Softmax(const Values: Array of Double): TDoubleArray
+</code></pre>
+<div class="prose">
+<p>Converts arbitrary scores into a categorical probability distribution.</p>
+<div class="math-display" data-math-display>
+$$
+\operatorname{softmax}(z_i)=
+\frac{e^{z_i-m}}{\sum_{j=1}^{n}e^{z_j-m}},
+\qquad m=\max_j z_j.
+$$
+</div>
+<p>Subtracting <span class="math-inline" data-math-inline>$m$</span> leaves the result unchanged while improving numerical stability.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>Values</code></td><td>Scores <span class="math-inline" data-math-inline>$(z_1,\ldots,z_n)$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>Probabilities whose sum is one, or an empty sequence.</p>
+</section>
+</article>
+</section>
+<section class="symbol-group" aria-labelledby="members">
+<div class="group-heading"><h2 id="members">Members</h2><span>4</span></div>
+<article class="symbol" id="symbol-scientific-analysis-tgaussianfunction-create-1444eec387cfd1a5">
+<div class="symbol-heading">
+<div><span class="kind-badge">constructor</span><h3><code>Scientific.Analysis.TGaussianFunction.Create</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-create-1444eec387cfd1a5" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.Create">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:35:23</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+constructor Create(const AMean: Double; const AStandardDeviation: Double)
+</code></pre>
+<div class="prose">
+<p>Creates <span class="math-inline" data-math-inline>$\mathcal{N}(\mu,\sigma^2)$</span> for a positive <span class="math-inline" data-math-inline>$\sigma$</span>.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>AMean</code></td><td>Distribution mean <span class="math-inline" data-math-inline>$\mu$</span>.</td></tr>
+<tr><td><code>AStandardDeviation</code></td><td>Standard deviation <span class="math-inline" data-math-inline>$\sigma&gt;0$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Raises</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Exception</th><th>Condition</th></tr></thead><tbody>
+<tr><td><code>Exception</code></td><td>When <span class="math-inline" data-math-inline>$\sigma\leq 0$</span>.</td></tr>
+</tbody></table></div></section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-tgaussianfunction-evaluate-bf9e752cc02b5d70">
+<div class="symbol-heading">
+<div><span class="kind-badge">method</span><h3><code>Scientific.Analysis.TGaussianFunction.Evaluate</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-evaluate-bf9e752cc02b5d70" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.Evaluate">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:41:22</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+function Evaluate(const X: Double): Double; override
+</code></pre>
+<div class="prose">
+<p>Evaluates the Gaussian probability density at <span class="math-inline" data-math-inline>$x$</span>.</p>
+</div>
+<section class="directive-section">
+<h4>Parameters</h4>
+<div class="table-shell"><table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>X</code></td><td>Observation <span class="math-inline" data-math-inline>$x$</span>.</td></tr>
+</tbody></table></div></section>
+<section class="directive-section">
+<h4>Returns</h4>
+<p>The density <span class="math-inline" data-math-inline>$\mathcal{N}(x\mid\mu,\sigma^2)$</span>.</p>
+</section>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-tgaussianfunction-mean-0a1055396fe14598">
+<div class="symbol-heading">
+<div><span class="kind-badge">property</span><h3><code>Scientific.Analysis.TGaussianFunction.Mean</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-mean-0a1055396fe14598" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.Mean">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:44:18</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+Mean : Double
+</code></pre>
+<div class="prose">
+<p>Distribution mean <span class="math-inline" data-math-inline>$\mu=\mathbb{E}[X]$</span>.</p>
+</div>
+</article>
+<article class="symbol" id="symbol-scientific-analysis-tgaussianfunction-standarddeviation-8f4e58e1f2de6bd0">
+<div class="symbol-heading">
+<div><span class="kind-badge">property</span><h3><code>Scientific.Analysis.TGaussianFunction.StandardDeviation</code></h3></div>
+<a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-standarddeviation-8f4e58e1f2de6bd0" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.StandardDeviation">#</a>
+</div>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:47:31</code></span></p>
+<p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
+<pre class="declaration"><code class="language-pascal">
+StandardDeviation : Double
+</code></pre>
+<div class="prose">
+<p>Standard deviation <span class="math-inline" data-math-inline>$\sigma=\sqrt{\operatorname{Var}(X)}$</span>.</p>
+</div>
+</article>
+</section>
+</main>
+<footer class="site-footer"><div class="shell">Generated by PasWeave from <code>examples/scientific-api</code>.</div></footer>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="API documentation for Scientific API showcase">
+<meta name="color-scheme" content="light dark">
+<title>Scientific API showcase API</title>
+<link rel="stylesheet" href="../../../../assets/katex/katex.min.css">
+<link rel="stylesheet" href="assets/site.css">
+<script defer src="../../../../assets/katex/katex.min.js"></script>
+<script defer src="assets/math.js"></script>
+<script defer src="../../../../assets/mermaid/mermaid.tiny.js"></script>
+<script defer src="assets/diagram.js"></script>
+<script defer src="assets/search-index.js"></script>
+<script defer src="assets/app.js"></script>
+</head>
+<body data-site-root="">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+<div class="shell header-inner">
+<a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Scientific API showcase</strong><small>API documentation</small></span></a>
+<div class="site-search" data-search-container>
+<label class="sr-only" for="site-search">Search API</label>
+<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
+<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+</div>
+</div>
+</header>
+<main id="main-content" class="shell main-content">
+<section class="hero">
+<p class="eyebrow">Free Pascal API reference</p>
+<h1>Scientific API showcase</h1>
+<p class="hero-copy">Browse units and declarations, or search the complete public API.</p>
+<p class="source-root">Source root <code>examples/scientific-api</code></p>
+</section>
+<section class="stats" aria-label="Project totals">
+<div class="stat"><strong>2</strong><span>Units</span></div>
+<div class="stat"><strong>32</strong><span>Parsed symbols</span></div>
+<div class="stat"><strong>30</strong><span>Public API symbols</span></div>
+<div class="stat"><strong>100%</strong><span>Documented</span></div>
+</section>
+<section class="index-section diagram-overview dependency-overview" data-diagram-section data-dependency-overview aria-labelledby="unit-dependencies">
+<div class="section-heading"><div><p class="eyebrow">Architecture</p><h2 id="unit-dependencies">Unit dependencies</h2></div><p>Arrows point from a unit to the project unit it imports.</p></div>
+<div class="diagram-toolbar" data-diagram-toolbar role="toolbar" aria-label="Unit dependency diagram controls" hidden>
+<div class="diagram-control-group" role="group" aria-label="Zoom controls"><span class="diagram-tool-label" aria-hidden="true">Zoom</span>
+<button type="button" data-diagram-zoom-out aria-controls="unit-dependency-diagram">Zoom out</button>
+<output class="diagram-zoom-status" data-diagram-scale aria-label="Current zoom" aria-live="polite" aria-atomic="true">100%</output>
+<button type="button" data-diagram-zoom-in aria-controls="unit-dependency-diagram">Zoom in</button>
+</div>
+<div class="diagram-control-group" role="group" aria-label="Pan controls"><span class="diagram-tool-label" aria-hidden="true">Pan</span>
+<button type="button" class="diagram-icon-button" data-diagram-pan-left aria-label="Pan left" title="Pan left" aria-controls="unit-dependency-diagram" disabled aria-hidden="true">&larr;</button>
+<button type="button" class="diagram-icon-button" data-diagram-pan-up aria-label="Pan up" title="Pan up" aria-controls="unit-dependency-diagram" disabled aria-hidden="true">&uarr;</button>
+<button type="button" class="diagram-icon-button" data-diagram-pan-down aria-label="Pan down" title="Pan down" aria-controls="unit-dependency-diagram" disabled aria-hidden="true">&darr;</button>
+<button type="button" class="diagram-icon-button" data-diagram-pan-right aria-label="Pan right" title="Pan right" aria-controls="unit-dependency-diagram" disabled aria-hidden="true">&rarr;</button>
+</div>
+<button type="button" data-diagram-reset aria-controls="unit-dependency-diagram" disabled>Reset</button>
+</div>
+<p id="unit-dependency-diagram-help" class="diagram-help" data-diagram-help hidden>Use the controls or focus the diagram: arrow keys pan, plus and minus zoom, and 0 resets. You can also drag with a mouse or use the scrollbars.</p>
+<div class="architecture-diagram dependency-diagram" data-diagram-container data-dependency-diagram id="unit-dependency-diagram" role="region" aria-label="Interactive unit dependency diagram" aria-describedby="unit-dependency-diagram-help" tabindex="0" aria-hidden="true" hidden>
+<pre class="mermaid" data-mermaid>
+flowchart LR
+  accTitle: Unit dependency graph
+  accDescr: Project units point to units imported by their interface uses clauses.
+  unit0001[&quot;Scientific.Analysis&quot;]
+  unit0002[&quot;Scientific.Core&quot;]
+  unit0001 --&gt; unit0002
+  click unit0001 &quot;units/Scientific.Analysis.html&quot; &quot;Open Scientific.Analysis documentation&quot; _self
+  click unit0002 &quot;units/Scientific.Core.html&quot; &quot;Open Scientific.Core documentation&quot; _self
+</pre>
+</div>
+<details class="diagram-fallback dependency-fallback" data-diagram-fallback data-dependency-fallback open>
+<summary>Text dependency list</summary>
+<ul>
+<li><a href="units/Scientific.Analysis.html"><code>Scientific.Analysis</code></a> uses <a href="units/Scientific.Core.html"><code>Scientific.Core</code></a>.</li>
+<li><a href="units/Scientific.Core.html"><code>Scientific.Core</code></a> has no project-local interface dependencies.</li>
+</ul>
+</details>
+</section>
+<section class="index-section diagram-overview relationship-overview" data-diagram-section aria-labelledby="type-relationships">
+<div class="section-heading"><div><p class="eyebrow">Architecture</p><h2 id="type-relationships">Class and interface relationships</h2></div><p>Solid arrows show inheritance; dotted arrows show interface implementation.</p></div>
+<div class="diagram-toolbar" data-diagram-toolbar role="toolbar" aria-label="Class and interface relationship diagram controls" hidden>
+<div class="diagram-control-group" role="group" aria-label="Zoom controls"><span class="diagram-tool-label" aria-hidden="true">Zoom</span>
+<button type="button" data-diagram-zoom-out aria-controls="type-relationship-diagram">Zoom out</button>
+<output class="diagram-zoom-status" data-diagram-scale aria-label="Current zoom" aria-live="polite" aria-atomic="true">100%</output>
+<button type="button" data-diagram-zoom-in aria-controls="type-relationship-diagram">Zoom in</button>
+</div>
+<div class="diagram-control-group" role="group" aria-label="Pan controls"><span class="diagram-tool-label" aria-hidden="true">Pan</span>
+<button type="button" class="diagram-icon-button" data-diagram-pan-left aria-label="Pan left" title="Pan left" aria-controls="type-relationship-diagram" disabled aria-hidden="true">&larr;</button>
+<button type="button" class="diagram-icon-button" data-diagram-pan-up aria-label="Pan up" title="Pan up" aria-controls="type-relationship-diagram" disabled aria-hidden="true">&uarr;</button>
+<button type="button" class="diagram-icon-button" data-diagram-pan-down aria-label="Pan down" title="Pan down" aria-controls="type-relationship-diagram" disabled aria-hidden="true">&darr;</button>
+<button type="button" class="diagram-icon-button" data-diagram-pan-right aria-label="Pan right" title="Pan right" aria-controls="type-relationship-diagram" disabled aria-hidden="true">&rarr;</button>
+</div>
+<button type="button" data-diagram-reset aria-controls="type-relationship-diagram" disabled>Reset</button>
+</div>
+<p id="type-relationship-diagram-help" class="diagram-help" data-diagram-help hidden>Use the controls or focus the diagram: arrow keys pan, plus and minus zoom, and 0 resets. You can also drag with a mouse or use the scrollbars.</p>
+<div class="architecture-diagram relationship-diagram" data-diagram-container id="type-relationship-diagram" role="region" aria-label="Interactive class and interface relationship diagram" aria-describedby="type-relationship-diagram-help" tabindex="0" aria-hidden="true" hidden>
+<pre class="mermaid" data-mermaid>
+flowchart BT
+  accTitle: Class and interface relationships
+  accDescr: Classes and interfaces point to their resolved ancestors and implemented interfaces.
+  type0001[&quot;[class] Scientific.Analysis.TGaussianFunction&quot;]
+  type0002[&quot;[interface] Scientific.Core.IRealFunction&quot;]
+  type0003[&quot;[class] Scientific.Core.TRealFunction&quot;]
+  unresolved0001[&quot;[unresolved] TInterfacedObject&quot;]
+  type0001 --&gt;|inherits| type0003
+  type0003 -. implements .-&gt; type0002
+  type0003 --&gt;|inherits| unresolved0001
+  click type0001 &quot;units/Scientific.Analysis.html#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487&quot; &quot;Open Scientific.Analysis.TGaussianFunction documentation&quot; _self
+  click type0002 &quot;units/Scientific.Core.html#symbol-scientific-core-irealfunction-7542e455abe9e55d&quot; &quot;Open Scientific.Core.IRealFunction documentation&quot; _self
+  click type0003 &quot;units/Scientific.Core.html#symbol-scientific-core-trealfunction-58d841dcd63cc0c9&quot; &quot;Open Scientific.Core.TRealFunction documentation&quot; _self
+</pre>
+</div>
+<details class="diagram-fallback relationship-fallback" data-diagram-fallback open>
+<summary>Text relationship list</summary>
+<ul>
+<li><a href="units/Scientific.Analysis.html#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a> inherits from <a href="units/Scientific.Core.html#symbol-scientific-core-trealfunction-58d841dcd63cc0c9"><code>Scientific.Core.TRealFunction</code></a>.</li>
+<li><a href="units/Scientific.Core.html#symbol-scientific-core-trealfunction-58d841dcd63cc0c9"><code>Scientific.Core.TRealFunction</code></a> implements <a href="units/Scientific.Core.html#symbol-scientific-core-irealfunction-7542e455abe9e55d"><code>Scientific.Core.IRealFunction</code></a>.</li>
+<li><a href="units/Scientific.Core.html#symbol-scientific-core-trealfunction-58d841dcd63cc0c9"><code>Scientific.Core.TRealFunction</code></a> inherits from unresolved type <code>TInterfacedObject</code>.</li>
+</ul>
+</details>
+</section>
+<section class="index-section">
+<div class="section-heading"><div><p class="eyebrow">Reference</p><h2>Units</h2></div><p>30 of 30 API symbols documented</p></div>
+<div class="table-shell"><table class="unit-table">
+<thead><tr><th>Unit</th><th>Source</th><th class="number">API symbols</th><th class="number">Documented</th></tr></thead><tbody>
+<tr><td><a class="unit-link" href="units/Scientific.Analysis.html">Scientific.Analysis</a></td><td><code>Scientific.Analysis.pas</code></td><td class="number">15</td><td class="number">15</td></tr>
+<tr><td><a class="unit-link" href="units/Scientific.Core.html">Scientific.Core</a></td><td><code>Scientific.Core.pas</code></td><td class="number">15</td><td class="number">15</td></tr>
+</tbody></table></div></section>
+</main>
+<footer class="site-footer"><div class="shell">Generated by PasWeave from <code>examples/scientific-api</code>.</div></footer>
+</body>
+</html>

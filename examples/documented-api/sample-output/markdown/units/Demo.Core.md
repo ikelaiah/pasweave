@@ -39,13 +39,13 @@ Selects the punctuation used in a generated greeting.
 
 ## Routines
 
-<a id="symbol-demo-core-add-ada12614b553c86d"></a>
+<a id="symbol-demo-core-add-ce92e6099fa0d067"></a>
 ### `Demo.Core.Add`
 
 **Kind:** `routine`; **Visibility:** `public`; **Source:** `Demo.Core.pas:34:13`
 
 ```pascal
-function Add(const A: Integer; const B: Integer) : Integer
+function Add(const A: Integer; const B: Integer): Integer
 ```
 
 Adds two integer values.
@@ -64,7 +64,7 @@ The sum of `A` and `B`.
 
 ## Members
 
-<a id="symbol-demo-core-tgreeter-greetingfor-82c8855e62545192"></a>
+<a id="symbol-demo-core-tgreeter-greetingfor-26da7ea6d7daae6a"></a>
 ### `Demo.Core.TGreeter.GreetingFor`
 
 **Kind:** `method`; **Visibility:** `public`; **Source:** `Demo.Core.pas:23:25`
@@ -72,8 +72,10 @@ The sum of `A` and `B`.
 **Parent:** [`Demo.Core.TGreeter`](#symbol-demo-core-tgreeter-fb605899cec8779b)
 
 ```pascal
-function GreetingFor(const AName: string; AStyle: TGreetingStyle)
-                     : string
+function GreetingFor(
+  const AName: string;
+  AStyle: TGreetingStyle = gsFriendly
+): string
 ```
 
 Builds a greeting for one person.

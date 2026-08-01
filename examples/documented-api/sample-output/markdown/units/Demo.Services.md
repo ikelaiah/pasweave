@@ -58,7 +58,7 @@ Name : string
 
 Name included by `Welcome`.
 
-<a id="symbol-demo-services-tnamedgreeter-welcome-17bff199acaca720"></a>
+<a id="symbol-demo-services-tnamedgreeter-welcome-39c026d5b69e81c2"></a>
 ### `Demo.Services.TNamedGreeter.Welcome`
 
 **Kind:** `method`; **Visibility:** `public`; **Source:** `Demo.Services.pas:25:21`
@@ -66,7 +66,7 @@ Name included by `Welcome`.
 **Parent:** [`Demo.Services.TNamedGreeter`](#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d)
 
 ```pascal
-function Welcome : string
+function Welcome: string
 ```
 
 Builds an excited greeting for the retained name.
