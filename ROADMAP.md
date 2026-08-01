@@ -1,194 +1,286 @@
 # PasWeave roadmap
 
-PasWeave is being built as a sequence of usable documentation pipelines. Each
-milestone should leave the command-line application functional, deterministic,
-and covered by small fixtures before broader features are added.
+PasWeave is currently at `v0.1.0-alpha.1`. The parser-to-site pipeline works;
+the path to `v1.0.0` is about making that pipeline understand real project
+builds, improving author feedback and navigation, scaling it safely, and then
+freezing the public contracts.
 
-This roadmap records direction rather than release dates. Priorities may move
-when real Free Pascal projects expose a more immediate compatibility need.
+This roadmap defines outcomes and release gates rather than dates. A milestone
+is complete only when its behavior is documented, covered by focused fixtures,
+and validated against real Free Pascal projects. Work may move between
+milestones when a compatibility issue blocks an earlier outcome, but the
+`v1.0.0` quality bar does not move with it.
 
-## Completed
+## Product contract through `v1.0.0`
 
-### Parser, model, JSON, and Markdown foundation
+### Documentation comment syntax
 
-- Parse Free Pascal unit interfaces through `fcl-passrc`.
-- Keep FPC parser classes behind an adapter.
-- Represent units, symbols, documentation, directives, and diagnostics in a
-  renderer-independent model.
-- Generate deterministic UTF-8 JSON and linked Markdown pages.
-- Preserve Markdown and mathematical delimiters from `///` documentation.
-- Continue building when an individual unit fails to parse.
-- Validate the pipeline against fixtures and all 45 units in `mathlib-fp`.
+PasWeave accepts exactly three source forms for API documentation:
 
-### Searchable static HTML
+| CLI name | Accepted source form | Default |
+|---|---|---:|
+| `slash` | Consecutive `///` lines | Yes |
+| `brace` | Standalone `{ ... }` blocks | No |
+| `paren` | Standalone `(* ... *)` blocks | No |
 
-- Generate a responsive project index and one page per unit.
-- Share stable symbol anchors with Markdown.
-- Render a safe, focused Markdown subset without remote dependencies.
-- Provide an offline JavaScript search index.
-- Support light and dark colour schemes.
-- Preserve inline and display mathematics for a later renderer.
-- Audit generated links, assets, anchors, search targets, and deterministic
-  output against `mathlib-fp`.
+`--doc-comments=all` is only shorthand for `slash,brace,paren`. The accepted
+syntax set is closed through `v1.0.0`; adding more comment dialects is not part
+of this roadmap.
 
-### Portable Windows distribution
+The association rules remain deliberately conservative:
 
-- Build one portable `pasweave.exe` with no installer.
-- Embed the exact KaTeX and Mermaid payload required by the HTML renderer.
-- Expose an explicit pre-release version through `--version`.
-- Smoke-test the executable outside the repository asset layout.
-- Publish the raw executable and its SHA-256 checksum from a version tag.
-
-### Documentation comment dialects
-
-PasWeave defines consecutive `///` comments as its explicit documentation
-marker and recognizes them by default. This is a PasWeave convention, not a
-special Free Pascal or `fcl-passrc` comment form: FPC sees `///` as an ordinary
-`//` comment whose body starts with `/`. A project can opt into the Pascal
-block-comment forms it uses for API documentation.
-
-Command-line forms:
-
-```text
---doc-comments=slash
---doc-comments=brace
---doc-comments=paren
---doc-comments=slash,brace,paren
---doc-comments=all
-```
-
-The CLI name `slash` means exactly consecutive `///` lines, never ordinary
-`//` comments. It remains the default so ordinary source comments do not
-silently become public documentation.
-
-Completed acceptance criteria:
-
-- Recognize enabled `///`, `{ ... }`, and `(* ... *)` documentation.
-- Merge adjacent enabled comment forms in source order.
-- Require documentation to immediately precede its declaration; a blank line
+- `slash` never includes ordinary `//` comments.
+- `brace` and `paren` are opt-in because ordinary Pascal block comments can
+  contain implementation notes, section labels, or disabled code.
+- Enabled forms may be adjacent and are merged in source order.
+- A documentation group must directly precede an interface declaration; a
+  blank line, disabled comment form, compiler directive, or other source token
   ends the association.
-- Never treat `{$...}` or `(*$...*)` compiler directives as documentation.
-- Preserve original delimiters in `rawDocumentation`.
-- Normalize combined bodies into `markdownDocumentation`.
-- Extract existing structured directives across a mixed comment group.
-- Attach each group to only the following interface declaration.
-- Add fixtures for mixed forms, blank lines, directives, section labels,
-  disabled code, and private declarations.
-- Re-run `mathlib-fp` with brace comments enabled and report both useful
-  coverage and false-positive findings.
+- `{$...}` and `(*$...*)` compiler directives are never documentation.
+- Original delimiters remain available in `rawDocumentation`; normalized body
+  text and supported directives remain renderer-independent model data.
+- `{** ... }` and `(** ... *)` do not gain separate marker semantics. When
+  their enclosing `brace` or `paren` form is enabled, any additional leading
+  `*` belongs to the comment body under the same ordinary block-form rules.
+- Plain `//`, C-style `/* ... */`, Javadoc/Doxygen `/** ... */`, and comments
+  inferred from implementation code are out of scope.
 
-Explicit block-documentation markers such as `{** ... }` and `(** ... *)`
-may later be recognized independently of the ordinary-comment settings.
+### Architecture and output boundaries
 
-The `mathlib-fp` brace-mode audit found useful API prose and expected
-false-positive section labels.
+- Target Free Pascal and `{$mode objfpc}` first; accept Delphi-compatible
+  syntax only where it works naturally through FPC's parser.
+- Reuse `fcl-passrc`; do not create a second Pascal parser.
+- Keep FPC parser objects behind the adapter and out of the public model.
+- Keep JSON, Markdown, and HTML renderers dependent on the same model.
+- Preserve deterministic UTF-8 output, stable ordering, and offline HTML.
+- Prefer explicit unresolved data and precise diagnostics over guessed links,
+  relationships, prose, or compiler behavior.
+- Keep the command-line pipeline usable at the end of every milestone.
 
-### Offline mathematical rendering
+## Current baseline — `v0.1.0-alpha.1`
 
-- Integrate KaTeX with the elements already marked by `data-math-inline` and
-  `data-math-display`.
-- Keep generated sites usable offline.
-- Preserve the original mathematical source in JSON and Markdown.
-- Report invalid expressions without failing the documentation build.
-- Define a clear asset and license strategy before vendoring KaTeX.
+The first alpha established the complete vertical slice:
 
-KaTeX 0.18.1 is vendored with its MIT license and copied into each generated
-site with its fonts. PasWeave renders only explicitly marked math nodes, keeps
-invalid source readable, and avoids interpreting paired currency amounts as
-mathematics. Fixture and browser checks cover valid, invalid, inline, display,
-escaped-dollar, and offline-loading behavior.
+- interface parsing through `fcl-passrc`, per-file error isolation, and a
+  renderer-independent model;
+- the three documentation-comment forms and their opt-in association rules;
+- structured `@param`, `@returns`, `@raises`, `@deprecated`, `@see`, and
+  `@since` extraction;
+- deterministic JSON, linked Markdown, and responsive static HTML;
+- stable overload-aware anchors, documentation coverage, offline search, and
+  light and dark color schemes;
+- offline KaTeX mathematics and linked Mermaid dependency and type diagrams
+  with accessible controls and text fallbacks;
+- deterministic recursive discovery with include and exclude globs;
+- portable Windows packaging with embedded assets and a SHA-256 checksum;
+- fixture coverage plus validation against all 45 units in `mathlib-fp`.
 
-### Unit dependency diagrams
+This baseline remains supported while the compiler and project inputs become
+more complete.
 
-- Generate Mermaid graphs from interface dependencies.
-- Link diagram nodes to unit pages.
-- Keep graph output deterministic.
-- Keep the generated site usable without a network connection.
-- Provide an accessible textual dependency list when diagrams are unavailable.
+## `v0.2.0` — Compiler-aware parsing
 
-Mermaid Tiny 11.16.0 is vendored with its MIT license and copied into each
-generated site. Graph nodes and edges follow stable sorted model data, local
-unit links remain active, and an initially expanded linked text list survives
-disabled JavaScript or diagram errors.
+**Outcome:** PasWeave can parse the same interface a configured Free Pascal
+build sees instead of silently inheriting the documentation host's defaults.
 
-### Type relationships
+Exit criteria:
 
-- Capture explicit ancestors and implemented interfaces from typed
-  `fcl-passrc` nodes rather than declaration text.
-- Resolve targets against the declaring unit and its interface dependencies.
-- Preserve generic display syntax while resolving its underlying declaration.
-- Keep external and ambiguous targets explicitly unresolved.
-- Emit deterministic, linked Mermaid graphs and readable text fallbacks.
-- Cover inheritance, interface implementation, generics, unresolved
-  ancestors, cross-unit scope, and declaration-text non-inference in fixtures.
-- Validate the model and rendered diagram against all 45 `mathlib-fp` units.
+- Accept repeatable unit paths, include paths, and conditional defines.
+- Represent target OS and CPU explicitly and normalize their values before
+  passing them to the parser adapter.
+- Define deterministic precedence for defaults and command-line settings.
+- Resolve include files and project units through configured paths without
+  leaking `fcl-passrc` types into the model.
+- Report missing paths, unreadable includes, invalid defines, and unsupported
+  target values with stable source-aware diagnostics.
+- Cover conditional declarations, nested includes, competing search paths,
+  missing inputs, and host-independent target selection in fixtures.
+- Re-run `mathlib-fp` with settings matching its supported build and explain
+  every difference from the unconfigured baseline.
+- Preserve current output byte-for-byte when no new compiler settings are
+  supplied.
 
-The `mathlib-fp` audit found 34 explicit relationships. Seven resolve inside
-the documented project; 27 standard-library ancestors remain honest
-unresolved nodes because their declaring units are outside the source set.
+## `v0.3.0` — Lazarus project and package inputs
 
-### Diagram interaction
+**Outcome:** common Lazarus projects can describe their source set and parser
+configuration without duplicating it manually on the PasWeave command line.
 
-- Provide independent zoom, directional pan, and reset controls for every
-  successfully rendered architecture diagram.
-- Support keyboard panning, zooming, and reset while the diagram region has
-  focus, plus mouse and pen dragging without intercepting linked nodes.
-- Bound zoom to 50–300%, report the current scale to assistive technology,
-  and respect reduced-motion preferences.
-- Keep controls hidden when Mermaid is unavailable and retain the initially
-  expanded linked text fallback when JavaScript is disabled or rendering
-  fails.
-- Exercise the controls, linked SVGs, independent diagram state, and fallback
-  behavior in a real browser against fixtures and `mathlib-fp`.
+Exit criteria:
 
-The 45-unit `mathlib-fp` site retained all 79 SVG links across its two
-diagrams. Browser checks reached both zoom bounds, panned, dragged, reset, and
-confirmed that interacting with one diagram leaves the other unchanged.
+- Read `.lpi` projects and `.lpk` packages without starting Lazarus.
+- Select a documented target or build mode and import its source paths,
+  include paths, defines, target settings, and main units.
+- Define and test precedence between explicit CLI options, project/package
+  settings, and PasWeave defaults.
+- Discover referenced local packages without traversing generated, vendored,
+  example, or test trees unless they are explicitly included.
+- Diagnose missing package files, unsupported macros, ambiguous targets, and
+  cyclic package references without partial silent configuration.
+- Keep direct file and directory inputs fully supported.
+- Validate at least one multi-package Lazarus project in addition to focused
+  fixtures.
 
-### Project-aware source discovery
+## `v0.4.0` — Authoring feedback and reference integrity
 
-- Preserve single-file input and top-level-only directory discovery by
-  default.
-- Add opt-in deterministic recursion for `.pas` and `.pp` source trees.
-- Support repeatable, root-relative include and exclude globs, with `*` and
-  `?` confined to one path segment and `**` spanning directories.
-- Make exclusions take precedence and prune matching generated, vendored, and
-  test directories.
-- Reject empty, absolute, and parent-traversing patterns.
-- Cover nested units, `.pp` files, filters, precedence, unsafe patterns,
-  deterministic output, and explicit-file compatibility in fixtures.
-- Confirm that default and recursive `mathlib-fp` builds remain identical for
-  its current flat source tree.
+**Outcome:** maintainers can use PasWeave in CI to find documentation defects,
+not only to render the documentation that already exists.
 
-Lazarus project and package readers remain deferred until their compiler
-paths, defines, and target settings can be represented honestly.
+Exit criteria:
 
-## Next: compiler-aware parsing configuration
+- Assign stable diagnostic codes and documented severity levels.
+- Detect missing or duplicate `@param` entries against parsed signatures.
+- Validate `@returns` against routine kind and flag conflicting directives.
+- Resolve project-local `@see` targets with the same conservative scope rules
+  used for type relationships; preserve honest unresolved targets.
+- Report broken internal links, duplicate anchors, and unreachable generated
+  pages as build defects.
+- Add configurable documentation-coverage and diagnostic failure thresholds
+  suitable for CI while retaining a useful default local workflow.
+- Provide a machine-readable diagnostics output based on the existing model
+  rather than a renderer-specific scrape.
+- Exercise all rules across `///`, `{ ... }`, and `(* ... *)` fixtures without
+  broadening the accepted syntax set.
 
-- Expose repeatable unit paths, include paths, and conditional defines without
-  leaking `fcl-passrc` types into the documentation model.
-- Represent target OS and CPU settings explicitly instead of silently using
-  host defaults.
-- Normalize and validate compiler inputs with deterministic diagnostics.
-- Add fixtures for include files, conditional declarations, and dependencies
-  found through configured paths.
-- Preserve current builds when no compiler configuration is supplied.
-- Re-run `mathlib-fp` with explicit settings matching its supported build.
+## `v0.5.0` — Navigation and source traceability
 
-## Later opportunities
+**Outcome:** readers can move efficiently from project overview to API symbol,
+related type, and original source in both small and large documentation sets.
 
-- Source-code links and repository URL templates.
-- Search filters for unit, kind, visibility, and documentation coverage.
-- Incremental builds and stale-output cleanup.
-- Lazarus integration after the command-line workflow is stable.
-- Additional output formats only when they can consume the existing model.
+Exit criteria:
 
-## Continuing constraints
+- Add repository URL templates and line-aware source links with normalized,
+  root-relative paths.
+- Reject source-link templates that can escape the configured repository URL
+  or produce non-deterministic output.
+- Add search filters for unit, symbol kind, visibility, and documentation
+  status while retaining dependency-free offline search.
+- Provide keyboard-accessible search and navigation with visible focus and
+  useful empty-result states.
+- Link resolved `@see`, dependency, parent, and type-relationship targets
+  consistently across HTML and Markdown.
+- Keep URLs and symbol anchors stable unless a documented schema migration
+  requires a change.
+- Validate navigation against the examples, `mathlib-fp`, and at least one
+  nested multi-package project.
 
-- Target Free Pascal and `{$mode objfpc}` first.
-- Use FPC's reusable parser libraries rather than writing a Pascal parser.
-- Keep the documentation model independent from renderers.
-- Prefer deterministic, offline output and small dependencies.
-- Do not infer public prose or type relationships when source intent is
-  ambiguous.
-- Keep diagnostics precise, including filenames and source positions.
+## `v0.6.0` — Safe incremental builds
+
+**Outcome:** repeated builds of large projects are faster without weakening
+determinism or deleting files PasWeave does not own.
+
+Exit criteria:
+
+- Record a deterministic manifest of generated pages and assets.
+- Skip unchanged parse and render work only when all relevant source,
+  configuration, renderer, and asset inputs match.
+- Remove stale outputs only when the prior manifest proves PasWeave created
+  them; never sweep an output directory by extension or broad wildcard.
+- Recover safely from an interrupted build without publishing a mixed old/new
+  site as successful output.
+- Provide an explicit clean-build path and prove it is byte-for-byte identical
+  to a correct incremental result.
+- Establish time and peak-memory baselines for the fixture suite,
+  `mathlib-fp`, and a larger public Pascal corpus.
+- Document cache invalidation and make corrupted cache state a recoverable
+  diagnostic rather than a fatal mystery.
+
+## `v0.7.0` — Reproducible project configuration and theming
+
+**Outcome:** a project can commit one reviewable PasWeave configuration and
+apply a restrained visual identity without forking generated assets.
+
+Exit criteria:
+
+- Add one versioned project configuration format covering stable CLI options.
+- Define precedence as explicit CLI values over project configuration over
+  documented defaults.
+- Resolve every relative path from a documented base and reject parent
+  traversal where it would escape that base.
+- Support project title, repository/source-link settings, output selection,
+  visibility policy, and coverage thresholds.
+- Expose a small set of validated theme tokens for colors, typography, and a
+  local project mark while retaining accessible defaults.
+- Keep arbitrary script injection, remote runtime dependencies, and executable
+  renderer plugins out of the `v1.0.0` scope.
+- Include the effective normalized configuration in diagnostics or model
+  metadata so a build can be reproduced.
+
+## `v0.8.0` — Portability and ecosystem validation
+
+**Outcome:** PasWeave has an evidence-backed support matrix and is tested
+outside its original Windows development path.
+
+Exit criteria:
+
+- Build and run the full fixture suite on supported Windows and Linux targets.
+- Validate behavior across the supported Free Pascal compiler versions rather
+  than assuming compatibility from `3.2.2` alone.
+- Define the binary-release target matrix from successful CI evidence and
+  publish a checksum for every artifact.
+- Keep generated JSON, Markdown, HTML, anchors, and search data identical
+  across supported hosts for the same logical inputs.
+- Add at least two substantial public Pascal validation projects with
+  different comment and project-layout conventions.
+- Record parser gaps, unsupported language modes, and platform limitations in
+  a maintained compatibility document.
+- Verify offline assets and third-party notices in every packaged artifact.
+
+## `v0.9.0` — Contract freeze and release candidates
+
+**Outcome:** the CLI, configuration, model schema, URLs, and renderer behavior
+are ready to become supported `v1.0.0` contracts.
+
+Exit criteria:
+
+- Freeze and document command names, option meanings, exit codes, diagnostic
+  codes, configuration keys, and precedence rules.
+- Publish the JSON schema and define compatibility rules for future additive
+  and breaking changes.
+- Freeze stable-anchor and generated-URL rules with migration fixtures for any
+  pre-release format changes.
+- Complete accessibility checks for keyboard navigation, screen-reader names,
+  contrast, reduced motion, diagrams, mathematics, and no-JavaScript fallbacks.
+- Complete security review of Markdown rendering, URL generation, local asset
+  handling, source links, project-file input, and output cleanup.
+- Run clean and incremental determinism checks on every validation corpus and
+  supported platform.
+- Publish at least one release candidate and resolve all known defects that
+  could corrupt output, misdocument public API, delete unrelated files, or
+  break a frozen contract.
+- Finish the installation, quick-start, configuration, CI, migration,
+  troubleshooting, and release documentation.
+
+## `v1.0.0` — Stable Free Pascal documentation pipeline
+
+`v1.0.0` is ready when a maintainer can point PasWeave at a supported file,
+source tree, Lazarus project, or Lazarus package and receive deterministic,
+offline, navigable API documentation with actionable diagnostics and a stable
+machine-readable model.
+
+The release must satisfy all earlier milestone gates and additionally:
+
+- support exactly the documented `///`, `{ ... }`, and `(* ... *)` comment
+  forms with `///` as the safe default;
+- carry no unresolved critical or data-loss defects;
+- pass the full fixture, golden-output, package-isolation, browser,
+  accessibility, security, and corpus-validation suites;
+- publish the support matrix, known limitations, schema compatibility policy,
+  and upgrade guidance;
+- produce reproducible release artifacts and checksums for every advertised
+  binary platform;
+- preserve a complete source-build path for platforms without a published
+  binary; and
+- use semantic versioning for subsequent CLI, configuration, schema, and URL
+  contract changes.
+
+## Quality gate for every milestone
+
+No milestone is complete with code alone. Each release must:
+
+- add focused regression fixtures before or with the behavior;
+- keep unrelated golden output unchanged;
+- update the README, detailed documentation, changelog, and version metadata
+  together;
+- run the complete automated suite and the relevant real-project audits;
+- document new limitations and diagnostics instead of hiding them; and
+- leave direct file input and the default `///` workflow working end to end.

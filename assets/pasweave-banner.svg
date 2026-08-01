@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="420" viewBox="0 0 1280 420" role="img" aria-labelledby="title description">
+  <title id="title">PasWeave</title>
+  <desc id="description">Pascal source code connected by woven strands to modern linked API documentation.</desc>
+  <defs>
+    <linearGradient id="background" x1="40" y1="20" x2="1220" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10131c"/>
+      <stop offset="0.56" stop-color="#17172a"/>
+      <stop offset="1" stop-color="#102a2a"/>
+    </linearGradient>
+    <linearGradient id="wordmark" x1="90" y1="136" x2="600" y2="222" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff"/>
+      <stop offset="0.62" stop-color="#dedaff"/>
+      <stop offset="1" stop-color="#98eee4"/>
+    </linearGradient>
+    <linearGradient id="violetThread" x1="852" y1="0" x2="1018" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a99eff"/>
+      <stop offset="1" stop-color="#6d5df6"/>
+    </linearGradient>
+    <linearGradient id="tealThread" x1="852" y1="0" x2="1018" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#63d7ca"/>
+      <stop offset="1" stop-color="#16a596"/>
+    </linearGradient>
+    <linearGradient id="page" x1="988" y1="58" x2="1212" y2="356" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#25283a"/>
+      <stop offset="1" stop-color="#181d2a"/>
+    </linearGradient>
+    <radialGradient id="violetGlow" cx="0" cy="0" r="1" gradientTransform="translate(1002 172) rotate(90) scale(230)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#635bff" stop-opacity="0.17"/>
+      <stop offset="1" stop-color="#635bff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tealGlow" cx="0" cy="0" r="1" gradientTransform="translate(1164 360) rotate(90) scale(190)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14b8a6" stop-opacity="0.15"/>
+      <stop offset="1" stop-color="#14b8a6" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="#c7d2fe" fill-opacity="0.07"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#050711" flood-opacity="0.48"/>
+    </filter>
+    <filter id="threadGlow" x="-20%" y="-60%" width="140%" height="220%" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <clipPath id="canvasClip">
+      <rect width="1280" height="420" rx="28"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#canvasClip)">
+    <rect width="1280" height="420" fill="url(#background)"/>
+    <rect width="1280" height="420" fill="url(#dots)"/>
+    <circle cx="1002" cy="172" r="230" fill="url(#violetGlow)"/>
+    <circle cx="1164" cy="360" r="190" fill="url(#tealGlow)"/>
+
+    <path d="M-70 355C101 296 172 392 343 333S585 307 704 342" fill="none" stroke="#a99eff" stroke-opacity="0.12" stroke-width="2"/>
+    <path d="M-60 380C102 321 187 414 350 360S585 335 733 372" fill="none" stroke="#63d7ca" stroke-opacity="0.11" stroke-width="2"/>
+    <path d="M995-28c66 50 87 104 64 161-23 56-4 104 58 142 63 38 98 90 105 157" fill="none" stroke="#63d7ca" stroke-opacity="0.1" stroke-width="2"/>
+
+    <g transform="translate(91 82)" aria-hidden="true" fill="none" stroke-linecap="round">
+      <path d="M0 7h15c12 0 14 22 26 22h17" stroke="#a99eff" stroke-width="5"/>
+      <path d="M0 29h15C27 29 29 7 41 7h17" stroke="#63d7ca" stroke-width="5"/>
+      <circle cx="62" cy="7" r="3.5" fill="#63d7ca" stroke="none"/>
+      <circle cx="62" cy="29" r="3.5" fill="#a99eff" stroke="none"/>
+    </g>
+
+    <text x="86" y="204" fill="url(#wordmark)" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="88" font-weight="760" letter-spacing="-4">PasWeave</text>
+    <text x="91" y="251" fill="#c4cada" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="25" font-weight="450" letter-spacing="0.1">Modern API documentation for Free Pascal.</text>
+    <text x="92" y="297" fill="#9ba5ba" font-family="Cascadia Code, SFMono-Regular, Consolas, monospace" font-size="13" font-weight="600" letter-spacing="1.1" aria-hidden="true">MARKDOWN  ·  HTML  ·  JSON  ·  OFFLINE</text>
+
+    <g filter="url(#shadow)" aria-hidden="true">
+      <rect x="704" y="86" width="174" height="248" rx="20" fill="#181c29" stroke="#8d86dc" stroke-opacity="0.28" stroke-width="2"/>
+      <rect x="720" y="103" width="142" height="30" rx="10" fill="#222638"/>
+    </g>
+
+    <g font-family="Cascadia Code, SFMono-Regular, Consolas, monospace" aria-hidden="true">
+      <circle cx="738" cy="118" r="4" fill="#a99eff"/>
+      <text x="750" y="122" fill="#cfd4e4" font-size="11" font-weight="700" letter-spacing="1">SOURCE.PAS</text>
+      <text x="723" y="167" fill="#a99eff" font-size="12" font-weight="600">/// Builds linked</text>
+      <text x="723" y="188" fill="#a99eff" font-size="12" font-weight="600">/// API docs.</text>
+      <text x="723" y="226" fill="#63d7ca" font-size="11.5">procedure</text>
+      <text x="723" y="247" fill="#e5e8f1" font-size="11.5">  Build;</text>
+      <text x="723" y="285" fill="#687287" font-size="10.5">interface</text>
+      <text x="723" y="304" fill="#687287" font-size="10.5">  declarations</text>
+    </g>
+
+    <g aria-hidden="true" stroke-linecap="round">
+      <path d="M878 160h12c38 0 48 56 86 56h18" fill="none" stroke="#6d5df6" stroke-opacity="0.18" stroke-width="16"/>
+      <path d="M878 216h12c38 0 48-56 86-56h18" fill="none" stroke="#16a596" stroke-opacity="0.16" stroke-width="16"/>
+      <path d="M878 276h42c25 0 30 18 56 18h18" fill="none" stroke="#6d5df6" stroke-opacity="0.15" stroke-width="16"/>
+      <g filter="url(#threadGlow)">
+        <path d="M878 160h12c38 0 48 56 86 56h18" fill="none" stroke="url(#violetThread)" stroke-width="5"/>
+        <path d="M878 216h12c38 0 48-56 86-56h18" fill="none" stroke="url(#tealThread)" stroke-width="5"/>
+        <path d="M878 276h42c25 0 30 18 56 18h18" fill="none" stroke="url(#violetThread)" stroke-width="5"/>
+      </g>
+    </g>
+
+    <g filter="url(#shadow)" aria-hidden="true">
+      <path d="M1014 58h126l70 70v210c0 14-12 26-26 26h-170c-14 0-26-12-26-26V84c0-14 12-26 26-26Z" fill="url(#page)" stroke="#959cba" stroke-opacity="0.28" stroke-width="2"/>
+      <path d="M1140 58v44c0 14 12 26 26 26h44" fill="#30344b" stroke="#9ba5ba" stroke-opacity="0.28" stroke-width="2" stroke-linejoin="round"/>
+    </g>
+
+    <g aria-hidden="true">
+      <text x="1022" y="103" fill="#8ee8dd" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="10.5" font-weight="750" letter-spacing="1.6">API REFERENCE</text>
+      <rect x="1022" y="121" width="86" height="5" rx="2.5" fill="#e9ecf6" fill-opacity="0.76"/>
+      <circle cx="1022" cy="160" r="5" fill="#63d7ca"/>
+      <rect x="1040" y="157" width="121" height="6" rx="3" fill="#e9ecf6" fill-opacity="0.84"/>
+      <rect x="1040" y="175" width="86" height="5" rx="2.5" fill="#9ba5ba" fill-opacity="0.63"/>
+      <circle cx="1022" cy="216" r="5" fill="#a99eff"/>
+      <rect x="1040" y="213" width="103" height="6" rx="3" fill="#e9ecf6" fill-opacity="0.84"/>
+      <rect x="1040" y="231" width="132" height="5" rx="2.5" fill="#9ba5ba" fill-opacity="0.63"/>
+      <circle cx="1022" cy="294" r="5" fill="#a99eff"/>
+      <rect x="1040" y="291" width="116" height="6" rx="3" fill="#e9ecf6" fill-opacity="0.84"/>
+    </g>
+
+    <g transform="translate(1038 313)" aria-hidden="true">
+      <rect width="184" height="48" rx="24" fill="#10131c" stroke="#63d7ca" stroke-opacity="0.48" stroke-width="1.5"/>
+      <path d="m20 25 6 6 13-16" fill="none" stroke="#63d7ca" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="53" y="30" fill="#d7f8f4" font-family="Inter, Segoe UI, Arial, sans-serif" font-size="14" font-weight="750" letter-spacing="1.25">LINKED DOCS</text>
+    </g>
+  </g>
+  <rect x="1" y="1" width="1278" height="418" rx="27" fill="none" stroke="#ffffff" stroke-opacity="0.1" stroke-width="2"/>
+</svg>

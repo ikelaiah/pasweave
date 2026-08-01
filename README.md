@@ -1,4 +1,4 @@
-# PasWeave 🧵
+![PasWeave — Documentation, woven from Pascal source](assets/pasweave-banner.svg)
 
 [![Version](https://img.shields.io/badge/version-0.1.0--alpha.1-635bff)](CHANGELOG.md)
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
