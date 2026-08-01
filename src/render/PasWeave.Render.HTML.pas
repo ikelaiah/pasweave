@@ -1326,8 +1326,7 @@ begin
     raise EFCreateError.CreateFmt('cannot create HTML asset directory: %s',
       [AssetsDirectory]);
 
-  WriteKaTeXAssets(AssetsDirectory);
-  WriteMermaidAssets(AssetsDirectory);
+  WriteThirdPartyAssets(AssetsDirectory);
   WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.html',
     RenderHTMLIndex(AProject));
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'site.css',

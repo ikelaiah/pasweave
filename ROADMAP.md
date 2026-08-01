@@ -31,6 +31,14 @@ when real Free Pascal projects expose a more immediate compatibility need.
 - Audit generated links, assets, anchors, search targets, and deterministic
   output against `mathlib-fp`.
 
+### Portable Windows distribution
+
+- Build one portable `pasweave.exe` with no installer.
+- Embed the exact KaTeX and Mermaid payload required by the HTML renderer.
+- Expose an explicit pre-release version through `--version`.
+- Smoke-test the executable outside the repository asset layout.
+- Publish the raw executable and its SHA-256 checksum from a version tag.
+
 ### Documentation comment dialects
 
 PasWeave defines consecutive `///` comments as its explicit documentation

@@ -6,7 +6,8 @@ uses
   Classes, SysUtils, FPJSON, JSONParser,
   PasWeave.Comments, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
-  PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets;
+  PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
+  PasWeave.Version;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
@@ -201,6 +202,8 @@ var
   DiscoveryOptions: TSourceDiscoveryOptions;
   InputErrorRaised: Boolean;
 begin
+  Check(PasWeaveVersion = '0.1.0-alpha.1',
+    'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
   Check(CommentStyles = AllDocumentationCommentStyles,

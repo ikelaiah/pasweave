@@ -11,13 +11,14 @@ implementation
 uses
   Classes, SysUtils, PasWeave.Comments, PasWeave.Diagnostics, PasWeave.Model,
   PasWeave.Model.JSON, PasWeave.Parser, PasWeave.Render.Markdown,
-  PasWeave.Render.HTML;
+  PasWeave.Render.HTML, PasWeave.Version;
 
 procedure PrintUsage;
 begin
   WriteLn('PasWeave - Free Pascal-first documentation model generator');
   WriteLn;
   WriteLn('Usage:');
+  WriteLn('  pasweave --version');
   WriteLn('  pasweave build <unit-or-directory> [--output <directory>]');
   WriteLn('                 [--project-name <name>] [--doc-comments=<styles>]');
   WriteLn('                 [--recursive] [--include=<glob>] [--exclude=<glob>]');
@@ -206,6 +207,11 @@ begin
        (ParamStr(1) = '-h') then
     begin
       PrintUsage;
+      Exit(0);
+    end;
+    if ParamStr(1) = '--version' then
+    begin
+      WriteLn('PasWeave ', PasWeaveVersion);
       Exit(0);
     end;
     if ParamStr(1) <> 'build' then

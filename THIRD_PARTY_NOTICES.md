@@ -22,5 +22,5 @@ MIT License. The complete upstream license accompanies the vendored files at
 [`assets/mermaid/LICENSE`](assets/mermaid/LICENSE) and is copied into generated
 HTML sites.
 
-These notices cover only the third-party KaTeX and Mermaid assets. PasWeave's
-own project license remains a separate maintainer decision.
+These notices cover only the third-party KaTeX and Mermaid assets. PasWeave
+itself is distributed under the [MIT License](LICENSE).

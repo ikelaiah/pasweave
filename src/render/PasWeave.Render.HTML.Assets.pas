@@ -13,13 +13,21 @@ function HTMLStylesheet: UTF8String;
 function HTMLApplicationScript: UTF8String;
 function HTMLMathScript: UTF8String;
 function HTMLDiagramScript: UTF8String;
+procedure WriteThirdPartyAssets(const AAssetsDirectory: string);
 procedure WriteKaTeXAssets(const AAssetsDirectory: string);
 procedure WriteMermaidAssets(const AAssetsDirectory: string);
 
 implementation
 
 uses
-  Classes, SysUtils, StrUtils;
+  Classes, SysUtils, StrUtils
+  {$IFDEF PASWEAVE_PORTABLE_ASSETS}
+  {$IFDEF MSWINDOWS}
+  , Zipper
+  {$ELSE}
+  {$ERROR Portable asset embedding currently requires Windows}
+  {$ENDIF}
+  {$ENDIF};
 
 procedure AppendLine(var AOutput: UTF8String; const ALine: UTF8String = '');
 begin
@@ -882,6 +890,78 @@ begin
     'mermaid.tiny.js');
   CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'LICENSE',
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'LICENSE');
+end;
+
+{$IFDEF PASWEAVE_PORTABLE_ASSETS}
+type
+  TEmbeddedAssetExtractor = class
+  private
+    procedure CloseInputStream(Sender: TObject; var AStream: TStream);
+    procedure OpenInputStream(Sender: TObject; var AStream: TStream);
+  public
+    procedure ExtractTo(const AAssetsDirectory: string);
+  end;
+
+const
+  WindowsRCDATAResourceType = 10;
+
+procedure TEmbeddedAssetExtractor.OpenInputStream(Sender: TObject;
+  var AStream: TStream);
+begin
+  AStream := TResourceStream.Create(HInstance, 'PASWEAVE_ASSETS',
+    PChar(PtrUInt(WindowsRCDATAResourceType)));
+end;
+
+procedure TEmbeddedAssetExtractor.CloseInputStream(Sender: TObject;
+  var AStream: TStream);
+begin
+  FreeAndNil(AStream);
+end;
+
+procedure TEmbeddedAssetExtractor.ExtractTo(const AAssetsDirectory: string);
+var
+  UnZipper: TUnZipper;
+begin
+  if not ForceDirectories(AAssetsDirectory) then
+    raise EFCreateError.CreateFmt('cannot create HTML asset directory: %s',
+      [AAssetsDirectory]);
+  UnZipper := TUnZipper.Create;
+  try
+    UnZipper.OutputPath := AAssetsDirectory;
+    UnZipper.UseUTF8 := True;
+    UnZipper.OnOpenInputStream := @OpenInputStream;
+    UnZipper.OnCloseInputStream := @CloseInputStream;
+    UnZipper.UnZipAllFiles;
+  finally
+    UnZipper.Free;
+  end;
+
+  if not IsKaTeXAssetsDirectory(IncludeTrailingPathDelimiter(
+    AAssetsDirectory) + 'katex') then
+    raise Exception.Create('embedded KaTeX assets are incomplete');
+  if not IsMermaidAssetsDirectory(IncludeTrailingPathDelimiter(
+    AAssetsDirectory) + 'mermaid') then
+    raise Exception.Create('embedded Mermaid assets are incomplete');
+end;
+{$ENDIF}
+
+procedure WriteThirdPartyAssets(const AAssetsDirectory: string);
+{$IFDEF PASWEAVE_PORTABLE_ASSETS}
+var
+  Extractor: TEmbeddedAssetExtractor;
+{$ENDIF}
+begin
+  {$IFDEF PASWEAVE_PORTABLE_ASSETS}
+  Extractor := TEmbeddedAssetExtractor.Create;
+  try
+    Extractor.ExtractTo(AAssetsDirectory);
+  finally
+    Extractor.Free;
+  end;
+  {$ELSE}
+  WriteKaTeXAssets(AAssetsDirectory);
+  WriteMermaidAssets(AAssetsDirectory);
+  {$ENDIF}
 end;
 
 end.

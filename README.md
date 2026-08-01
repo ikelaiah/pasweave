@@ -52,7 +52,34 @@ workflow centred on Markdown, structured output and modern static
 documentation. We appreciate the substantial work those projects have
 contributed to the Pascal ecosystem.
 
+## Download
+
+Windows users can download the portable `pasweave.exe` from the
+[GitHub Releases page](https://github.com/ikelaiah/pasweave/releases). It does
+not use an installer, modify the registry, or require Free Pascal at runtime.
+The executable contains the offline KaTeX and Mermaid assets needed by the
+HTML renderer.
+
+Place it anywhere and run:
+
+```powershell
+.\pasweave.exe --version
+.\pasweave.exe build path\to\project --output docs
+```
+
+Each release also provides `pasweave.exe.sha256` for integrity verification:
+
+```powershell
+Get-FileHash .\pasweave.exe -Algorithm SHA256
+```
+
+Early pre-release executables are not code-signed, so Windows may display a
+SmartScreen warning. Download only from the PasWeave release page and compare
+the SHA-256 value before running the executable.
+
 ## Requirements
+
+These requirements apply only when compiling PasWeave from source:
 
 - Free Pascal 3.2.2 or newer
 - the FPC `fcl-passrc` and `fcl-json` packages
@@ -95,6 +122,18 @@ Run the test executable from the repository root so it can find its fixture:
 ```text
 build/tests/test_pasweave
 ```
+
+To build the standalone Windows release executable and perform its isolated
+smoke test:
+
+```powershell
+.\scripts\build-portable-windows.ps1
+```
+
+This writes only `dist\pasweave.exe` and its checksum as release artifacts;
+there is no installer or ZIP package. See the
+[release procedure](docs/releasing.md) for the isolated smoke test, version-tag
+rules, and public-release license gate.
 
 ## Use
 
@@ -316,12 +355,12 @@ for its offline-search, safety, and Markdown-subset contracts.
   declarations originating from include files do not yet have source-backed
   comment extraction;
 - no fixture coverage yet for every requested symbol kind or unusual FPC
-  syntax;
-- no license has been selected for the repository yet.
+  syntax.
 
-The absence of a license is intentional in this bootstrap commit: choosing an
-open-source license is a maintainer decision, not a code-generation default.
-Bundled third-party components retain their own licenses; see
+## License
+
+PasWeave is released under the [MIT License](LICENSE). Bundled third-party
+components retain their own licenses; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## 🧭 Roadmap

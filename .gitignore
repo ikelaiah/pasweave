@@ -1,6 +1,6 @@
 /build/
+/dist/
 *.exe
 *.o
 *.ppu
 *.rst
-

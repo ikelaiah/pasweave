@@ -1,0 +1,54 @@
+name: Release portable Windows binary
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@v6
+
+      - name: Verify the public-release license gate
+        shell: pwsh
+        run: |
+          if (-not (Test-Path -LiteralPath LICENSE)) {
+            throw 'A project LICENSE must be committed before publishing binaries.'
+          }
+
+      - name: Install Free Pascal 3.2.2
+        shell: powershell
+        run: |
+          choco install freepascal --version=3.2.2 --yes --no-progress
+          [IO.File]::AppendAllText($env:GITHUB_PATH,
+            "C:\tools\freepascal\bin\i386-win32`n",
+            [Text.UTF8Encoding]::new($false))
+
+      - name: Build and smoke-test the portable executable
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME.TrimStart('v')
+          .\scripts\build-portable-windows.ps1 -ExpectedVersion $version
+
+      - name: Publish the raw executable and checksum
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $arguments = @(
+            'release', 'create', $env:GITHUB_REF_NAME,
+            'dist/pasweave.exe', 'dist/pasweave.exe.sha256',
+            '--verify-tag', '--generate-notes',
+            '--title', "PasWeave $env:GITHUB_REF_NAME"
+          )
+          if ($env:GITHUB_REF_NAME.Contains('-')) {
+            $arguments += '--prerelease'
+          }
+          gh @arguments
