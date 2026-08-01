@@ -59,3 +59,7 @@ GitHub pre-releases.
 
 Do not draft the GitHub release manually. Pushing the tag starts the validated
 build, and the workflow creates the release only after that build succeeds.
+
+If a Windows build fails, consult the
+[Windows CI troubleshooting guide](windows-ci-troubleshooting.md) before
+changing or recreating a release tag.
