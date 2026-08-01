@@ -4,7 +4,8 @@ program test_pasweave;
 
 uses
   Classes, SysUtils, FPJSON, JSONParser,
-  PasWeave.Comments, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Comments, PasWeave.Compiler, PasWeave.Diagnostics, PasWeave.Model,
+  PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
   PasWeave.Version;
@@ -200,9 +201,15 @@ var
   DiscoveryProject: TDocProject;
   SecondDiscoveryProject: TDocProject;
   DiscoveryOptions: TSourceDiscoveryOptions;
+  CompilerOptions: TCompilerOptions;
+  CompilerProject: TDocProject;
+  ComparisonProject: TDocProject;
+  CompilerUnit: TDocUnit;
+  CompilerSymbol: TDocSymbol;
+  NormalisedTarget: string;
   InputErrorRaised: Boolean;
 begin
-  Check(PasWeaveVersion = '0.1.0-alpha.1',
+  Check(PasWeaveVersion = '0.2.0',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -218,6 +225,276 @@ begin
     'failed documentation comment parsing should not leave partial styles');
   Check(DocumentationCommentStylesText([dcsBrace, dcsSlash]) =
     'slash,brace', 'documentation comment styles should have stable text');
+
+  Check(TryNormaliseTargetOS('Windows-64', NormalisedTarget) and
+    (NormalisedTarget = 'win64'),
+    'target OS aliases should normalize before adapter use');
+  Check(TryNormaliseTargetOS('macOS', NormalisedTarget) and
+    (NormalisedTarget = 'darwin'),
+    'macOS should normalize to the Free Pascal Darwin target');
+  Check(not TryNormaliseTargetOS('plan9', NormalisedTarget),
+    'unsupported target operating systems should be rejected');
+  Check(TryNormaliseTargetCPU('arm64', NormalisedTarget) and
+    (NormalisedTarget = 'aarch64'),
+    'target CPU aliases should normalize before adapter use');
+  Check(TryNormaliseTargetCPU('x86-64', NormalisedTarget) and
+    (NormalisedTarget = 'x86_64'),
+    'x86-64 should normalize to the Free Pascal target name');
+  Check(not TryNormaliseTargetCPU('z80', NormalisedTarget),
+    'unsupported target CPUs should be rejected');
+  Check(IsValidConditionalDefine('FEATURE_2') and
+    not IsValidConditionalDefine('2FEATURE') and
+    not IsValidConditionalDefine('FEATURE=2'),
+    'conditional defines should be plain Pascal identifiers');
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    CompilerOptions.AddDefine('feature_alpha');
+    CompilerOptions.AddDefine('FEATURE_ALPHA');
+    CompilerOptions.SetTargetOS('LINUX');
+    CompilerOptions.SetTargetCPU('arm64');
+    Check((CompilerOptions.Defines.Count = 1) and
+      (CompilerOptions.Defines[0] = 'FEATURE_ALPHA'),
+      'repeatable defines should normalize and ignore duplicates');
+    Check((CompilerOptions.TargetOS = 'linux') and
+      (CompilerOptions.TargetCPU = 'aarch64'),
+      'explicit targets should retain their canonical values');
+
+    CompilerProject := BuildProject(
+      'tests/fixtures/compiler/conditional/ConditionalAPI.pas',
+      'ConditionalCompilerFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, nil, CompilerOptions);
+    try
+      Check((AttemptedCount = 1) and
+        (CompilerProject.Errors.Count = 0),
+        'configured conditional fixture should parse once without errors');
+      CompilerUnit := FindUnitModel(CompilerProject, 'ConditionalAPI');
+      Check(Assigned(FindSymbol(CompilerUnit, 'AlphaFeature')) and
+        not Assigned(FindSymbol(CompilerUnit, 'DefaultFeature')),
+        'repeatable defines should select the configured declaration');
+      Check(Assigned(FindSymbol(CompilerUnit, 'UnixTarget')) and
+        not Assigned(FindSymbol(CompilerUnit, 'WindowsTarget')),
+        'target OS selection should be independent of the documentation host');
+      Check(Assigned(FindSymbol(CompilerUnit, 'SixtyFourBitTarget')) and
+        not Assigned(FindSymbol(CompilerUnit, 'ThirtyTwoBitTarget')) and
+        Assigned(FindSymbol(CompilerUnit, 'AArch64Target')),
+        'target CPU selection should expose the configured width and CPU');
+    finally
+      CompilerProject.Free;
+    end;
+  finally
+    CompilerOptions.Free;
+  end;
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    CompilerOptions.AddIncludePath(
+      'tests/fixtures/compiler/includes/fragments');
+    CompilerProject := BuildProject(
+      'tests/fixtures/compiler/includes/IncludeAPI.pas',
+      'NestedIncludeFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, nil, CompilerOptions);
+    try
+      Check((AttemptedCount = 1) and
+        (CompilerProject.Errors.Count = 0),
+        'configured include paths should resolve nested includes');
+      CompilerUnit := FindUnitModel(CompilerProject, 'IncludeAPI');
+      CompilerSymbol := FindSymbol(CompilerUnit, 'OuterIncluded');
+      Check(Assigned(CompilerSymbol) and
+        (CompilerSymbol.MarkdownDocumentation =
+        'Declaration supplied by the outer include.') and
+        (ExtractFileName(CompilerSymbol.SourceFilename) = 'outer.inc'),
+        'outer include declarations should retain source-backed documentation');
+      CompilerSymbol := FindSymbol(CompilerUnit, 'NestedIncluded');
+      Check(Assigned(CompilerSymbol) and
+        (CompilerSymbol.MarkdownDocumentation =
+        'Declaration supplied by the nested include.') and
+        (ExtractFileName(CompilerSymbol.SourceFilename) = 'nested.inc'),
+        'nested include declarations should retain their include source');
+    finally
+      CompilerProject.Free;
+    end;
+  finally
+    CompilerOptions.Free;
+  end;
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    CompilerOptions.AddIncludePath(
+      'tests/fixtures/compiler/includes/path-a');
+    CompilerOptions.AddIncludePath(
+      'tests/fixtures/compiler/includes/path-b');
+    CompilerProject := BuildProject(
+      'tests/fixtures/compiler/includes/CompetingInclude.pas',
+      'CompetingIncludeFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, nil, CompilerOptions);
+    try
+      CompilerUnit := FindUnitModel(CompilerProject, 'CompetingInclude');
+      Check((CompilerProject.Errors.Count = 0) and
+        Assigned(FindSymbol(CompilerUnit, 'FirstPathChoice')) and
+        not Assigned(FindSymbol(CompilerUnit, 'SecondPathChoice')),
+        'the earliest configured include path should win deterministically');
+    finally
+      CompilerProject.Free;
+    end;
+  finally
+    CompilerOptions.Free;
+  end;
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    CompilerOptions.AddIncludePath(
+      'tests/fixtures/compiler/includes/fragments');
+    CompilerProject := BuildProject(
+      'tests/fixtures/compiler/includes/MissingInclude.pas',
+      'MissingIncludeFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, nil, CompilerOptions);
+    try
+      Check((CompilerProject.Units.Count = 0) and
+        (CompilerProject.Errors.Count = 1),
+        'a missing include should produce one isolated parser diagnostic');
+      Check((TDiagnostic(CompilerProject.Errors[0]).SourceFilename =
+        'MissingInclude.pas') and
+        (TDiagnostic(CompilerProject.Errors[0]).SourceLine = 7) and
+        (TDiagnostic(CompilerProject.Errors[0]).MessageText =
+        'include file is missing or unreadable: absent.inc'),
+        'missing include diagnostics should retain stable source context');
+    finally
+      CompilerProject.Free;
+    end;
+  finally
+    CompilerOptions.Free;
+  end;
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    CompilerOptions.AddUnitPath(
+      'tests/fixtures/compiler/units/path-a');
+    CompilerOptions.AddUnitPath(
+      'tests/fixtures/compiler/units/path-b');
+    CompilerProject := BuildProject(
+      'tests/fixtures/compiler/units/root/UnitPathConsumer.pas',
+      'UnitPathFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, nil, CompilerOptions);
+    try
+      Check((AttemptedCount = 3) and (CompilerProject.Units.Count = 3) and
+        (CompilerProject.Errors.Count = 0),
+        'unit paths should resolve project dependencies transitively');
+      CompilerUnit := FindUnitModel(CompilerProject, 'SharedDependency');
+      Check(Assigned(FindSymbol(CompilerUnit, 'TSharedBase')) and
+        not Assigned(FindSymbol(CompilerUnit, 'TWrongPathBase')),
+        'the earliest configured unit path should win deterministically');
+      CompilerUnit := FindUnitModel(CompilerProject, 'UnitPathConsumer');
+      CompilerSymbol := FindSymbol(CompilerUnit, 'TConsumer');
+      TypeRelationship := FindTypeRelationship(CompilerSymbol,
+        trkInheritance);
+      Check(Assigned(TypeRelationship) and
+        (TypeRelationship.TargetSymbolID =
+        'class:shareddependency.tsharedbase'),
+        'resolved unit-path sources should participate in model relationships');
+    finally
+      CompilerProject.Free;
+    end;
+  finally
+    CompilerOptions.Free;
+  end;
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    ComparisonProject := BuildProject('tests/fixtures/SimpleUnit.pas',
+      'NoSettingsCompatibilityFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, nil, CompilerOptions);
+    CompilerProject := BuildProject('tests/fixtures/SimpleUnit.pas',
+      'NoSettingsCompatibilityFixture', AttemptedCount);
+    try
+      Check(ProjectToJSON(ComparisonProject) =
+        ProjectToJSON(CompilerProject),
+        'an empty compiler configuration should preserve model bytes');
+      Check(RenderMarkdownUnit(ComparisonProject,
+        TDocUnit(ComparisonProject.Units[0])) =
+        RenderMarkdownUnit(CompilerProject,
+        TDocUnit(CompilerProject.Units[0])),
+        'an empty compiler configuration should preserve renderer bytes');
+    finally
+      CompilerProject.Free;
+      ComparisonProject.Free;
+    end;
+  finally
+    CompilerOptions.Free;
+  end;
+
+  ComparisonProject := BuildProject(
+    'tests/fixtures/compiler/includes/LocalIncludeAPI.pas',
+    'LocalIncludeCompatibilityFixture', AttemptedCount);
+  try
+    CompilerUnit := FindUnitModel(ComparisonProject, 'LocalIncludeAPI');
+    Check(FindSymbol(CompilerUnit, 'LocalIncluded').MarkdownDocumentation = '',
+      'no-settings include documentation should retain baseline behavior');
+  finally
+    ComparisonProject.Free;
+  end;
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    CompilerOptions.AddIncludePath(
+      'tests/fixtures/compiler/includes');
+    CompilerProject := BuildProject(
+      'tests/fixtures/compiler/includes/LocalIncludeAPI.pas',
+      'ConfiguredLocalIncludeFixture', AttemptedCount,
+      DefaultDocumentationCommentStyles, nil, CompilerOptions);
+    try
+      CompilerUnit := FindUnitModel(CompilerProject, 'LocalIncludeAPI');
+      Check(FindSymbol(CompilerUnit,
+        'LocalIncluded').MarkdownDocumentation =
+        'Documentation stored beside the source unit.',
+        'configured builds should read include-backed documentation');
+    finally
+      CompilerProject.Free;
+    end;
+  finally
+    CompilerOptions.Free;
+  end;
+
+  CompilerOptions := TCompilerOptions.Create;
+  try
+    InputErrorRaised := False;
+    try
+      CompilerOptions.AddDefine('INVALID=1');
+    except
+      on E: ECompilerConfigurationError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised, 'invalid conditional defines should fail early');
+
+    InputErrorRaised := False;
+    try
+      CompilerOptions.AddUnitPath('tests/fixtures/compiler/missing');
+    except
+      on E: ECompilerConfigurationError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised, 'missing configured unit paths should fail early');
+
+    InputErrorRaised := False;
+    try
+      CompilerOptions.SetTargetOS('plan9');
+    except
+      on E: ECompilerConfigurationError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised, 'unsupported target operating systems should fail');
+
+    InputErrorRaised := False;
+    try
+      CompilerOptions.SetTargetCPU('z80');
+    except
+      on E: ECompilerConfigurationError do
+        InputErrorRaised := True;
+    end;
+    Check(InputErrorRaised, 'unsupported target CPUs should fail');
+  finally
+    CompilerOptions.Free;
+  end;
 
   Project := BuildProject('tests/fixtures/SimpleUnit.pas',
     'PasWeaveFixture', AttemptedCount);
