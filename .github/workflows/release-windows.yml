@@ -1,19 +1,23 @@
-name: Release portable Windows binary
+name: Windows build and release
 
 on:
+  pull_request:
   push:
+    branches:
+      - main
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  windows:
     runs-on: windows-latest
 
     steps:
-      - name: Check out the tagged source
+      - name: Check out the source
         uses: actions/checkout@v6
 
       - name: Verify the public-release license gate
@@ -79,12 +83,17 @@ jobs:
       - name: Build and smoke-test the portable executable
         shell: pwsh
         run: |
-          $version = $env:GITHUB_REF_NAME.TrimStart('v')
-          .\scripts\build-portable-windows.ps1 `
-            -Fpc $env:PASWEAVE_FPC -Windres $env:PASWEAVE_WINDRES `
-            -ExpectedVersion $version
+          $buildArguments = @{
+            Fpc = $env:PASWEAVE_FPC
+            Windres = $env:PASWEAVE_WINDRES
+          }
+          if ($env:GITHUB_REF.StartsWith('refs/tags/v')) {
+            $buildArguments.ExpectedVersion = $env:GITHUB_REF_NAME.Substring(1)
+          }
+          .\scripts\build-portable-windows.ps1 @buildArguments
 
       - name: Publish the raw executable and checksum
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
