@@ -37,10 +37,14 @@ jobs:
           }
 
           $fpcRoot = Join-Path $env:RUNNER_TEMP 'fpc-3.2.2'
-          & $installer '/VERYSILENT' '/SUPPRESSMSGBOXES' '/NORESTART' `
-            '/NOICONS' "/DIR=$fpcRoot" '/TYPE=minimum' '/TASKS=createcfg'
-          if ($LASTEXITCODE -ne 0) {
-            throw "Free Pascal installer failed with exit code $LASTEXITCODE"
+          $installerArguments = @(
+            '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/NOICONS',
+            "/DIR=$fpcRoot", '/TYPE=minimum', '/TASKS=createcfg'
+          )
+          $installerProcess = Start-Process -FilePath $installer `
+            -ArgumentList $installerArguments -Wait -PassThru
+          if ($installerProcess.ExitCode -ne 0) {
+            throw "Free Pascal installer failed with exit code $($installerProcess.ExitCode)"
           }
 
           $fpcBin = Join-Path $fpcRoot 'bin\i386-win32'
