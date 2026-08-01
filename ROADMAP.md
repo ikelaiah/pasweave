@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave is currently at `v0.1.0-alpha.1`. The parser-to-site pipeline works;
+PasWeave is currently at `v0.2.0`. The parser-to-site pipeline works;
 the path to `v1.0.0` is about making that pipeline understand real project
 builds, improving author feedback and navigation, scaling it safely, and then
 freezing the public contracts.
@@ -78,10 +78,16 @@ The first alpha established the complete vertical slice:
 This baseline remains supported while the compiler and project inputs become
 more complete.
 
-## `v0.2.0` — Compiler-aware parsing
+## Current release — `v0.2.0` — Compiler-aware parsing
 
 **Outcome:** PasWeave can parse the same interface a configured Free Pascal
 build sees instead of silently inheriting the documentation host's defaults.
+
+Status: completed on 2026-08-02. The behavior, precedence, supported targets,
+diagnostics, compatibility evidence, fixtures, and `mathlib-fp` revalidation
+are recorded in [compiler-aware parsing](docs/compiler-aware-parsing.md), the
+[real-project audit](docs/mathlib-fp-validation.md), and the
+[changelog](CHANGELOG.md).
 
 Exit criteria:
 

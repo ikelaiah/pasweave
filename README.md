@@ -1,6 +1,6 @@
 ![PasWeave — Documentation, woven from Pascal source](assets/pasweave-banner.svg)
 
-[![Version](https://img.shields.io/badge/version-0.1.0--alpha.1-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-635bff)](CHANGELOG.md)
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Portable release](https://img.shields.io/badge/portable-Windows%20x86--64-2563eb)](docs/releasing.md)
 [![Model schema](https://img.shields.io/badge/model%20schema-v1-64748b)](src/model/PasWeave.Model.JSON.pas)
@@ -23,6 +23,8 @@ The working parser-to-site pipeline includes:
 - a `pasweave build` command for one Pascal unit or a directory of `.pas` and
   `.pp` units, with opt-in recursive discovery and include/exclude filters;
 - interface parsing through `fcl-passrc`;
+- compiler-aware parsing with repeatable unit paths, include paths, and
+  conditional defines plus explicit normalized target OS and CPU settings;
 - parser-independent project, unit, symbol, directive, and diagnostic models;
 - source-backed association of enabled PasWeave `///`, Pascal `{ ... }`, and
   Pascal `(* ... *)` documentation groups, with `///` as the safe default;
@@ -83,9 +85,9 @@ Early pre-release executables are not code-signed, so Windows may display a
 SmartScreen warning. Download only from the PasWeave release page and compare
 the SHA-256 value before running the executable.
 
-Read the [v0.1.0-alpha.1 release notes](RELEASE_NOTE_v0.1.0-alpha.1.md) for
-the highlights, compatibility details, validation results, and known alpha
-limitations. The complete project history is maintained in the
+Read the [v0.2.0 release notes](RELEASE_NOTE_v0.2.0.md) for the highlights,
+compatibility details, validation results, and known limitations. The
+complete project history is maintained in the
 [changelog](CHANGELOG.md).
 
 ## Requirements
@@ -189,6 +191,24 @@ the supplied source directory. `*` and `?` match within one path segment;
 Without `--recursive`, directory input retains the original top-level-only
 behavior. See [source discovery](docs/source-discovery.md) for the complete
 matching and safety contract.
+
+To reproduce the interface selected by a configured FPC build, supply its
+source paths, defines, and target explicitly:
+
+```text
+pasweave build src --recursive \
+  --unit-path=packages/core/src \
+  --include-path=include \
+  --define=USE_FAST_MATH \
+  --target-os=linux \
+  --target-cpu=aarch64
+```
+
+`--unit-path`, `--include-path`, and `--define` are repeatable. Paths are
+searched in command-line order; the first match wins. Explicit targets replace
+the host defaults and are normalized before `fcl-passrc` sees them. See
+[compiler-aware parsing](docs/compiler-aware-parsing.md) for supported values,
+precise precedence, diagnostics, and limitations.
 
 The command writes:
 
@@ -354,17 +374,18 @@ for its offline-search, safety, and Markdown-subset contracts.
   LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
-- no project/package file reader or configurable compiler paths, defines, or
-  target settings;
+- no Lazarus project/package reader yet; compiler settings must be supplied
+  explicitly on the command line;
 - type relationship resolution is limited to the current unit and its
   interface dependencies; ancestors outside the documented source set remain
   explicitly unresolved, and implementation bodies are not analysed;
 - ordinary block-comment modes cannot semantically distinguish API prose from
   section labels or commented-out code; they therefore remain explicit
   project opt-ins;
-- documentation association currently reads the main unit source file, so
-  declarations originating from include files do not yet have source-backed
-  comment extraction;
+- configured unit paths resolve source `.pas` and `.pp` files, not compiled
+  `.ppu` files, and do not recurse;
+- explicit OS and CPU values are validated independently, but PasWeave does
+  not claim every possible pair is a real FPC code-generation target;
 - no fixture coverage yet for every requested symbol kind or unusual FPC
   syntax.
 
@@ -376,5 +397,6 @@ components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The next milestone is compiler-aware parsing configuration. See
-[ROADMAP.md](ROADMAP.md) for acceptance criteria and the longer-term sequence.
+The compiler-aware parsing milestone is complete in `v0.2.0`. See
+[ROADMAP.md](ROADMAP.md) for its acceptance evidence and the remaining
+longer-term sequence.

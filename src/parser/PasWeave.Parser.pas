@@ -5,7 +5,7 @@ unit PasWeave.Parser;
 interface
 
 uses
-  Classes, SysUtils, PasWeave.Model, PasWeave.Comments;
+  Classes, SysUtils, PasWeave.Model, PasWeave.Comments, PasWeave.Compiler;
 
 type
   EPasWeaveInputError = class(Exception);
@@ -32,6 +32,11 @@ function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer;
   ACommentStyles: TDocumentationCommentStyles;
   ADiscoveryOptions: TSourceDiscoveryOptions): TDocProject; overload;
+function BuildProject(const ASourcePath, AProjectName: string;
+  out AAttemptedFileCount: Integer;
+  ACommentStyles: TDocumentationCommentStyles;
+  ADiscoveryOptions: TSourceDiscoveryOptions;
+  ACompilerOptions: TCompilerOptions): TDocProject; overload;
 
 implementation
 
@@ -463,13 +468,61 @@ function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer;
   ACommentStyles: TDocumentationCommentStyles;
   ADiscoveryOptions: TSourceDiscoveryOptions): TDocProject;
+begin
+  Result := BuildProject(ASourcePath, AProjectName, AAttemptedFileCount,
+    ACommentStyles, ADiscoveryOptions, nil);
+end;
+
+function FindUnitSourceFile(AUnitPaths: TStrings;
+  const AUnitName: string): string;
+const
+  Extensions: array[0..1] of string = ('.pas', '.pp');
+var
+  Candidate: string;
+  ExpectedName: string;
+  I: Integer;
+  J: Integer;
+begin
+  Result := '';
+  for I := 0 to AUnitPaths.Count - 1 do
+    for J := Low(Extensions) to High(Extensions) do
+    begin
+      ExpectedName := AUnitName + Extensions[J];
+      Candidate := IncludeTrailingPathDelimiter(AUnitPaths[I]) +
+        ExpectedName;
+      if FileExists(Candidate) then
+        Exit(ExpandFileName(Candidate));
+      Candidate := IncludeTrailingPathDelimiter(AUnitPaths[I]) +
+        LowerCase(ExpectedName);
+      if FileExists(Candidate) then
+        Exit(ExpandFileName(Candidate));
+      Candidate := IncludeTrailingPathDelimiter(AUnitPaths[I]) +
+        UpperCase(ExpectedName);
+      if FileExists(Candidate) then
+        Exit(ExpandFileName(Candidate));
+    end;
+end;
+
+function BuildProject(const ASourcePath, AProjectName: string;
+  out AAttemptedFileCount: Integer;
+  ACommentStyles: TDocumentationCommentStyles;
+  ADiscoveryOptions: TSourceDiscoveryOptions;
+  ACompilerOptions: TCompilerOptions): TDocProject;
 var
   Files: TStringList;
+  AttemptedFiles: TStringList;
   SourceRoot: string;
   DisplayRoot: string;
   UnitModel: TDocUnit;
   Diagnostic: TDiagnostic;
   I: Integer;
+  J: Integer;
+  DependencyUnitIndex: Integer;
+  DependencyName: string;
+  DependencyFilename: string;
+  DependencySourceUnit: TDocUnit;
+  EffectiveCompilerOptions: TCompilerOptions;
+  OwnedCompilerOptions: TCompilerOptions;
 begin
   AAttemptedFileCount := 0;
   if not FileExists(ASourcePath) and not DirectoryExists(ASourcePath) then
@@ -483,10 +536,21 @@ begin
       'recursive, include, and exclude options require a source directory');
 
   Files := TStringList.Create;
+  AttemptedFiles := TStringList.Create;
+  OwnedCompilerOptions := nil;
   try
     Files.Sorted := True;
     Files.CaseSensitive := False;
     Files.Duplicates := dupIgnore;
+    AttemptedFiles.CaseSensitive := False;
+    AttemptedFiles.Duplicates := dupIgnore;
+    if Assigned(ACompilerOptions) then
+      EffectiveCompilerOptions := ACompilerOptions
+    else
+    begin
+      OwnedCompilerOptions := TCompilerOptions.Create;
+      EffectiveCompilerOptions := OwnedCompilerOptions;
+    end;
     if DirectoryExists(ASourcePath) then
     begin
       SourceRoot := ExpandFileName(ASourcePath);
@@ -515,16 +579,60 @@ begin
         Result.Name := DefaultProjectName(ASourcePath);
       Result.SourceRoot := NormalisePath(DisplayRoot);
 
-      AAttemptedFileCount := Files.Count;
       for I := 0 to Files.Count - 1 do
       begin
+        AttemptedFiles.Add(ExpandFileName(Files[I]));
+        Inc(AAttemptedFileCount);
         UnitModel := nil;
         Diagnostic := nil;
-        if ParseUnitFile(Files[I], SourceRoot, ACommentStyles, UnitModel,
-          Diagnostic) then
+        if ParseUnitFile(Files[I], SourceRoot, ACommentStyles,
+          EffectiveCompilerOptions, UnitModel, Diagnostic) then
           Result.Units.Add(UnitModel)
         else if Assigned(Diagnostic) then
           Result.Errors.Add(Diagnostic);
+      end;
+
+      DependencyUnitIndex := 0;
+      while DependencyUnitIndex < Result.Units.Count do
+      begin
+        DependencySourceUnit := TDocUnit(
+          Result.Units[DependencyUnitIndex]);
+        for J := 0 to DependencySourceUnit.InterfaceDependencies.Count - 1 do
+        begin
+          DependencyName :=
+            DependencySourceUnit.InterfaceDependencies[J];
+          if Assigned(FindUnit(Result, DependencyName)) then
+            Continue;
+          DependencyFilename := FindUnitSourceFile(
+            EffectiveCompilerOptions.UnitPaths, DependencyName);
+          if (DependencyFilename = '') or
+            (AttemptedFiles.IndexOf(DependencyFilename) >= 0) then
+            Continue;
+
+          AttemptedFiles.Add(DependencyFilename);
+          Inc(AAttemptedFileCount);
+          UnitModel := nil;
+          Diagnostic := nil;
+          if ParseUnitFile(DependencyFilename, SourceRoot, ACommentStyles,
+            EffectiveCompilerOptions, UnitModel, Diagnostic) then
+          begin
+            if SameText(UnitModel.Name, DependencyName) then
+              Result.Units.Add(UnitModel)
+            else
+            begin
+              Result.Errors.Add(TDiagnostic.Create(dsError,
+                UnitModel.SourceFilename, 1, 1,
+                'resolved unit name does not match dependency: expected ' +
+                DependencyName + ', found ' + UnitModel.Name,
+                'unitPath=' + NormalisePath(ExtractFileDir(
+                DependencyFilename))));
+              UnitModel.Free;
+            end;
+          end
+          else if Assigned(Diagnostic) then
+            Result.Errors.Add(Diagnostic);
+        end;
+        Inc(DependencyUnitIndex);
       end;
       ResolveTypeRelationships(Result);
     except
@@ -532,6 +640,8 @@ begin
       raise;
     end;
   finally
+    OwnedCompilerOptions.Free;
+    AttemptedFiles.Free;
     Files.Free;
   end;
 end;

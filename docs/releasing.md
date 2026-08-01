@@ -42,7 +42,7 @@ The script:
 3. Run the complete test suite and the portable release build.
 4. Commit the release-ready source and merge it into `main`.
 5. Wait for the Windows build on `main` to pass.
-6. Create and push a matching tag such as `v0.1.0-alpha.1`.
+6. Create and push a matching tag such as `v0.2.0`.
 
 The tag workflow repeats the standalone build and smoke test, then creates a
 GitHub release containing only:

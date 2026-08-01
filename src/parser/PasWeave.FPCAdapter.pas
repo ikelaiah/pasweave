@@ -5,10 +5,11 @@ unit PasWeave.FPCAdapter;
 interface
 
 uses
-  PasWeave.Comments, PasWeave.Diagnostics, PasWeave.Model;
+  PasWeave.Comments, PasWeave.Compiler, PasWeave.Diagnostics, PasWeave.Model;
 
 function ParseUnitFile(const AFileName, ASourceRoot: string;
   ACommentStyles: TDocumentationCommentStyles;
+  ACompilerOptions: TCompilerOptions;
   out AUnit: TDocUnit; out ADiagnostic: TDiagnostic): Boolean;
 
 implementation
@@ -21,6 +22,17 @@ type
   public
     Column: Integer;
     constructor Create(AColumn: Integer);
+  end;
+
+  TSourceTextCache = class
+  private
+    FFileNames: TStringList;
+    FSourceTexts: TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Add(const AFileName, ASourceText: string);
+    function TextFor(const AFileName: string): string;
   end;
 
   TPasWeaveTreeContainer = class(TPasTreeContainer)
@@ -123,6 +135,53 @@ begin
   end;
 end;
 
+constructor TSourceTextCache.Create;
+begin
+  inherited Create;
+  FFileNames := TStringList.Create;
+  FSourceTexts := TStringList.Create;
+  FFileNames.CaseSensitive := False;
+end;
+
+destructor TSourceTextCache.Destroy;
+begin
+  FSourceTexts.Free;
+  FFileNames.Free;
+  inherited Destroy;
+end;
+
+procedure TSourceTextCache.Add(const AFileName, ASourceText: string);
+var
+  FileName: string;
+  Index: Integer;
+begin
+  FileName := ExpandFileName(AFileName);
+  Index := FFileNames.IndexOf(FileName);
+  if Index < 0 then
+  begin
+    FFileNames.Add(FileName);
+    FSourceTexts.Add(ASourceText);
+  end
+  else
+    FSourceTexts[Index] := ASourceText;
+end;
+
+function TSourceTextCache.TextFor(const AFileName: string): string;
+var
+  FileName: string;
+  Index: Integer;
+begin
+  FileName := ExpandFileName(AFileName);
+  Index := FFileNames.IndexOf(FileName);
+  if Index < 0 then
+  begin
+    Result := ReadSourceText(FileName);
+    Add(FileName, Result);
+  end
+  else
+    Result := FSourceTexts[Index];
+end;
+
 function CleanParserMessage(const AMessage, AParserFilename,
   ADisplayFilename: string): string;
 var
@@ -133,6 +192,32 @@ begin
   LocationStart := Pos(' in file ', Result);
   if LocationStart > 0 then
     Delete(Result, LocationStart, MaxInt);
+end;
+
+function StableParserMessage(const AMessage, AParserFilename,
+  ADisplayFilename: string; AConfiguredBuild: Boolean): string;
+var
+  FirstQuote: Integer;
+  SecondQuote: Integer;
+  IncludeName: string;
+begin
+  Result := CleanParserMessage(AMessage, AParserFilename,
+    ADisplayFilename);
+  if not AConfiguredBuild or
+    (Pos('Could not find include file', Result) = 0) then
+    Exit;
+
+  FirstQuote := Pos('''', Result);
+  SecondQuote := Pos('''', Copy(Result, FirstQuote + 1, MaxInt));
+  if (FirstQuote > 0) and (SecondQuote > 0) then
+  begin
+    Inc(SecondQuote, FirstQuote);
+    IncludeName := Copy(Result, FirstQuote + 1,
+      SecondQuote - FirstQuote - 1);
+    Result := 'include file is missing or unreadable: ' + IncludeName;
+  end
+  else
+    Result := 'include file is missing or unreadable';
 end;
 
 function ElementColumn(AElement: TPasElement): Integer;
@@ -606,13 +691,17 @@ end;
 
 procedure AddElementSymbols(AElement: TPasElement; AUnit: TDocUnit;
   AEngine: TPasWeaveTreeContainer; const ASourceRoot, ADefaultFilename,
-  AParentSymbolID, AParentQualifiedName, ASourceText: string;
-  ACommentStyles: TDocumentationCommentStyles);
+  ADefaultSourceFile, AParentSymbolID, AParentQualifiedName: string;
+  ASourceTexts: TSourceTextCache;
+  ACommentStyles: TDocumentationCommentStyles;
+  AReadIncludeDocumentation: Boolean);
 var
   Kind: TSymbolKind;
   Symbol: TDocSymbol;
   QualifiedName: string;
   DeclarationText: string;
+  ElementSourceFile: string;
+  ElementSourceText: string;
   I: Integer;
   Members: TFPList;
 begin
@@ -620,8 +709,9 @@ begin
   begin
     for I := 0 to TPasOverloadedProc(AElement).Overloads.Count - 1 do
       AddElementSymbols(TPasElement(TPasOverloadedProc(AElement).Overloads[I]),
-        AUnit, AEngine, ASourceRoot, ADefaultFilename, AParentSymbolID,
-        AParentQualifiedName, ASourceText, ACommentStyles);
+        AUnit, AEngine, ASourceRoot, ADefaultFilename, ADefaultSourceFile,
+        AParentSymbolID, AParentQualifiedName, ASourceTexts,
+        ACommentStyles, AReadIncludeDocumentation);
     Exit;
   end;
 
@@ -644,16 +734,26 @@ begin
     Symbol.Visibility := VisibilityOf(AElement);
     Symbol.DeclarationText := DeclarationText;
     if AElement.SourceFilename <> '' then
+    begin
+      ElementSourceFile := AElement.SourceFilename;
       Symbol.SourceFilename := RelativeSourceFilename(
-        AElement.SourceFilename, ASourceRoot)
+        ElementSourceFile, ASourceRoot)
+    end
     else
+    begin
+      ElementSourceFile := ADefaultSourceFile;
       Symbol.SourceFilename := ADefaultFilename;
+    end;
     Symbol.SourceLine := AElement.SourceLinenumber;
     Symbol.SourceColumn := ElementColumn(AElement);
-    if SameText(Symbol.SourceFilename, ADefaultFilename) then
-      ParseDocumentationComment(ASourceText, AElement.SourceLinenumber,
+    if SameText(Symbol.SourceFilename, ADefaultFilename) or
+      AReadIncludeDocumentation then
+    begin
+      ElementSourceText := ASourceTexts.TextFor(ElementSourceFile);
+      ParseDocumentationComment(ElementSourceText, AElement.SourceLinenumber,
         ACommentStyles, Symbol.RawDocumentation,
         Symbol.MarkdownDocumentation, Symbol.Directives);
+    end;
     Symbol.ParentSymbolID := AParentSymbolID;
     Symbol.ID := StableSymbolID(Kind, QualifiedName, DeclarationText);
     if AElement is TPasClassType then
@@ -669,74 +769,101 @@ begin
     Members := TPasMembersType(AElement).Members;
     for I := 0 to Members.Count - 1 do
       AddElementSymbols(TPasElement(Members[I]), AUnit, AEngine, ASourceRoot,
-        ADefaultFilename, Symbol.ID, Symbol.QualifiedName, ASourceText,
-        ACommentStyles);
+        ADefaultFilename, ADefaultSourceFile, Symbol.ID,
+        Symbol.QualifiedName, ASourceTexts, ACommentStyles,
+        AReadIncludeDocumentation);
   end;
 end;
 
 function ConvertModule(AModule: TPasModule; AEngine: TPasWeaveTreeContainer;
   const AFileName, ASourceRoot, ASourceText: string;
-  ACommentStyles: TDocumentationCommentStyles): TDocUnit;
+  ACommentStyles: TDocumentationCommentStyles;
+  AReadIncludeDocumentation: Boolean): TDocUnit;
 var
   I: Integer;
   UnitSymbol: TDocSymbol;
   DefaultFilename: string;
+  SourceTexts: TSourceTextCache;
 begin
   Result := TDocUnit.Create;
+  SourceTexts := TSourceTextCache.Create;
   try
-    Result.Name := AModule.Name;
-    DefaultFilename := RelativeSourceFilename(AFileName, ASourceRoot);
-    Result.SourceFilename := DefaultFilename;
+    try
+      Result.Name := AModule.Name;
+      DefaultFilename := RelativeSourceFilename(AFileName, ASourceRoot);
+      Result.SourceFilename := DefaultFilename;
+      SourceTexts.Add(AFileName, ASourceText);
 
-    if Assigned(AModule.InterfaceSection) then
-    begin
-      for I := 0 to Length(AModule.InterfaceSection.UsesClause) - 1 do
-        if not SameText(AModule.InterfaceSection.UsesClause[I].Name,
-          'System') then
-          Result.InterfaceDependencies.Add(
-            AModule.InterfaceSection.UsesClause[I].Name);
+      if Assigned(AModule.InterfaceSection) then
+      begin
+        for I := 0 to Length(AModule.InterfaceSection.UsesClause) - 1 do
+          if not SameText(AModule.InterfaceSection.UsesClause[I].Name,
+            'System') then
+            Result.InterfaceDependencies.Add(
+              AModule.InterfaceSection.UsesClause[I].Name);
+      end;
+
+      AddElementSymbols(AModule, Result, AEngine, ASourceRoot,
+        DefaultFilename, AFileName, '', '', SourceTexts, ACommentStyles,
+        AReadIncludeDocumentation);
+      UnitSymbol := TDocSymbol(Result.Symbols[Result.Symbols.Count - 1]);
+
+      if Assigned(AModule.InterfaceSection) then
+        for I := 0 to AModule.InterfaceSection.Declarations.Count - 1 do
+          AddElementSymbols(
+            TPasElement(AModule.InterfaceSection.Declarations[I]),
+            Result, AEngine, ASourceRoot, DefaultFilename,
+            AFileName, UnitSymbol.ID, AModule.Name, SourceTexts,
+            ACommentStyles, AReadIncludeDocumentation);
+    except
+      Result.Free;
+      raise;
     end;
-
-    AddElementSymbols(AModule, Result, AEngine, ASourceRoot,
-      DefaultFilename, '', '', ASourceText, ACommentStyles);
-    UnitSymbol := TDocSymbol(Result.Symbols[Result.Symbols.Count - 1]);
-
-    if Assigned(AModule.InterfaceSection) then
-      for I := 0 to AModule.InterfaceSection.Declarations.Count - 1 do
-        AddElementSymbols(
-          TPasElement(AModule.InterfaceSection.Declarations[I]),
-          Result, AEngine, ASourceRoot, DefaultFilename,
-          UnitSymbol.ID, AModule.Name, ASourceText, ACommentStyles);
-  except
-    Result.Free;
-    raise;
+  finally
+    SourceTexts.Free;
   end;
 end;
 
 function ParseUnitFile(const AFileName, ASourceRoot: string;
   ACommentStyles: TDocumentationCommentStyles;
+  ACompilerOptions: TCompilerOptions;
   out AUnit: TDocUnit; out ADiagnostic: TDiagnostic): Boolean;
 var
   Engine: TPasWeaveTreeContainer;
   Module: TPasModule;
-  Arguments: array[0..1] of string;
+  ArgumentList: TStringList;
+  Arguments: array of string;
   DisplayFilename: string;
   ModuleClassName: string;
   SourceText: string;
+  ErrorFilename: string;
+  DiagnosticDetails: string;
+  I: Integer;
 begin
   Result := False;
   AUnit := nil;
   ADiagnostic := nil;
   Engine := TPasWeaveTreeContainer.Create;
+  ArgumentList := TStringList.Create;
   Module := nil;
   DisplayFilename := RelativeSourceFilename(AFileName, ASourceRoot);
+  DiagnosticDetails := 'adapter=fcl-passrc; interfaceOnly=true';
+  if ACompilerOptions.HasExplicitSettings then
+    DiagnosticDetails := DiagnosticDetails + '; targetOS=' +
+      ACompilerOptions.TargetOS + '; targetCPU=' +
+      ACompilerOptions.TargetCPU;
   try
-    Arguments[0] := '-Mobjfpc';
-    Arguments[1] := ExpandFileName(AFileName);
+    ArgumentList.Add('-Mobjfpc');
+    if Assigned(ACompilerOptions) and ACompilerOptions.HasExplicitSettings then
+      ACompilerOptions.AppendParserArguments(ArgumentList);
+    ArgumentList.Add(ExpandFileName(AFileName));
+    SetLength(Arguments, ArgumentList.Count);
+    for I := 0 to ArgumentList.Count - 1 do
+      Arguments[I] := ArgumentList[I];
     try
       SourceText := ReadSourceText(AFileName);
       Module := ParseSource(Engine, Arguments,
-        {$I %FPCTARGETOS%}, {$I %FPCTARGETCPU%}, []);
+        ACompilerOptions.TargetOS, ACompilerOptions.TargetCPU, []);
       if not Assigned(Module) or not Assigned(Module.InterfaceSection) then
       begin
         if Assigned(Module) then
@@ -750,22 +877,44 @@ begin
         Exit;
       end;
       AUnit := ConvertModule(Module, Engine, AFileName, ASourceRoot,
-        SourceText, ACommentStyles);
+        SourceText, ACommentStyles,
+        ACompilerOptions.IncludePaths.Count > 0);
       Result := True;
     except
       on E: EParserError do
-        ADiagnostic := TDiagnostic.Create(dsError, DisplayFilename,
-          E.Row, E.Column,
-          CleanParserMessage(E.Message, E.Filename, DisplayFilename),
-          'exception=' + E.ClassName +
-          '; adapter=fcl-passrc; interfaceOnly=true');
+      begin
+        if not ACompilerOptions.HasExplicitSettings then
+          ErrorFilename := DisplayFilename
+        else if (E.Filename = '') or SameText(ExpandFileName(E.Filename),
+          ExpandFileName(AFileName)) then
+          ErrorFilename := DisplayFilename
+        else if FileExists(E.Filename) then
+          ErrorFilename := RelativeSourceFilename(E.Filename, ASourceRoot)
+        else
+          ErrorFilename := NormalisePath(E.Filename);
+        ADiagnostic := TDiagnostic.Create(dsError, ErrorFilename,
+          E.Row, E.Column, StableParserMessage(E.Message, E.Filename,
+          ErrorFilename, ACompilerOptions.HasExplicitSettings),
+          'exception=' + E.ClassName + '; ' + DiagnosticDetails);
+      end;
+      on E: EFileNotFoundError do
+        if ACompilerOptions.HasExplicitSettings then
+          ADiagnostic := TDiagnostic.Create(dsError, DisplayFilename,
+            0, 0, 'cannot read source or include file: ' +
+            NormalisePath(E.Message), 'exception=' + E.ClassName +
+            '; ' + DiagnosticDetails)
+        else
+          ADiagnostic := TDiagnostic.Create(dsError, DisplayFilename,
+            0, 0, E.Message, 'exception=' + E.ClassName + '; ' +
+            DiagnosticDetails);
       on E: Exception do
         ADiagnostic := TDiagnostic.Create(dsError, DisplayFilename,
-          0, 0, E.Message, 'exception=' + E.ClassName +
-          '; adapter=fcl-passrc; interfaceOnly=true');
+          0, 0, E.Message, 'exception=' + E.ClassName + '; ' +
+          DiagnosticDetails);
     end;
   finally
     Module.Free;
+    ArgumentList.Free;
     Engine.Free;
     if not Result then
       FreeAndNil(AUnit);

@@ -7,6 +7,49 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-02
+
+### Added
+
+- Repeatable `--unit-path`, `--include-path`, and `--define` compiler inputs.
+- Explicit, normalized `--target-os` and `--target-cpu` selection with
+  documented supported values and aliases.
+- Deterministic transitive source-unit resolution through configured unit
+  paths and nested include resolution through configured include paths.
+- Source-backed locations and documentation extraction for declarations
+  originating in include files when include paths are configured.
+- Focused compiler-configuration fixtures for conditional declarations,
+  nested and missing includes, competing search paths, transitive units, and
+  host-independent target selection.
+
+### Changed
+
+- Compiler settings now live in a parser-independent configuration object;
+  `fcl-passrc` types remain confined to the adapter.
+- Configured include failures use a stable, source-aware “missing or
+  unreadable” diagnostic, reflecting the information available from FPC 3.2.2.
+- Version metadata, CLI help, README guidance, parser integration notes, and
+  real-project validation now describe compiler-aware parsing and precedence.
+
+### Compatibility
+
+- With no compiler settings, PasWeave retains the original host target and
+  parser arguments. A before/after SHA-256 comparison matched all 77 generated
+  files in the documented example byte-for-byte.
+- Direct file input, top-level and recursive directory discovery, and the
+  default `///` workflow remain supported end to end.
+- Generated JSON remains model schema version 1.
+
+### Validation
+
+- The complete automated suite and all checked-in Markdown/HTML golden outputs
+  pass with FPC 3.2.2.
+- `mathlib-fp` commit `6f3480b7e9494fcd4f72abb0f5c21dd30fde3e42`
+  parsed all 45 units into 2,338 symbols with zero warnings or errors under
+  explicit Windows x86-64 settings.
+- All 163 configured `mathlib-fp` output files matched the unconfigured
+  baseline byte-for-byte.
+
 ## [0.1.0-alpha.1] - 2026-08-01
 
 PasWeave's first public alpha establishes the complete parser-to-static-site
@@ -50,5 +93,6 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.1.0-alpha.1...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/ikelaiah/pasweave/compare/v0.1.0-alpha.1...v0.2.0
 [0.1.0-alpha.1]: https://github.com/ikelaiah/pasweave/releases/tag/v0.1.0-alpha.1

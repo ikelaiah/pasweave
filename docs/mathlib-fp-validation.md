@@ -4,6 +4,46 @@ PasWeave's first substantial external test is
 [`ikelaiah/mathlib-fp`](https://github.com/ikelaiah/mathlib-fp), as planned in
 the project brief.
 
+## `v0.2.0` configured-build revalidation
+
+The same tested revision was re-run with settings matching its Windows
+x86-64 FPC 3.2.2 build: its `src` directory as both the documented source and
+unit path, and explicit `win64`/`x86_64` targets.
+
+```text
+pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\v020-mathlib-baseline --project-name mathlib-fp
+pasweave build C:\tmp\pasweave-mathlib-fp\src --output build\v020-mathlib-configured --project-name mathlib-fp --unit-path C:\tmp\pasweave-mathlib-fp\src --target-os win64 --target-cpu x86_64
+```
+
+| Check | Unconfigured | Configured | Difference |
+|---|---:|---:|---:|
+| Source units attempted | 45 | 45 | 0 |
+| Source units parsed | 45 | 45 | 0 |
+| Symbols generated | 2,338 | 2,338 | 0 |
+| Warnings | 0 | 0 | 0 |
+| Errors | 0 | 0 | 0 |
+| Generated files | 163 | 163 | 0 |
+| JSON bytes | 1,947,826 | 1,947,826 | 0 |
+| Markdown files | 46 | 46 | 0 |
+| Markdown bytes | 1,022,548 | 1,022,548 | 0 |
+| HTML files | 116 | 116 | 0 |
+| HTML bytes | 6,853,533 | 6,853,533 | 0 |
+
+Every corresponding generated file had the same SHA-256 digest. The model
+digest in both runs was:
+
+```text
+384E59B1D4423CAFB07E5D2FFCF1C3515575522955BC32A4D48F48B4C0EB3F59
+```
+
+There are therefore no configured-versus-unconfigured output differences to
+explain for this revision. All 45 project units are already selected by the
+source-directory input, so the matching unit path adds no unit. The only
+target-dependent code found in the source tree is inside an implementation
+body, while PasWeave deliberately parses interfaces only. Explicit Windows
+x86-64 target symbols consequently select the same documented interface as
+the Windows host defaults.
+
 ## Tested revision
 
 - Branch: `main`

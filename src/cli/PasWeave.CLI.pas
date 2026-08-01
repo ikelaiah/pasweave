@@ -9,8 +9,9 @@ function RunPasWeave: Integer;
 implementation
 
 uses
-  Classes, SysUtils, PasWeave.Comments, PasWeave.Diagnostics, PasWeave.Model,
-  PasWeave.Model.JSON, PasWeave.Parser, PasWeave.Render.Markdown,
+  Classes, SysUtils, PasWeave.Comments, PasWeave.Compiler,
+  PasWeave.Diagnostics, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Render.Markdown,
   PasWeave.Render.HTML, PasWeave.Version;
 
 procedure PrintUsage;
@@ -22,6 +23,8 @@ begin
   WriteLn('  pasweave build <unit-or-directory> [--output <directory>]');
   WriteLn('                 [--project-name <name>] [--doc-comments=<styles>]');
   WriteLn('                 [--recursive] [--include=<glob>] [--exclude=<glob>]');
+  WriteLn('                 [--unit-path=<directory>] [--include-path=<directory>]');
+  WriteLn('                 [--define=<name>] [--target-os=<os>] [--target-cpu=<cpu>]');
   WriteLn('                 [--verbose]');
   WriteLn;
   WriteLn('Source discovery:');
@@ -29,6 +32,11 @@ begin
   WriteLn('  --include and --exclude are repeatable, source-root-relative globs');
   WriteLn('  * and ? stay within one path segment; ** spans directories');
   WriteLn('  Exclusions win when both an include and exclude match');
+  WriteLn;
+  WriteLn('Compiler-aware parsing:');
+  WriteLn('  --unit-path, --include-path, and --define are repeatable');
+  WriteLn('  Unit and include paths are searched in command-line order');
+  WriteLn('  Explicit target OS/CPU values override the documentation host defaults');
   WriteLn;
   WriteLn('Documentation comment styles:');
   WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
@@ -83,6 +91,7 @@ var
   CommentStyleValue: string;
   CommentStyles: TDocumentationCommentStyles;
   DiscoveryOptions: TSourceDiscoveryOptions;
+  CompilerOptions: TCompilerOptions;
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
@@ -90,6 +99,7 @@ begin
   Verbose := False;
   CommentStyles := DefaultDocumentationCommentStyles;
   DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  CompilerOptions := TCompilerOptions.Create;
   try
     I := 2;
     while I <= ParamCount do
@@ -135,6 +145,35 @@ begin
       else if Pos('--exclude=', ParamStr(I)) = 1 then
         DiscoveryOptions.AddExcludePattern(Copy(ParamStr(I),
           Length('--exclude=') + 1, MaxInt))
+      else if ParamStr(I) = '--unit-path' then
+        CompilerOptions.AddUnitPath(
+          RequireOptionValue(I, '--unit-path'))
+      else if Pos('--unit-path=', ParamStr(I)) = 1 then
+        CompilerOptions.AddUnitPath(Copy(ParamStr(I),
+          Length('--unit-path=') + 1, MaxInt))
+      else if ParamStr(I) = '--include-path' then
+        CompilerOptions.AddIncludePath(
+          RequireOptionValue(I, '--include-path'))
+      else if Pos('--include-path=', ParamStr(I)) = 1 then
+        CompilerOptions.AddIncludePath(Copy(ParamStr(I),
+          Length('--include-path=') + 1, MaxInt))
+      else if ParamStr(I) = '--define' then
+        CompilerOptions.AddDefine(RequireOptionValue(I, '--define'))
+      else if Pos('--define=', ParamStr(I)) = 1 then
+        CompilerOptions.AddDefine(Copy(ParamStr(I),
+          Length('--define=') + 1, MaxInt))
+      else if ParamStr(I) = '--target-os' then
+        CompilerOptions.SetTargetOS(
+          RequireOptionValue(I, '--target-os'))
+      else if Pos('--target-os=', ParamStr(I)) = 1 then
+        CompilerOptions.SetTargetOS(Copy(ParamStr(I),
+          Length('--target-os=') + 1, MaxInt))
+      else if ParamStr(I) = '--target-cpu' then
+        CompilerOptions.SetTargetCPU(
+          RequireOptionValue(I, '--target-cpu'))
+      else if Pos('--target-cpu=', ParamStr(I)) = 1 then
+        CompilerOptions.SetTargetCPU(Copy(ParamStr(I),
+          Length('--target-cpu=') + 1, MaxInt))
       else if ParamStr(I) = '--verbose' then
         Verbose := True
       else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
@@ -155,8 +194,9 @@ begin
       raise EPasWeaveInputError.Create('missing unit or source directory');
 
     Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
-      CommentStyles, DiscoveryOptions);
+      CommentStyles, DiscoveryOptions, CompilerOptions);
   finally
+    CompilerOptions.Free;
     DiscoveryOptions.Free;
   end;
   try
@@ -219,6 +259,12 @@ begin
     Result := RunBuild;
   except
     on E: EPasWeaveInputError do
+    begin
+      WriteLn(StdErr, 'pasweave: ', E.Message);
+      WriteLn(StdErr, 'Run "pasweave --help" for usage.');
+      Result := 2;
+    end;
+    on E: ECompilerConfigurationError do
     begin
       WriteLn(StdErr, 'pasweave: ', E.Message);
       WriteLn(StdErr, 'Run "pasweave --help" for usage.');

@@ -9,7 +9,10 @@ sources are `packages/fcl-passrc/src/pparser.pp`,
 The concrete integration is:
 
 1. `PParser.ParseSource` accepts an array of compiler-style arguments plus
-   target OS and CPU strings and returns a `PasTree.TPasModule`. In FPC 3.2.2,
+   target OS and CPU strings and returns a `PasTree.TPasModule`. PasWeave
+   normalizes parser-independent compiler options, passes include paths and
+   defines in the argument array, and passes canonical target strings
+   separately. In FPC 3.2.2,
    `ParseUnit` constructs `TPasModule` itself rather than the also-declared
    `TPasUnitModule`, so the adapter identifies a unit by its populated
    `InterfaceSection`.
@@ -23,6 +26,10 @@ The concrete integration is:
    standalone comment forms. This retains exact delimiters, enforces blank-line
    gaps, merges mixed forms in source order, and treats compiler directives as
    barriers. `fcl-passrc` still supplies declaration identity and positions;
+   When include paths are configured, PasWeave caches the main source and every
+   include source named by an element, so included declarations retain their
+   own documentation and location. No-settings builds retain the legacy
+   main-file-only lookup for byte compatibility.
    PasWeave is not parsing Pascal declarations itself. The meaning of `///` is
    defined by PasWeave; FPC tokenizes it as an ordinary `//` comment and does
    not classify it as API documentation.
@@ -51,6 +58,11 @@ The concrete integration is:
    root-relative include/exclude globs select `.pas` and `.pp` inputs before
    parsing, with exclusions taking precedence. This keeps project enumeration
    deterministic without asking the parser to guess a build system.
+9. Configured unit paths are also handled outside `fcl-passrc`, whose 3.2.2
+   command-line adapter does not process `-Fu`. After the selected source set
+   is parsed, PasWeave resolves missing interface dependencies to conventional
+   `.pas`/`.pp` names in ordered unit paths and parses them transitively. Only
+   strings and PasWeave model objects cross this boundary.
 
 The container's `FindElement` currently returns `nil`, matching the minimal
 bundled `parsepp` example. This allows unresolved type references to remain
@@ -73,15 +85,18 @@ explicitly unresolved.
   declaration from attaching to the next declaration.
 - Comment text is normalised to LF in the model. Raw delimiters are preserved,
   as are Markdown and mathematical source in normalized bodies.
-- The source-backed lookup currently uses the main unit file. A declaration
-  supplied by an include file may have a correct FPC source position but does
-  not yet receive documentation from that include file.
 - The adapter supplies `-Mobjfpc`; source mode directives can still change
   scanner mode in the normal FPC way.
-- Include paths, defines, and other compiler arguments are not exposed by the
-  CLI yet.
-- Lazarus `.lpi` and `.lpk` files are not read yet because PasWeave cannot
-  faithfully represent all of their compiler settings.
+- With no compiler settings, host OS/CPU defaults and the original two parser
+  arguments are retained exactly. Explicit include paths and defines are
+  repeatable; explicit OS/CPU values are normalized before adapter use.
+- Lazarus `.lpi` and `.lpk` files are not read yet. Their compiler settings
+  must be supplied explicitly on the command line.
+- Configured unit paths resolve source files only. Compiled `.ppu` dependencies
+  remain external and unresolved in the documentation model.
+- FPC 3.2.2 reports a missing include and an include it cannot open through the
+  same scanner failure. PasWeave preserves the including source position and
+  reports the condition honestly as “missing or unreadable.”
 - The mapping covers the requested initial symbol categories, but unusual
   generic, helper, Objective-C, and compiler-extension nodes have not yet been
   validated with fixtures.

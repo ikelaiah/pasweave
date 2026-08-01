@@ -47,6 +47,7 @@ Discovery options apply only to directory input. Supplying `--recursive`,
 `--include`, or `--exclude` with an explicit source file is rejected because
 there is no discovery set to filter.
 
-PasWeave does not yet interpret Lazarus `.lpi` or `.lpk` files. Project-file
-support is deferred until compiler search paths, conditional defines, target
-OS/CPU settings, and include paths can be represented faithfully.
+PasWeave does not yet interpret Lazarus `.lpi` or `.lpk` files. Unit paths,
+include paths, conditional defines, and target OS/CPU settings can be supplied
+manually as described in [compiler-aware parsing](compiler-aware-parsing.md);
+importing those values from project/package files remains outside `v0.2.0`.
