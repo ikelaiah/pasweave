@@ -45,9 +45,15 @@ jobs:
           $arguments = @(
             'release', 'create', $env:GITHUB_REF_NAME,
             'dist/pasweave.exe', 'dist/pasweave.exe.sha256',
-            '--verify-tag', '--generate-notes',
+            '--verify-tag',
             '--title', "PasWeave $env:GITHUB_REF_NAME"
           )
+          $notesFile = "RELEASE_NOTE_$($env:GITHUB_REF_NAME).md"
+          if (Test-Path -LiteralPath $notesFile) {
+            $arguments += @('--notes-file', $notesFile)
+          } else {
+            $arguments += '--generate-notes'
+          }
           if ($env:GITHUB_REF_NAME.Contains('-')) {
             $arguments += '--prerelease'
           }

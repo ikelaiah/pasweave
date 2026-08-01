@@ -1,5 +1,11 @@
 # PasWeave 🧵
 
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha.1-635bff)](CHANGELOG.md)
+[![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
+[![Portable release](https://img.shields.io/badge/portable-Windows%20x86--64-2563eb)](docs/releasing.md)
+[![Model schema](https://img.shields.io/badge/model%20schema-v1-64748b)](src/model/PasWeave.Model.JSON.pas)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
+
 PasWeave is an early-stage documentation generator designed primarily for
 Free Pascal projects. It is written in Free Pascal and builds its source model
 with FPC's reusable `fcl-passrc` parser libraries.
@@ -76,6 +82,11 @@ Get-FileHash .\pasweave.exe -Algorithm SHA256
 Early pre-release executables are not code-signed, so Windows may display a
 SmartScreen warning. Download only from the PasWeave release page and compare
 the SHA-256 value before running the executable.
+
+Read the [v0.1.0-alpha.1 release notes](RELEASE_NOTE_v0.1.0-alpha.1.md) for
+the highlights, compatibility details, validation results, and known alpha
+limitations. The complete project history is maintained in the
+[changelog](CHANGELOG.md).
 
 ## Requirements
 
