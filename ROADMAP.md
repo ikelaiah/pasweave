@@ -168,6 +168,10 @@ Exit criteria:
   requires a change.
 - Validate navigation against the examples, `mathlib-fp`, and at least one
   nested multi-package project.
+- Publish a representative PasWeave-generated static HTML showcase from
+  committed example sources at `https://ikelaiah.github.io/pasweave/`, and
+  validate its navigation, search, mathematics, diagrams, accessibility, and
+  stable links as a deployed GitHub Pages site.
 
 ## `v0.6.0` — Safe incremental builds
 
