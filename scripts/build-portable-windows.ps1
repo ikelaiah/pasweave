@@ -3,7 +3,7 @@ param(
   [string]$Fpc = 'fpc',
   [string]$FpcRes = 'fpcres',
   [string]$Windres = 'windres',
-  [string]$ExpectedVersion = '0.2.0'
+  [string]$ExpectedVersion = '0.4.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,6 +19,21 @@ $resourceFile = Join-Path $buildDirectory 'pasweave-assets.res'
 $releaseExecutable = Join-Path $distDirectory 'pasweave.exe'
 $checksumFile = Join-Path $distDirectory 'pasweave.exe.sha256'
 $smokeDirectory = Join-Path $buildDirectory 'standalone-smoke'
+$versionUnit = Join-Path $repositoryRoot 'src\cli\PasWeave.Version.pas'
+$versionSource = [IO.File]::ReadAllText($versionUnit)
+$versionMatch = [regex]::Match($versionSource,
+  "(?m)^\s*PasWeaveVersion\s*=\s*'([^']+)'\s*;")
+if (-not $versionMatch.Success) {
+  throw "could not read PasWeaveVersion from $versionUnit"
+}
+$sourceVersion = $versionMatch.Groups[1].Value
+if ([string]::IsNullOrWhiteSpace($ExpectedVersion)) {
+  $ExpectedVersion = $sourceVersion
+} elseif ($ExpectedVersion -ne $sourceVersion) {
+  throw "release version mismatch: tag expects PasWeave $ExpectedVersion, " +
+    "but src/cli/PasWeave.Version.pas declares PasWeave $sourceVersion. " +
+    "Create a tag matching the source version."
+}
 
 function Assert-LastExitCode([string]$Operation) {
   if ($LASTEXITCODE -ne 0) {
