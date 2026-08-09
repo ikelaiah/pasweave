@@ -47,7 +47,7 @@ function BuildProjectFromFiles(const ASourceRoot, AProjectName: string;
 implementation
 
 uses
-  PasWeave.Diagnostics, PasWeave.FPCAdapter;
+  PasWeave.Diagnostics, PasWeave.FPCAdapter, PasWeave.Validation;
 
 function NormalisePath(const APath: string): string;
 begin
@@ -627,6 +627,7 @@ begin
         Inc(DependencyUnitIndex);
       end;
       ResolveTypeRelationships(Result);
+      ValidateProject(Result);
     except
       Result.Free;
       raise;

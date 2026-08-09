@@ -1,72 +1,80 @@
-# Implementation Plan: PasWeave v0.3.0 Lazarus inputs
+# Implementation Plan: PasWeave v0.4.0 authoring feedback
 
 ## Overview
 
-Add parser-independent support for Lazarus `.lpi` projects and `.lpk`
-packages. A project/package input will provide source files, unit/include
-paths, conditional defines, target settings, build-mode selection, and local
-package dependencies to the existing compiler-aware parser while preserving
-direct file and directory input behavior.
+Add a deterministic, model-level authoring-validation pass. It will validate
+documentation directives and project-local references after parsing, expose
+stable coded diagnostics in both the API model and a dedicated diagnostics
+artifact, and let CI fail on coverage or warning-level feedback without making
+the default local workflow noisy.
 
 ## Architecture decisions
 
-- Use FPC's XML DOM reader (`DOM`/`XMLRead`) in a new Lazarus configuration
-  adapter; do not expose XML or FPC parser objects in the model.
-- Treat explicit CLI compiler values as higher precedence than imported
-  Lazarus values, which in turn take precedence over existing PasWeave
-  defaults. Merge imported values only into unset CLI categories.
-- Resolve only explicitly referenced local packages and package files found
-  by deterministic, pruned search. Skip generated, vendor, example, and test
-  trees during automatic search; `--package-path` is an explicit opt-in.
-- Reject malformed or incomplete project/package configuration before
-  parsing any source so missing packages, unsupported macros, ambiguous build
-  modes, and dependency cycles cannot silently produce partial configuration.
-- Keep the current `BuildProject` path for direct inputs and add a file-list
-  entry point for project/package-selected sources.
+- Keep validation separate from the FPC adapter and renderers. The parser
+  populates parsed routine-signature data, then invokes one model-only
+  validation pass after type-relationship resolution.
+- Store a resolved `@see` symbol ID on the existing directive model. Markdown
+  and HTML therefore consume the same conservative resolution result rather
+  than independently guessing links.
+- Treat authoring-rule findings as warnings by default. Output-integrity
+  failures and an explicitly configured coverage threshold are errors; CI can
+  promote warnings with `--fail-on=warning`.
+- Preserve the existing JSON model schema version and add diagnostic fields
+  additively. Emit a separate `diagnostics.json` from those same model lists,
+  never by inspecting renderer output.
 
 ## Task list
 
-### Phase 1: Configuration foundation
+### Phase 1: Validation foundation
 
-- [x] Add focused Lazarus fixtures and tests for `.lpi`/`.lpk` XML parsing,
-  build-mode selection, imported paths/defines/targets, and CLI precedence.
-- [x] Implement normalized Lazarus configuration records/classes and XML
-  value extraction, including supported macro expansion and diagnostics.
-- [x] Extend compiler options with category-aware default merging.
+- [ ] Add stable diagnostic codes, routine-signature model data, and
+  deterministic diagnostics JSON serialization.
+- [ ] Add parser-independent authoring validation for parameter, return, and
+  conservative project-local `@see` rules.
+- [ ] Add focused slash, brace, and paren fixtures plus failing validation
+  tests before the implementation.
 
-### Checkpoint: Configuration foundation
+### Checkpoint: Model validation
 
-- [x] New tests fail before implementation and pass after implementation.
-- [x] Existing compiler-option and direct-input tests remain green.
+- [ ] Focused validation tests pass.
+- [ ] Existing parser and renderer tests stay green.
 
-### Phase 2: Package graph and source selection
+### Phase 2: Build integrity and CI controls
 
-- [x] Resolve referenced local packages deterministically with cycle,
-  missing-file, ambiguity, and safe-directory diagnostics.
-- [x] Import project units, package files, main units, unit paths, and include
-  paths into a selected source set without traversing excluded trees.
-- [x] Add a parser file-list build entry point and preserve transitive unit
-  resolution through effective imported paths.
+- [ ] Validate rendered-route invariants: duplicate anchors/pages, dangling
+  generated links, and route reachability as build defects.
+- [ ] Add coverage calculation, `--min-documentation-coverage`, and
+  `--fail-on` CLI behavior.
+- [ ] Write `diagnostics.json` alongside `api-model.json`.
 
-### Checkpoint: End-to-end project input
+### Checkpoint: CI behavior
 
-- [x] A multi-package fixture builds with no manually duplicated compiler
-  settings.
-- [x] Direct file and directory builds remain unchanged.
-- [x] Deterministic JSON is identical across repeated project builds.
+- [ ] The executable reports coded diagnostics and exits according to the
+  configured failure severity.
+- [ ] HTML and Markdown consume resolved `@see` IDs consistently.
 
 ### Phase 3: Release contract
 
-- [x] Add CLI options/help for Lazarus input, build mode, and package paths.
-- [x] Update README, parser/project documentation, changelog, release note,
-  roadmap status, and version metadata to `0.3.0`.
-- [x] Validate against at least one real multi-package Lazarus project or a
-  checked-in equivalent, then run the full test/build suite.
+- [ ] Document diagnostic codes, severities, CI usage, and the validation
+  design decision.
+- [ ] Update README, changelog, roadmap, release note, and version metadata.
+- [ ] Run the full suite, build the executable, perform focused CLI smoke
+  checks, and review the change across correctness, architecture, security,
+  and performance.
+
+## Risks and mitigations
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| FPC routine forms are varied | Incorrect `@param` checks | Capture names directly from the parser AST, not declaration text. |
+| A guessed `@see` link misleads readers | Incorrect navigation | Resolve only current-unit, qualified, or dependency-unit candidates; ambiguity remains unresolved. |
+| New warnings disrupt local use | Poor adoption | Warning diagnostics do not change the default successful exit status. |
+| Renderer drift reintroduces broken links | Broken generated navigation | Renderers use the resolved directive ID and validation checks route/anchor invariants. |
 
 ## Definition of done
 
-- [x] Branch is `release/v0.3.0`.
-- [x] Every new behavior has focused regression coverage.
-- [x] Full automated tests pass and the application builds.
-- [x] Direct inputs, default `///` comments, and existing golden outputs are
-  unchanged.
+- [ ] Branch is `release/v0.5.0` as requested.
+- [ ] v0.4.0 exit criteria are documented and covered across all three accepted
+  documentation-comment forms.
+- [ ] The full test suite and production build pass.
+- [ ] Direct input and default `///` rendering continue to work end to end.

@@ -8,6 +8,7 @@ uses
   PasWeave.Lazarus, PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
+  PasWeave.ValidationTests,
   PasWeave.Version;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -1635,6 +1636,7 @@ end;
 begin
   try
     RunTests;
+    RunValidationTests;
     WriteLn('All PasWeave tests passed.');
   except
     on E: Exception do

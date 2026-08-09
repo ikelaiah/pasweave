@@ -1,5 +1,5 @@
 FPC ?= fpc
-UNIT_PATHS = -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render
+UNIT_PATHS = -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation
 FPC_FLAGS = -Mobjfpc -Sh $(UNIT_PATHS) -FUbuild/units
 
 ifeq ($(OS),Windows_NT)

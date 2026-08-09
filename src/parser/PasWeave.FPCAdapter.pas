@@ -689,6 +689,26 @@ begin
   end;
 end;
 
+procedure PopulateRoutineSignature(AElement: TPasElement; ASymbol: TDocSymbol);
+var
+  ProcedureElement: TPasProcedure;
+  I: Integer;
+  Argument: TPasArgument;
+begin
+  if not (AElement is TPasProcedure) then
+    Exit;
+  ProcedureElement := TPasProcedure(AElement);
+  ASymbol.HasReturnValue := AElement is TPasFunction;
+  if not Assigned(ProcedureElement.ProcType) then
+    Exit;
+  for I := 0 to ProcedureElement.ProcType.Args.Count - 1 do
+  begin
+    Argument := TPasArgument(ProcedureElement.ProcType.Args[I]);
+    if Argument.Name <> '' then
+      ASymbol.ParameterNames.Add(Argument.SafeName);
+  end;
+end;
+
 procedure AddElementSymbols(AElement: TPasElement; AUnit: TDocUnit;
   AEngine: TPasWeaveTreeContainer; const ASourceRoot, ADefaultFilename,
   ADefaultSourceFile, AParentSymbolID, AParentQualifiedName: string;
@@ -733,6 +753,7 @@ begin
     Symbol.Kind := Kind;
     Symbol.Visibility := VisibilityOf(AElement);
     Symbol.DeclarationText := DeclarationText;
+    PopulateRoutineSignature(AElement, Symbol);
     if AElement.SourceFilename <> '' then
     begin
       ElementSourceFile := AElement.SourceFilename;

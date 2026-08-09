@@ -1,10 +1,10 @@
-# v0.3.0 task checklist
+# v0.4.0 task checklist
 
-- [x] Lazarus XML configuration model and parser
-- [x] Compiler option default precedence
-- [x] Build-mode selection and macro validation
-- [x] Local package discovery and dependency graph validation
-- [x] Project/package source-file build path
-- [x] CLI integration and focused fixtures
-- [x] Documentation, version metadata, and release notes
-- [x] Full test/build validation
+- [ ] Stable coded diagnostics and machine-readable output
+- [ ] Parsed-signature parameter and return validation
+- [ ] Conservative, model-level `@see` resolution
+- [ ] Generated-link, anchor, and page-route integrity checks
+- [ ] Coverage and diagnostic CI thresholds
+- [ ] Slash, brace, and paren regression fixtures
+- [ ] Markdown and HTML shared resolved-link rendering
+- [ ] Documentation, release metadata, and final validation
