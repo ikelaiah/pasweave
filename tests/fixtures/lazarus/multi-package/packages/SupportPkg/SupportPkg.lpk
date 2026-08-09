@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="SupportPkg"/>
+    <CompilerOptions>
+      <SearchPaths>
+        <OtherUnitFiles Value="src"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files>
+      <Item>
+        <Filename Value="src\SupportUnit.pas"/>
+        <UnitName Value="SupportUnit"/>
+      </Item>
+    </Files>
+  </Package>
+</CONFIG>

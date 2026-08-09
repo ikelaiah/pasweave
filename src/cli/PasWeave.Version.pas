@@ -5,7 +5,7 @@ unit PasWeave.Version;
 interface
 
 const
-  PasWeaveVersion = '0.2.0';
+  PasWeaveVersion = '0.3.0';
 
 implementation
 

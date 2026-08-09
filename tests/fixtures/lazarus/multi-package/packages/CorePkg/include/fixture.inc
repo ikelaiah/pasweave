@@ -1,0 +1,1 @@
+{ Lazarus package include fixture. }

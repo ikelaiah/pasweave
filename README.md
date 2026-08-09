@@ -1,6 +1,6 @@
 ![PasWeave — Documentation, woven from Pascal source](assets/pasweave-banner.svg)
 
-[![Version](https://img.shields.io/badge/version-0.2.0-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0-635bff)](CHANGELOG.md)
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Portable release](https://img.shields.io/badge/portable-Windows%20x86--64-2563eb)](docs/releasing.md)
 [![Model schema](https://img.shields.io/badge/model%20schema-v1-64748b)](src/model/PasWeave.Model.JSON.pas)
@@ -25,6 +25,8 @@ The working parser-to-site pipeline includes:
 - interface parsing through `fcl-passrc`;
 - compiler-aware parsing with repeatable unit paths, include paths, and
   conditional defines plus explicit normalized target OS and CPU settings;
+- Lazarus `.lpi` project and `.lpk` package inputs with build-mode selection,
+  imported compiler settings, and deterministic local-package discovery;
 - parser-independent project, unit, symbol, directive, and diagnostic models;
 - source-backed association of enabled PasWeave `///`, Pascal `{ ... }`, and
   Pascal `(* ... *)` documentation groups, with `///` as the safe default;
@@ -85,7 +87,7 @@ Early pre-release executables are not code-signed, so Windows may display a
 SmartScreen warning. Download only from the PasWeave release page and compare
 the SHA-256 value before running the executable.
 
-Read the [v0.2.0 release notes](RELEASE_NOTE_v0.2.0.md) for the highlights,
+Read the [v0.3.0 release notes](RELEASE_NOTE_v0.3.0.md) for the highlights,
 compatibility details, validation results, and known limitations. The
 complete project history is maintained in the
 [changelog](CHANGELOG.md).
@@ -209,6 +211,23 @@ searched in command-line order; the first match wins. Explicit targets replace
 the host defaults and are normalized before `fcl-passrc` sees them. See
 [compiler-aware parsing](docs/compiler-aware-parsing.md) for supported values,
 precise precedence, diagnostics, and limitations.
+
+Lazarus projects and packages can provide those settings directly. Point the
+build command at an `.lpi` or `.lpk`; no Lazarus process is started:
+
+```text
+pasweave build path/to/Application.lpi --build-mode=Release \
+  --package-path=path/to/local-packages --output build/docs
+```
+
+PasWeave imports project/package units, source and include paths, defines, and
+target settings. Explicit command-line compiler options override imported
+values; imported project/package settings override PasWeave defaults. The
+default package scan is deterministic and prunes generated, vendor, example,
+and test trees. Use repeatable `--package-path` values when a local package
+intentionally lives in one of those trees. See the
+[Lazarus project and package guide](docs/lazarus-projects.md) for supported
+XML elements and diagnostics.
 
 The command writes:
 
@@ -374,8 +393,8 @@ for its offline-search, safety, and Markdown-subset contracts.
   LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
-- no Lazarus project/package reader yet; compiler settings must be supplied
-  explicitly on the command line;
+- Lazarus package discovery requires local `.lpk` files; external Lazarus/FPC
+  packages must be made available through an explicit package path;
 - type relationship resolution is limited to the current unit and its
   interface dependencies; ancestors outside the documented source set remain
   explicitly unresolved, and implementation bodies are not analysed;
@@ -397,6 +416,6 @@ components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The compiler-aware parsing milestone is complete in `v0.2.0`. See
+The Lazarus project/package milestone is complete in `v0.3.0`. See
 [ROADMAP.md](ROADMAP.md) for its acceptance evidence and the remaining
 longer-term sequence.

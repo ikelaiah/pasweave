@@ -10,7 +10,8 @@ implementation
 
 uses
   Classes, SysUtils, PasWeave.Comments, PasWeave.Compiler,
-  PasWeave.Diagnostics, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Diagnostics, PasWeave.Lazarus, PasWeave.Model,
+  PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown,
   PasWeave.Render.HTML, PasWeave.Version;
 
@@ -25,6 +26,7 @@ begin
   WriteLn('                 [--recursive] [--include=<glob>] [--exclude=<glob>]');
   WriteLn('                 [--unit-path=<directory>] [--include-path=<directory>]');
   WriteLn('                 [--define=<name>] [--target-os=<os>] [--target-cpu=<cpu>]');
+  WriteLn('                 [--build-mode=<name>] [--package-path=<directory>]');
   WriteLn('                 [--verbose]');
   WriteLn;
   WriteLn('Source discovery:');
@@ -37,6 +39,12 @@ begin
   WriteLn('  --unit-path, --include-path, and --define are repeatable');
   WriteLn('  Unit and include paths are searched in command-line order');
   WriteLn('  Explicit target OS/CPU values override the documentation host defaults');
+  WriteLn;
+  WriteLn('Lazarus project and package inputs:');
+  WriteLn('  .lpi projects and .lpk packages import their source and compiler settings');
+  WriteLn('  --build-mode selects a named Lazarus project build mode');
+  WriteLn('  --package-path is repeatable and opts into additional package roots');
+  WriteLn('  automatic package search prunes build, vendor, example, and test trees');
   WriteLn;
   WriteLn('Documentation comment styles:');
   WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
@@ -89,17 +97,26 @@ var
   MarkdownOutputPath: string;
   HTMLOutputPath: string;
   CommentStyleValue: string;
+  BuildMode: string;
   CommentStyles: TDocumentationCommentStyles;
   DiscoveryOptions: TSourceDiscoveryOptions;
   CompilerOptions: TCompilerOptions;
+  PackagePaths: TStringList;
+  LazarusConfiguration: TLazarusConfiguration;
+  ProjectNameExplicit: Boolean;
+  IsLazarusInput: Boolean;
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
   ProjectName := '';
+  ProjectNameExplicit := False;
+  BuildMode := '';
   Verbose := False;
   CommentStyles := DefaultDocumentationCommentStyles;
   DiscoveryOptions := TSourceDiscoveryOptions.Create;
   CompilerOptions := TCompilerOptions.Create;
+  PackagePaths := TStringList.Create;
+  LazarusConfiguration := nil;
   try
     I := 2;
     while I <= ParamCount do
@@ -107,7 +124,16 @@ begin
       if ParamStr(I) = '--output' then
         OutputPath := RequireOptionValue(I, '--output')
       else if ParamStr(I) = '--project-name' then
-        ProjectName := RequireOptionValue(I, '--project-name')
+      begin
+        ProjectName := RequireOptionValue(I, '--project-name');
+        ProjectNameExplicit := True;
+      end
+      else if Pos('--project-name=', ParamStr(I)) = 1 then
+      begin
+        ProjectName := Copy(ParamStr(I), Length('--project-name=') + 1,
+          MaxInt);
+        ProjectNameExplicit := True;
+      end
       else if ParamStr(I) = '--doc-comments' then
       begin
         CommentStyleValue := RequireOptionValue(I, '--doc-comments');
@@ -174,6 +200,15 @@ begin
       else if Pos('--target-cpu=', ParamStr(I)) = 1 then
         CompilerOptions.SetTargetCPU(Copy(ParamStr(I),
           Length('--target-cpu=') + 1, MaxInt))
+      else if ParamStr(I) = '--build-mode' then
+        BuildMode := RequireOptionValue(I, '--build-mode')
+      else if Pos('--build-mode=', ParamStr(I)) = 1 then
+        BuildMode := Copy(ParamStr(I), Length('--build-mode=') + 1, MaxInt)
+      else if ParamStr(I) = '--package-path' then
+        PackagePaths.Add(RequireOptionValue(I, '--package-path'))
+      else if Pos('--package-path=', ParamStr(I)) = 1 then
+        PackagePaths.Add(Copy(ParamStr(I), Length('--package-path=') + 1,
+          MaxInt))
       else if ParamStr(I) = '--verbose' then
         Verbose := True
       else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
@@ -193,9 +228,38 @@ begin
     if SourcePath = '' then
       raise EPasWeaveInputError.Create('missing unit or source directory');
 
-    Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
-      CommentStyles, DiscoveryOptions, CompilerOptions);
+    IsLazarusInput := SameText(ExtractFileExt(SourcePath), '.lpi') or
+      SameText(ExtractFileExt(SourcePath), '.lpk');
+    if IsLazarusInput then
+    begin
+      if DiscoveryOptions.HasExplicitSettings then
+        raise EPasWeaveInputError.Create(
+          '--recursive, --include, and --exclude require a direct source '
+          + 'file or directory input');
+      LazarusConfiguration := LoadLazarusConfiguration(SourcePath, BuildMode,
+        PackagePaths);
+      if not ProjectNameExplicit then
+        ProjectName := LazarusConfiguration.ProjectName;
+      CompilerOptions.ApplyDefaultsFrom(
+        LazarusConfiguration.CompilerOptions);
+      Project := BuildProjectFromFiles(LazarusConfiguration.SourceRoot,
+        ProjectName, LazarusConfiguration.SourceFiles, AttemptedCount,
+        CommentStyles, CompilerOptions);
+    end
+    else
+    begin
+      if BuildMode <> '' then
+        raise EPasWeaveInputError.Create(
+          '--build-mode requires a Lazarus .lpi or .lpk input');
+      if PackagePaths.Count > 0 then
+        raise EPasWeaveInputError.Create(
+          '--package-path requires a Lazarus .lpi or .lpk input');
+      Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
+        CommentStyles, DiscoveryOptions, CompilerOptions);
+    end;
   finally
+    LazarusConfiguration.Free;
+    PackagePaths.Free;
     CompilerOptions.Free;
     DiscoveryOptions.Free;
   end;
@@ -265,6 +329,12 @@ begin
       Result := 2;
     end;
     on E: ECompilerConfigurationError do
+    begin
+      WriteLn(StdErr, 'pasweave: ', E.Message);
+      WriteLn(StdErr, 'Run "pasweave --help" for usage.');
+      Result := 2;
+    end;
+    on E: ELazarusConfigurationError do
     begin
       WriteLn(StdErr, 'pasweave: ', E.Message);
       WriteLn(StdErr, 'Run "pasweave --help" for usage.');
