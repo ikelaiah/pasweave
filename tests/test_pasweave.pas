@@ -5,9 +5,10 @@ program test_pasweave;
 uses
   Classes, SysUtils, FPJSON, JSONParser,
   PasWeave.Comments, PasWeave.Compiler, PasWeave.Diagnostics, PasWeave.Model,
-  PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Lazarus, PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
+  PasWeave.ValidationTests,
   PasWeave.Version;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -208,8 +209,13 @@ var
   CompilerSymbol: TDocSymbol;
   NormalisedTarget: string;
   InputErrorRaised: Boolean;
+  LazarusConfiguration: TLazarusConfiguration;
+  LazarusCompilerOptions: TCompilerOptions;
+  LazarusProject: TDocProject;
+  LazarusProjectSecond: TDocProject;
+  LazarusErrorMessage: string;
 begin
-  Check(PasWeaveVersion = '0.2.0',
+  Check(PasWeaveVersion = '0.4.0',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -496,12 +502,172 @@ begin
     CompilerOptions.Free;
   end;
 
+  LazarusConfiguration := LoadLazarusConfiguration(
+    'tests/fixtures/lazarus/multi-package/LazarusProject.lpi',
+    'Release', nil);
+  try
+    Check(LazarusConfiguration.ProjectName = 'Lazarus Multi Package Fixture',
+      'Lazarus project title should become the default project name');
+    Check((LazarusConfiguration.SourceFiles.Count = 3) and
+      (LazarusConfiguration.PackageFiles.Count = 2),
+      'Lazarus projects should select project and transitive package sources');
+    Check((LazarusConfiguration.MainUnits.Count = 1) and
+      (ExtractFileName(LazarusConfiguration.MainUnits[0]) =
+      'LazarusProject.pas'),
+      'Lazarus project units should identify its main unit');
+    Check((LazarusConfiguration.CompilerOptions.TargetOS = 'linux') and
+      (LazarusConfiguration.CompilerOptions.TargetCPU = 'aarch64'),
+      'selected Lazarus build modes should import normalized target settings');
+    Check(LazarusConfiguration.CompilerOptions.Defines.IndexOf(
+      'RELEASE_BUILD') >= 0,
+      'selected Lazarus build modes should import conditional defines');
+    Check(LazarusConfiguration.CompilerOptions.UnitPaths.Count >= 3,
+      'project and package search paths should become unit paths');
+    Check(LazarusConfiguration.CompilerOptions.IncludePaths.Count >= 2,
+      'project and package include paths should be imported');
+
+    LazarusCompilerOptions := TCompilerOptions.Create;
+    try
+      LazarusCompilerOptions.AddDefine('CLI_ONLY');
+      LazarusCompilerOptions.AddUnitPath(
+        'tests/fixtures/lazarus/multi-package/src');
+      LazarusCompilerOptions.SetTargetOS('darwin');
+      LazarusCompilerOptions.ApplyDefaultsFrom(
+        LazarusConfiguration.CompilerOptions);
+      Check((LazarusCompilerOptions.Defines.Count = 1) and
+        (LazarusCompilerOptions.Defines[0] = 'CLI_ONLY'),
+        'explicit CLI defines should replace imported project defines');
+      Check((LazarusCompilerOptions.UnitPaths.Count = 1) and
+        (LazarusCompilerOptions.TargetOS = 'darwin'),
+        'explicit CLI paths and targets should override imported settings');
+    finally
+      LazarusCompilerOptions.Free;
+    end;
+
+    LazarusProject := BuildProjectFromFiles(
+      LazarusConfiguration.SourceRoot,
+      LazarusConfiguration.ProjectName,
+      LazarusConfiguration.SourceFiles,
+      AttemptedCount, DefaultDocumentationCommentStyles,
+      LazarusConfiguration.CompilerOptions);
+    try
+      Check((AttemptedCount = 3) and (LazarusProject.Units.Count = 3) and
+        (LazarusProject.Errors.Count = 0),
+        'a multi-package Lazarus project should build without manual paths');
+      Check(Assigned(FindUnitModel(LazarusProject, 'LazarusProject')) and
+        Assigned(FindUnitModel(LazarusProject, 'CoreUnit')) and
+        Assigned(FindUnitModel(LazarusProject, 'SupportUnit')),
+        'project and transitive package units should enter the model');
+      LazarusProjectSecond := BuildProjectFromFiles(
+        LazarusConfiguration.SourceRoot,
+        LazarusConfiguration.ProjectName,
+        LazarusConfiguration.SourceFiles,
+        AttemptedCount, DefaultDocumentationCommentStyles,
+        LazarusConfiguration.CompilerOptions);
+      try
+        Check(ProjectToJSON(LazarusProject) =
+          ProjectToJSON(LazarusProjectSecond),
+          'Lazarus project output should remain deterministic');
+      finally
+        LazarusProjectSecond.Free;
+      end;
+    finally
+      LazarusProject.Free;
+    end;
+  finally
+    LazarusConfiguration.Free;
+  end;
+
+  LazarusConfiguration := LoadLazarusConfiguration(
+    'tests/fixtures/lazarus/multi-package/LazarusProject.lpi', '', nil);
+  try
+    Check((LazarusConfiguration.CompilerOptions.TargetOS = 'win32') and
+      (LazarusConfiguration.CompilerOptions.Defines.IndexOf('PROJECT_BUILD') >= 0) and
+      (LazarusConfiguration.CompilerOptions.Defines.IndexOf('RELEASE_BUILD') < 0),
+      'the Lazarus default build mode should be selected deterministically');
+  finally
+    LazarusConfiguration.Free;
+  end;
+
+  LazarusErrorMessage := '';
+  try
+    LazarusConfiguration := LoadLazarusConfiguration(
+      'tests/fixtures/lazarus/ambiguous/Ambiguous.lpi', '', nil);
+    LazarusConfiguration.Free;
+  except
+    on E: ELazarusConfigurationError do
+      LazarusErrorMessage := E.Message;
+  end;
+  Check(Pos('ambiguous Lazarus package reference TwinPkg', LazarusErrorMessage) > 0,
+    'ambiguous local packages should fail configuration explicitly');
+
+  LazarusErrorMessage := '';
+  try
+    LazarusConfiguration := LoadLazarusConfiguration(
+      'tests/fixtures/lazarus/cycle/Cycle.lpi', '', nil);
+    LazarusConfiguration.Free;
+  except
+    on E: ELazarusConfigurationError do
+      LazarusErrorMessage := E.Message;
+  end;
+  Check(Pos('cyclic Lazarus package reference', LazarusErrorMessage) > 0,
+    'cyclic local package references should fail before a partial build');
+
+  LazarusErrorMessage := '';
+  try
+    LazarusConfiguration := LoadLazarusConfiguration(
+      'tests/fixtures/lazarus/unsupported-macro/Macro.lpi', '', nil);
+    LazarusConfiguration.Free;
+  except
+    on E: ELazarusConfigurationError do
+      LazarusErrorMessage := E.Message;
+  end;
+  Check(Pos('unsupported Lazarus macro', LazarusErrorMessage) > 0,
+    'unsupported Lazarus macros should not be silently ignored');
+
+  LazarusErrorMessage := '';
+  try
+    LazarusConfiguration := LoadLazarusConfiguration(
+      'tests/fixtures/lazarus/missing/Missing.lpi', '', nil);
+    LazarusConfiguration.Free;
+  except
+    on E: ELazarusConfigurationError do
+      LazarusErrorMessage := E.Message;
+  end;
+  Check(Pos('referenced Lazarus package file is missing', LazarusErrorMessage) > 0,
+    'missing local packages should fail configuration explicitly');
+
+  LazarusErrorMessage := '';
+  try
+    LazarusConfiguration := LoadLazarusConfiguration(
+      'tests/fixtures/lazarus/ambiguous-mode/Mode.lpi', '', nil);
+    LazarusConfiguration.Free;
+  except
+    on E: ELazarusConfigurationError do
+      LazarusErrorMessage := E.Message;
+  end;
+  Check(Pos('ambiguous Lazarus build mode', LazarusErrorMessage) > 0,
+    'projects without one default build mode should fail explicitly');
+
+  LazarusConfiguration := LoadLazarusConfiguration(
+    'tests/fixtures/lazarus/multi-package/packages/CorePkg/CorePkg.lpk', '', nil);
+  try
+    Check((LazarusConfiguration.ProjectName = 'CorePkg') and
+      (LazarusConfiguration.SourceFiles.Count = 2) and
+      (LazarusConfiguration.PackageFiles.Count = 2),
+      'direct package input should include its source and local dependency');
+  finally
+    LazarusConfiguration.Free;
+  end;
+
   Project := BuildProject('tests/fixtures/SimpleUnit.pas',
-    'PasWeaveFixture', AttemptedCount);
+    '', AttemptedCount);
   try
     Check(AttemptedCount = 1, 'one fixture should be attempted');
     Check(Project.Errors.Count = 0, 'fixture should parse without errors');
     Check(Project.Units.Count = 1, 'fixture should produce one unit');
+    Check(Project.Name = 'SimpleUnit',
+      'unnamed direct file builds should use the file stem as project name');
 
     UnitModel := TDocUnit(Project.Units[0]);
     Check(UnitModel.Name = 'SimpleUnit', 'unit name should be parsed');
@@ -1470,6 +1636,7 @@ end;
 begin
   try
     RunTests;
+    RunValidationTests;
     WriteLn('All PasWeave tests passed.');
   except
     on E: Exception do

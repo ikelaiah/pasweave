@@ -5,30 +5,17 @@ unit PasWeave.Render.HTML.Markdown;
 
 interface
 
-function EscapeHTML(const AText: string): UTF8String;
 function RenderInlineMarkdown(const AText: string): UTF8String;
 function RenderMarkdownFragment(const AMarkdown: string): UTF8String;
 
 implementation
 
 uses
-  Classes, SysUtils, StrUtils;
+  Classes, SysUtils, StrUtils, PasWeave.Render.Support;
 
 procedure AppendLine(var AOutput: UTF8String; const ALine: UTF8String = '');
 begin
   AOutput := AOutput + ALine + #10;
-end;
-
-function EscapeHTML(const AText: string): UTF8String;
-var
-  Value: string;
-begin
-  Value := StringReplace(AText, '&', '&amp;', [rfReplaceAll]);
-  Value := StringReplace(Value, '<', '&lt;', [rfReplaceAll]);
-  Value := StringReplace(Value, '>', '&gt;', [rfReplaceAll]);
-  Value := StringReplace(Value, '"', '&quot;', [rfReplaceAll]);
-  Value := StringReplace(Value, '''', '&#39;', [rfReplaceAll]);
-  Result := UTF8String(Value);
 end;
 
 function IsSafeLinkTarget(const ATarget: string): Boolean;

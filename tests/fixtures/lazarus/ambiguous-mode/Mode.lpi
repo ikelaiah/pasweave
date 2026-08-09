@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <General><Title Value="Ambiguous Mode Fixture"/></General>
+    <BuildModes>
+      <Item Name="Debug"/>
+      <Item Name="Release"/>
+    </BuildModes>
+    <Units><Unit><Filename Value="Main.pas"/><IsPartOfProject Value="True"/></Unit></Units>
+  </ProjectOptions>
+</CONFIG>

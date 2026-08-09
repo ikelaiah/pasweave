@@ -9,6 +9,8 @@ uses
 
 function ProjectToJSON(AProject: TDocProject): UTF8String;
 procedure WriteProjectJSON(AProject: TDocProject; const AFileName: string);
+function DiagnosticsToJSON(AProject: TDocProject): UTF8String;
+procedure WriteDiagnosticsJSON(AProject: TDocProject; const AFileName: string);
 
 implementation
 
@@ -77,6 +79,7 @@ begin
     Item.Add('name', Directive.Name);
     Item.Add('subject', Directive.Subject);
     Item.Add('text', Directive.Text);
+    Item.Add('targetSymbolId', Directive.TargetSymbolID);
     Result.Add(Item);
   end;
 end;
@@ -131,6 +134,8 @@ begin
   Result.Add('rawDocumentation', ASymbol.RawDocumentation);
   Result.Add('markdownDocumentation', ASymbol.MarkdownDocumentation);
   Result.Add('directives', DirectivesToJSON(ASymbol.Directives));
+  Result.Add('parameterNames', StringArrayToJSON(ASymbol.ParameterNames, False));
+  Result.Add('hasReturnValue', ASymbol.HasReturnValue);
   Result.Add('typeRelationships',
     TypeRelationshipsToJSON(ASymbol.TypeRelationships));
   Result.Add('parentSymbolId', ASymbol.ParentSymbolID);
@@ -178,7 +183,7 @@ begin
   end;
 end;
 
-function DiagnosticsToJSON(ADiagnostics: TList): TJSONArray;
+function DiagnosticListToJSON(ADiagnostics: TList): TJSONArray;
 var
   Sorted: TStringList;
   I: Integer;
@@ -192,6 +197,7 @@ begin
     begin
       Diagnostic := TDiagnostic(Sorted.Objects[I]);
       Item := TJSONObject.Create;
+      Item.Add('code', Diagnostic.Code);
       Item.Add('severity', DiagnosticSeverityName(Diagnostic.Severity));
       Item.Add('sourceFilename', Diagnostic.SourceFilename);
       Item.Add('sourceLine', Diagnostic.SourceLine);
@@ -215,8 +221,8 @@ begin
     Root.Add('name', AProject.Name);
     Root.Add('sourceRoot', AProject.SourceRoot);
     Root.Add('units', UnitsToJSON(AProject.Units));
-    Root.Add('warnings', DiagnosticsToJSON(AProject.Warnings));
-    Root.Add('errors', DiagnosticsToJSON(AProject.Errors));
+    Root.Add('warnings', DiagnosticListToJSON(AProject.Warnings));
+    Root.Add('errors', DiagnosticListToJSON(AProject.Errors));
     Result := Root.FormatJSON([], 2);
     Result := UTF8String(StringReplace(string(Result), #13#10, #10,
       [rfReplaceAll]));
@@ -224,6 +230,53 @@ begin
       Result := Result + #10;
   finally
     Root.Free;
+  end;
+end;
+
+function DiagnosticsToJSON(AProject: TDocProject): UTF8String;
+var
+  Root: TJSONObject;
+  Diagnostics: TList;
+  I: Integer;
+begin
+  Root := TJSONObject.Create;
+  Diagnostics := TList.Create;
+  try
+    for I := 0 to AProject.Warnings.Count - 1 do
+      Diagnostics.Add(AProject.Warnings[I]);
+    for I := 0 to AProject.Errors.Count - 1 do
+      Diagnostics.Add(AProject.Errors[I]);
+    Root.Add('schemaVersion', 1);
+    Root.Add('diagnostics', DiagnosticListToJSON(Diagnostics));
+    Root.Add('warningCount', AProject.Warnings.Count);
+    Root.Add('errorCount', AProject.Errors.Count);
+    Result := UTF8String(StringReplace(string(Root.FormatJSON([], 2)), #13#10,
+      #10, [rfReplaceAll]));
+    if (Result = '') or (Result[Length(Result)] <> #10) then
+      Result := Result + #10;
+  finally
+    Diagnostics.Free;
+    Root.Free;
+  end;
+end;
+
+procedure WriteDiagnosticsJSON(AProject: TDocProject; const AFileName: string);
+var
+  OutputStream: TFileStream;
+  Data: UTF8String;
+  ParentDirectory: string;
+begin
+  ParentDirectory := ExtractFileDir(AFileName);
+  if (ParentDirectory <> '') and not ForceDirectories(ParentDirectory) then
+    raise EFCreateError.CreateFmt('cannot create output directory: %s',
+      [ParentDirectory]);
+  Data := DiagnosticsToJSON(AProject);
+  OutputStream := TFileStream.Create(AFileName, fmCreate);
+  try
+    if Length(Data) > 0 then
+      OutputStream.WriteBuffer(Data[1], Length(Data));
+  finally
+    OutputStream.Free;
   end;
 end;
 

@@ -15,11 +15,13 @@ type
     FExcludePatterns: TStringList;
     FIncludePatterns: TStringList;
     FRecursive: Boolean;
+    function GetHasExplicitSettings: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
     procedure AddExcludePattern(const APattern: string);
     procedure AddIncludePattern(const APattern: string);
+    property HasExplicitSettings: Boolean read GetHasExplicitSettings;
     property Recursive: Boolean read FRecursive write FRecursive;
   end;
 
@@ -37,11 +39,15 @@ function BuildProject(const ASourcePath, AProjectName: string;
   ACommentStyles: TDocumentationCommentStyles;
   ADiscoveryOptions: TSourceDiscoveryOptions;
   ACompilerOptions: TCompilerOptions): TDocProject; overload;
+function BuildProjectFromFiles(const ASourceRoot, AProjectName: string;
+  AFiles: TStrings; out AAttemptedFileCount: Integer;
+  ACommentStyles: TDocumentationCommentStyles;
+  ACompilerOptions: TCompilerOptions): TDocProject;
 
 implementation
 
 uses
-  PasWeave.Diagnostics, PasWeave.FPCAdapter;
+  PasWeave.Diagnostics, PasWeave.FPCAdapter, PasWeave.Validation;
 
 function NormalisePath(const APath: string): string;
 begin
@@ -120,6 +126,12 @@ begin
   FExcludePatterns.Free;
   FIncludePatterns.Free;
   inherited Destroy;
+end;
+
+function TSourceDiscoveryOptions.GetHasExplicitSettings: Boolean;
+begin
+  Result := FRecursive or (FIncludePatterns.Count > 0) or
+    (FExcludePatterns.Count > 0);
 end;
 
 procedure TSourceDiscoveryOptions.AddExcludePattern(const APattern: string);
@@ -503,45 +515,47 @@ begin
     end;
 end;
 
-function BuildProject(const ASourcePath, AProjectName: string;
-  out AAttemptedFileCount: Integer;
+function BuildProjectFileSet(const ASourceRoot, ADisplayRoot, AProjectName: string;
+  AFiles: TStrings; out AAttemptedFileCount: Integer;
   ACommentStyles: TDocumentationCommentStyles;
-  ADiscoveryOptions: TSourceDiscoveryOptions;
   ACompilerOptions: TCompilerOptions): TDocProject;
 var
   Files: TStringList;
   AttemptedFiles: TStringList;
   SourceRoot: string;
-  DisplayRoot: string;
   UnitModel: TDocUnit;
   Diagnostic: TDiagnostic;
-  I: Integer;
-  J: Integer;
-  DependencyUnitIndex: Integer;
-  DependencyName: string;
-  DependencyFilename: string;
-  DependencySourceUnit: TDocUnit;
   EffectiveCompilerOptions: TCompilerOptions;
   OwnedCompilerOptions: TCompilerOptions;
+  DependencySourceUnit: TDocUnit;
+  DependencyFilename: string;
+  DependencyName: string;
+  DependencyUnitIndex: Integer;
+  I: Integer;
+  J: Integer;
 begin
   AAttemptedFileCount := 0;
-  if not FileExists(ASourcePath) and not DirectoryExists(ASourcePath) then
-    raise EPasWeaveInputError.CreateFmt('source path does not exist: %s',
-      [ASourcePath]);
-  if FileExists(ASourcePath) and Assigned(ADiscoveryOptions) and
-    (ADiscoveryOptions.Recursive or
-    (ADiscoveryOptions.FIncludePatterns.Count > 0) or
-    (ADiscoveryOptions.FExcludePatterns.Count > 0)) then
+  SourceRoot := ExpandFileName(ASourceRoot);
+  if not DirectoryExists(SourceRoot) then
+    raise EPasWeaveInputError.CreateFmt(
+      'source root does not exist: %s', [ASourceRoot]);
+  if not Assigned(AFiles) or (AFiles.Count = 0) then
     raise EPasWeaveInputError.Create(
-      'recursive, include, and exclude options require a source directory');
+      'no Pascal unit files were selected');
 
   Files := TStringList.Create;
   AttemptedFiles := TStringList.Create;
   OwnedCompilerOptions := nil;
   try
-    Files.Sorted := True;
     Files.CaseSensitive := False;
     Files.Duplicates := dupIgnore;
+    Files.Sorted := True;
+    for I := 0 to AFiles.Count - 1 do
+      if FileExists(ExpandFileName(AFiles[I])) then
+        Files.Add(ExpandFileName(AFiles[I]))
+      else
+        raise EPasWeaveInputError.CreateFmt(
+          'Lazarus source file does not exist: %s', [AFiles[I]]);
     AttemptedFiles.CaseSensitive := False;
     AttemptedFiles.Duplicates := dupIgnore;
     if Assigned(ACompilerOptions) then
@@ -551,37 +565,17 @@ begin
       OwnedCompilerOptions := TCompilerOptions.Create;
       EffectiveCompilerOptions := OwnedCompilerOptions;
     end;
-    if DirectoryExists(ASourcePath) then
-    begin
-      SourceRoot := ExpandFileName(ASourcePath);
-      DisplayRoot := ExcludeTrailingPathDelimiter(ASourcePath);
-      DiscoverDirectoryFiles(SourceRoot, '', ADiscoveryOptions, Files);
-    end
-    else
-    begin
-      SourceRoot := ExtractFileDir(ExpandFileName(ASourcePath));
-      DisplayRoot := ExtractFileDir(ASourcePath);
-      if DisplayRoot = '' then
-        DisplayRoot := '.';
-      Files.Add(ExpandFileName(ASourcePath));
-    end;
-
-    if Files.Count = 0 then
-      raise EPasWeaveInputError.CreateFmt(
-        'no Pascal unit files (*.pas or *.pp) matched source discovery in: %s',
-        [ASourcePath]);
 
     Result := TDocProject.Create;
     try
       if AProjectName <> '' then
         Result.Name := AProjectName
       else
-        Result.Name := DefaultProjectName(ASourcePath);
-      Result.SourceRoot := NormalisePath(DisplayRoot);
-
+        Result.Name := DefaultProjectName(ASourceRoot);
+      Result.SourceRoot := NormalisePath(ADisplayRoot);
       for I := 0 to Files.Count - 1 do
       begin
-        AttemptedFiles.Add(ExpandFileName(Files[I]));
+        AttemptedFiles.Add(Files[I]);
         Inc(AAttemptedFileCount);
         UnitModel := nil;
         Diagnostic := nil;
@@ -599,8 +593,7 @@ begin
           Result.Units[DependencyUnitIndex]);
         for J := 0 to DependencySourceUnit.InterfaceDependencies.Count - 1 do
         begin
-          DependencyName :=
-            DependencySourceUnit.InterfaceDependencies[J];
+          DependencyName := DependencySourceUnit.InterfaceDependencies[J];
           if Assigned(FindUnit(Result, DependencyName)) then
             Continue;
           DependencyFilename := FindUnitSourceFile(
@@ -608,7 +601,6 @@ begin
           if (DependencyFilename = '') or
             (AttemptedFiles.IndexOf(DependencyFilename) >= 0) then
             Continue;
-
           AttemptedFiles.Add(DependencyFilename);
           Inc(AAttemptedFileCount);
           UnitModel := nil;
@@ -635,6 +627,7 @@ begin
         Inc(DependencyUnitIndex);
       end;
       ResolveTypeRelationships(Result);
+      ValidateProject(Result);
     except
       Result.Free;
       raise;
@@ -644,6 +637,69 @@ begin
     AttemptedFiles.Free;
     Files.Free;
   end;
+end;
+
+function BuildProject(const ASourcePath, AProjectName: string;
+  out AAttemptedFileCount: Integer;
+  ACommentStyles: TDocumentationCommentStyles;
+  ADiscoveryOptions: TSourceDiscoveryOptions;
+  ACompilerOptions: TCompilerOptions): TDocProject;
+var
+  Files: TStringList;
+  SourceRoot: string;
+  DisplayRoot: string;
+  EffectiveProjectName: string;
+begin
+  AAttemptedFileCount := 0;
+  if not FileExists(ASourcePath) and not DirectoryExists(ASourcePath) then
+    raise EPasWeaveInputError.CreateFmt('source path does not exist: %s',
+      [ASourcePath]);
+  if FileExists(ASourcePath) and Assigned(ADiscoveryOptions) and
+    ADiscoveryOptions.HasExplicitSettings then
+    raise EPasWeaveInputError.Create(
+      'recursive, include, and exclude options require a source directory');
+
+  Files := TStringList.Create;
+  try
+    Files.Sorted := True;
+    Files.CaseSensitive := False;
+    Files.Duplicates := dupIgnore;
+    if DirectoryExists(ASourcePath) then
+    begin
+      SourceRoot := ExpandFileName(ASourcePath);
+      DisplayRoot := ExcludeTrailingPathDelimiter(ASourcePath);
+      DiscoverDirectoryFiles(SourceRoot, '', ADiscoveryOptions, Files);
+    end
+    else
+    begin
+      SourceRoot := ExtractFileDir(ExpandFileName(ASourcePath));
+      DisplayRoot := ExtractFileDir(ASourcePath);
+      if DisplayRoot = '' then
+        DisplayRoot := '.';
+      Files.Add(ExpandFileName(ASourcePath));
+    end;
+    if Files.Count = 0 then
+      raise EPasWeaveInputError.CreateFmt(
+        'no Pascal unit files (*.pas or *.pp) matched source discovery in: %s',
+        [ASourcePath]);
+    EffectiveProjectName := AProjectName;
+    if EffectiveProjectName = '' then
+      EffectiveProjectName := DefaultProjectName(ASourcePath);
+    Result := BuildProjectFileSet(SourceRoot, DisplayRoot,
+      EffectiveProjectName,
+      Files, AAttemptedFileCount, ACommentStyles, ACompilerOptions);
+  finally
+    Files.Free;
+  end;
+end;
+
+function BuildProjectFromFiles(const ASourceRoot, AProjectName: string;
+  AFiles: TStrings; out AAttemptedFileCount: Integer;
+  ACommentStyles: TDocumentationCommentStyles;
+  ACompilerOptions: TCompilerOptions): TDocProject;
+begin
+  Result := BuildProjectFileSet(ASourceRoot, ASourceRoot, AProjectName,
+    AFiles, AAttemptedFileCount, ACommentStyles, ACompilerOptions);
 end;
 
 end.

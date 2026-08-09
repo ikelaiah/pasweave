@@ -8,56 +8,28 @@ uses
   PasWeave.Model;
 
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
+function EscapeHTML(const AText: string): UTF8String;
 
 implementation
 
 uses
   SysUtils;
 
-function AnchorNamePart(const AText: string): string;
-var
-  I: Integer;
-  C: Char;
-  LastWasDash: Boolean;
-begin
-  Result := '';
-  LastWasDash := False;
-  for I := 1 to Length(AText) do
-  begin
-    C := LowerCase(AText[I]);
-    if C in ['a'..'z', '0'..'9'] then
-    begin
-      Result := Result + C;
-      LastWasDash := False;
-    end
-    else if not LastWasDash and (Result <> '') then
-    begin
-      Result := Result + '-';
-      LastWasDash := True;
-    end;
-  end;
-  while (Result <> '') and (Result[Length(Result)] = '-') do
-    Delete(Result, Length(Result), 1);
-  if Result = '' then
-    Result := 'symbol';
-end;
-
-function StableHash64(const AText: string): QWord;
-var
-  I: Integer;
-begin
-  Result := QWord($CBF29CE484222325);
-  for I := 1 to Length(AText) do
-  begin
-    Result := Result xor Byte(AText[I]);
-    Result := Result * QWord(1099511628211);
-  end;
-end;
-
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
 begin
-  Result := 'symbol-' + AnchorNamePart(ASymbol.QualifiedName) + '-' +
-    LowerCase(IntToHex(StableHash64(ASymbol.ID), 16));
+  Result := PasWeave.Model.DocumentationSymbolAnchor(ASymbol);
+end;
+
+function EscapeHTML(const AText: string): UTF8String;
+var
+  Value: string;
+begin
+  Value := StringReplace(AText, '&', '&amp;', [rfReplaceAll]);
+  Value := StringReplace(Value, '<', '&lt;', [rfReplaceAll]);
+  Value := StringReplace(Value, '>', '&gt;', [rfReplaceAll]);
+  Value := StringReplace(Value, '"', '&quot;', [rfReplaceAll]);
+  Value := StringReplace(Value, '''', '&#39;', [rfReplaceAll]);
+  Result := UTF8String(Value);
 end;
 
 end.

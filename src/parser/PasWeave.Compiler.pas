@@ -13,12 +13,15 @@ type
   TCompilerOptions = class
   private
     FDefines: TStringList;
+    FDefinesExplicit: Boolean;
     FIncludePaths: TStringList;
+    FIncludePathsExplicit: Boolean;
     FTargetCPU: string;
     FTargetCPUExplicit: Boolean;
     FTargetOS: string;
     FTargetOSExplicit: Boolean;
     FUnitPaths: TStringList;
+    FUnitPathsExplicit: Boolean;
     procedure AddPath(APaths: TStringList; const AValue,
       AOptionName: string);
     function GetHasExplicitSettings: Boolean;
@@ -29,6 +32,8 @@ type
     procedure AddIncludePath(const AValue: string);
     procedure AddUnitPath(const AValue: string);
     procedure AppendParserArguments(AArguments: TStrings);
+    procedure AppendImported(const AOptions: TCompilerOptions);
+    procedure ApplyDefaultsFrom(const AOptions: TCompilerOptions);
     procedure SetTargetCPU(const AValue: string);
     procedure SetTargetOS(const AValue: string);
     property Defines: TStringList read FDefines;
@@ -231,18 +236,59 @@ begin
     raise ECompilerConfigurationError.CreateFmt(
       'invalid conditional define: %s', [AValue]);
   Define := UpperCase(Define);
+  FDefinesExplicit := True;
   if FDefines.IndexOf(Define) < 0 then
     FDefines.Add(Define);
 end;
 
 procedure TCompilerOptions.AddIncludePath(const AValue: string);
 begin
+  FIncludePathsExplicit := True;
   AddPath(FIncludePaths, AValue, 'include');
 end;
 
 procedure TCompilerOptions.AddUnitPath(const AValue: string);
 begin
+  FUnitPathsExplicit := True;
   AddPath(FUnitPaths, AValue, 'unit');
+end;
+
+procedure TCompilerOptions.AppendImported(const AOptions: TCompilerOptions);
+var
+  I: Integer;
+begin
+  if not Assigned(AOptions) then
+    Exit;
+  for I := 0 to AOptions.Defines.Count - 1 do
+    if FDefines.IndexOf(AOptions.Defines[I]) < 0 then
+      FDefines.Add(AOptions.Defines[I]);
+  for I := 0 to AOptions.IncludePaths.Count - 1 do
+    if FIncludePaths.IndexOf(AOptions.IncludePaths[I]) < 0 then
+      FIncludePaths.Add(AOptions.IncludePaths[I]);
+  for I := 0 to AOptions.UnitPaths.Count - 1 do
+    if FUnitPaths.IndexOf(AOptions.UnitPaths[I]) < 0 then
+      FUnitPaths.Add(AOptions.UnitPaths[I]);
+
+  if not FTargetOSExplicit and AOptions.TargetOSExplicit then
+    FTargetOS := AOptions.TargetOS;
+  if not FTargetCPUExplicit and AOptions.TargetCPUExplicit then
+    FTargetCPU := AOptions.TargetCPU;
+end;
+
+procedure TCompilerOptions.ApplyDefaultsFrom(const AOptions: TCompilerOptions);
+begin
+  if not Assigned(AOptions) then
+    Exit;
+  if not FDefinesExplicit then
+    FDefines.Assign(AOptions.Defines);
+  if not FIncludePathsExplicit then
+    FIncludePaths.Assign(AOptions.IncludePaths);
+  if not FUnitPathsExplicit then
+    FUnitPaths.Assign(AOptions.UnitPaths);
+  if not FTargetOSExplicit and AOptions.TargetOSExplicit then
+    FTargetOS := AOptions.TargetOS;
+  if not FTargetCPUExplicit and AOptions.TargetCPUExplicit then
+    FTargetCPU := AOptions.TargetCPU;
 end;
 
 procedure TCompilerOptions.SetTargetCPU(const AValue: string);

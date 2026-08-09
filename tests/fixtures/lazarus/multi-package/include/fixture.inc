@@ -1,0 +1,1 @@
+{ Lazarus project include fixture. }

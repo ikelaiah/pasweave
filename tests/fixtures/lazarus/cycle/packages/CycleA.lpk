@@ -1,0 +1,1 @@
+<CONFIG><Package><Name Value="CycleA"/><RequiredPkgs><Item><PackageName Value="CycleB"/></Item></RequiredPkgs></Package></CONFIG>

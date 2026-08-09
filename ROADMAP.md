@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave is currently at `v0.2.0`. The parser-to-site pipeline works;
+PasWeave is currently at `v0.3.0`. The parser-to-site pipeline works;
 the path to `v1.0.0` is about making that pipeline understand real project
 builds, improving author feedback and navigation, scaling it safely, and then
 freezing the public contracts.
@@ -78,7 +78,7 @@ The first alpha established the complete vertical slice:
 This baseline remains supported while the compiler and project inputs become
 more complete.
 
-## Current release — `v0.2.0` — Compiler-aware parsing
+## Previous release — `v0.2.0` — Compiler-aware parsing
 
 **Outcome:** PasWeave can parse the same interface a configured Free Pascal
 build sees instead of silently inheriting the documentation host's defaults.
@@ -111,6 +111,11 @@ Exit criteria:
 **Outcome:** common Lazarus projects can describe their source set and parser
 configuration without duplicating it manually on the PasWeave command line.
 
+Status: completed on 2026-08-09. The behavior, precedence, supported XML
+inputs, package-isolation rules, diagnostics, fixtures, and multi-package
+validation are recorded in [Lazarus project and package inputs](docs/lazarus-projects.md),
+the [changelog](CHANGELOG.md), and the v0.3.0 release note.
+
 Exit criteria:
 
 - Read `.lpi` projects and `.lpk` packages without starting Lazarus.
@@ -130,6 +135,12 @@ Exit criteria:
 
 **Outcome:** maintainers can use PasWeave in CI to find documentation defects,
 not only to render the documentation that already exists.
+
+Status: completed on 2026-08-10. The diagnostic contract, conservative
+reference rules, output-integrity checks, CI thresholds, fixtures, and model
+design rationale are recorded in [authoring feedback and reference
+integrity](docs/authoring-feedback.md), [ADR-0001](docs/decisions/0001-model-driven-authoring-validation.md),
+the [changelog](CHANGELOG.md), and the v0.4.0 release note.
 
 Exit criteria:
 

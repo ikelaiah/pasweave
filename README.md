@@ -1,6 +1,6 @@
 ![PasWeave — Documentation, woven from Pascal source](assets/pasweave-banner.svg)
 
-[![Version](https://img.shields.io/badge/version-0.2.0-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.4.0-635bff)](CHANGELOG.md)
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Portable release](https://img.shields.io/badge/portable-Windows%20x86--64-2563eb)](docs/releasing.md)
 [![Model schema](https://img.shields.io/badge/model%20schema-v1-64748b)](src/model/PasWeave.Model.JSON.pas)
@@ -25,11 +25,15 @@ The working parser-to-site pipeline includes:
 - interface parsing through `fcl-passrc`;
 - compiler-aware parsing with repeatable unit paths, include paths, and
   conditional defines plus explicit normalized target OS and CPU settings;
+- Lazarus `.lpi` project and `.lpk` package inputs with build-mode selection,
+  imported compiler settings, and deterministic local-package discovery;
 - parser-independent project, unit, symbol, directive, and diagnostic models;
 - source-backed association of enabled PasWeave `///`, Pascal `{ ... }`, and
   Pascal `(* ... *)` documentation groups, with `///` as the safe default;
 - structural extraction of `@param`, `@returns`, `@raises`, `@deprecated`,
   `@see`, and `@since`;
+- model-level authoring feedback with stable diagnostic codes for directive,
+  project-local reference, route, and coverage defects;
 - deterministic, human-readable UTF-8 JSON;
 - a deterministic Markdown project index and one page per parsed unit;
 - stable overload-aware anchors, internal dependency links, parent links,
@@ -85,7 +89,7 @@ Early pre-release executables are not code-signed, so Windows may display a
 SmartScreen warning. Download only from the PasWeave release page and compare
 the SHA-256 value before running the executable.
 
-Read the [v0.2.0 release notes](RELEASE_NOTE_v0.2.0.md) for the highlights,
+Read the [v0.4.0 release notes](RELEASE_NOTE_v0.4.0.md) for the highlights,
 compatibility details, validation results, and known limitations. The
 complete project history is maintained in the
 [changelog](CHANGELOG.md).
@@ -120,8 +124,8 @@ Directly with FPC from the repository root:
 
 ```text
 mkdir -p build/bin build/tests build/units
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -FUbuild/units -FEbuild/bin src/pasweave.lpr
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -FUbuild/units -FEbuild/tests tests/test_pasweave.pas
+fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/bin src/pasweave.lpr
+fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/tests tests/test_pasweave.pas
 ```
 
 On PowerShell, create the directories with:
@@ -210,11 +214,40 @@ the host defaults and are normalized before `fcl-passrc` sees them. See
 [compiler-aware parsing](docs/compiler-aware-parsing.md) for supported values,
 precise precedence, diagnostics, and limitations.
 
+Lazarus projects and packages can provide those settings directly. Point the
+build command at an `.lpi` or `.lpk`; no Lazarus process is started:
+
+```text
+pasweave build path/to/Application.lpi --build-mode=Release \
+  --package-path=path/to/local-packages --output build/docs
+```
+
+PasWeave imports project/package units, source and include paths, defines, and
+target settings. Explicit command-line compiler options override imported
+values; imported project/package settings override PasWeave defaults. The
+default package scan is deterministic and prunes generated, vendor, example,
+and test trees. Use repeatable `--package-path` values when a local package
+intentionally lives in one of those trees. See the
+[Lazarus project and package guide](docs/lazarus-projects.md) for supported
+XML elements and diagnostics.
+
+To use authoring feedback as a CI gate, require a coverage percentage and
+promote warnings to failures explicitly:
+
+```text
+pasweave build src --min-documentation-coverage=90 --fail-on=warning
+```
+
+The default is `--fail-on=error`, so new documentation warnings remain useful
+without blocking local rendering. See [authoring feedback and reference
+integrity](docs/authoring-feedback.md) for stable codes and precise rules.
+
 The command writes:
 
 ```text
 build/docs/
 ├── api-model.json
+├── diagnostics.json
 ├── html/
 │   ├── index.html
 │   ├── assets/
@@ -239,16 +272,22 @@ build/docs/
         └── SimpleUnit.md
 ```
 
-The command exits with `0` when every input parsed, `1` when usable output was
-produced with one or more per-file parse errors, `2` for command-line or input
-errors, and `3` for an unexpected internal failure. `--verbose` adds the
-underlying exception class and adapter mode without printing a stack trace.
+The command exits with `0` when no diagnostic meets the configured
+`--fail-on` severity, `1` after usable output with a failing diagnostic,
+`2` for command-line or input errors, and `3` for an unexpected internal
+failure. `--fail-on=error` is the default; `--fail-on=warning` also fails on
+authoring feedback. `--verbose` adds diagnostic details without printing a
+stack trace.
 
 In `api-model.json`, class and interface symbols expose a
 `typeRelationships` array. Each entry records `kind` (`inherits` or
 `implements`), the typed-AST `targetName`, its source-like `displayName`, and a
 stable `targetSymbolId` when the target resolves inside the documented
 project. An empty target ID is an explicit unresolved result.
+
+Routine symbols additionally expose parser-derived `parameterNames` and
+`hasReturnValue`. Directive objects contain `targetSymbolId` for a resolved
+project-local `@see`; an empty value is deliberately unresolved.
 
 ## Documentation comments
 
@@ -364,6 +403,9 @@ fonts, and licenses are copied into the output. It contains:
 - keyboard search focus with `/` and dismissal with Escape;
 - build diagnostics and visible documentation-coverage totals.
 
+Both generated indexes show the stable diagnostic code. The separate
+`diagnostics.json` artifact carries the same model diagnostics for CI systems.
+
 The HTML, stylesheet, JavaScript, and search index are deterministic UTF-8
 files with LF line endings. See [the HTML renderer notes](docs/html-renderer.md)
 for its offline-search, safety, and Markdown-subset contracts.
@@ -374,8 +416,8 @@ for its offline-search, safety, and Markdown-subset contracts.
   LaTeX; invalid or unsupported expressions remain visible as source;
 - the dependency-free Markdown-to-HTML conversion intentionally supports a
   focused subset rather than every Markdown extension;
-- no Lazarus project/package reader yet; compiler settings must be supplied
-  explicitly on the command line;
+- Lazarus package discovery requires local `.lpk` files; external Lazarus/FPC
+  packages must be made available through an explicit package path;
 - type relationship resolution is limited to the current unit and its
   interface dependencies; ancestors outside the documented source set remain
   explicitly unresolved, and implementation bodies are not analysed;
@@ -397,6 +439,6 @@ components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The compiler-aware parsing milestone is complete in `v0.2.0`. See
+The authoring-feedback milestone is complete in `v0.4.0`. See
 [ROADMAP.md](ROADMAP.md) for its acceptance evidence and the remaining
 longer-term sequence.

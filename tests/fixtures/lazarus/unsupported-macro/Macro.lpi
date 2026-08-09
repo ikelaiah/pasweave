@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <General><Title Value="Unsupported Macro Fixture"/></General>
+    <BuildModes><Item Name="Default" Default="True"/></BuildModes>
+    <Units><Unit><Filename Value="Main.pas"/><IsPartOfProject Value="True"/></Unit></Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <SearchPaths><OtherUnitFiles Value="$(UnknownLazarusMacro)"/></SearchPaths>
+  </CompilerOptions>
+</CONFIG>

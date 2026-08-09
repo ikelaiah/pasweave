@@ -7,6 +7,67 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-10
+
+### Added
+
+- Model-level authoring diagnostics with stable codes and documented warning
+  and error severities.
+- Parsed-signature checks for missing, duplicate, and unknown `@param`
+  directives and invalid or conflicting `@returns` directives.
+- Conservative project-local `@see` resolution stored as a symbol ID in the
+  directive model, plus shared Markdown/HTML rendering of that result.
+- Generated-route and anchor integrity diagnostics, deterministic
+  `diagnostics.json`, `--min-documentation-coverage`, and `--fail-on` CI
+  controls.
+- Slash, brace, and paren fixtures covering every authoring rule.
+
+### Changed
+
+- Build diagnostics shown by the CLI, Markdown, and HTML now include their
+  stable code.
+- Version metadata and release guidance now describe v0.4.0 authoring
+  feedback.
+
+### Validation
+
+- The complete FPC 3.2.2 suite and application build pass.
+- Focused command-line checks confirm that default warning output exits 0,
+  `--fail-on=warning` exits 1, and a missed 100% coverage target emits
+  `PW411` and exits 1.
+- The 45-unit `mathlib-fp` source corpus produced 2,338 symbols with zero
+  errors and 2,676 actionable `PW401` warnings under the default local policy.
+
+## [0.3.0] - 2026-08-09
+
+### Added
+
+- Direct `.lpi` Lazarus project and `.lpk` package inputs without starting
+  Lazarus.
+- Named/default build-mode selection and import of project/package source
+  units, unit paths, include paths, defines, and target settings.
+- Deterministic local-package discovery with repeatable `--package-path`
+  roots and pruning of generated, vendor, example, and test trees.
+- Fatal diagnostics for missing or ambiguous packages, unsupported macros,
+  ambiguous build modes, malformed inputs, and cyclic package references.
+- Focused multi-package Lazarus fixtures and end-to-end CLI validation.
+
+### Changed
+
+- Explicit CLI compiler options now merge over imported Lazarus settings while
+  preserving the existing PasWeave defaults for unset categories.
+- Source-list builds reuse the existing parser, model, and renderers, so direct
+  file and directory input remains supported.
+- Version metadata, README guidance, and parser documentation now describe
+  Lazarus input behavior and precedence.
+
+### Validation
+
+- The complete automated suite and FPC 3.2.2 application build pass.
+- A three-unit, two-package Lazarus fixture builds through the CLI with six
+  symbols and no diagnostics; the installed Lazarus `charactermap_demo.lpi`
+  project also builds with its local package graph and no diagnostics.
+
 ## [0.2.0] - 2026-08-02
 
 ### Added
@@ -93,6 +154,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ikelaiah/pasweave/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/ikelaiah/pasweave/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ikelaiah/pasweave/compare/v0.1.0-alpha.1...v0.2.0
 [0.1.0-alpha.1]: https://github.com/ikelaiah/pasweave/releases/tag/v0.1.0-alpha.1

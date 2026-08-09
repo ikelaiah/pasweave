@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <General>
+      <Title Value="Lazarus Multi Package Fixture"/>
+    </General>
+    <BuildModes>
+      <Item Name="Default" Default="True"/>
+      <Item Name="Release">
+        <CompilerOptions>
+          <Target>
+            <OS Value="linux"/>
+            <CPU Value="aarch64"/>
+          </Target>
+          <SearchPaths>
+            <OtherUnitFiles Value="src;$(ProjOutDir)"/>
+            <IncludeFiles Value="include"/>
+          </SearchPaths>
+          <Other>
+            <CustomOptions Value="-dRELEASE_BUILD"/>
+          </Other>
+        </CompilerOptions>
+      </Item>
+    </BuildModes>
+    <RequiredPackages>
+      <Item>
+        <PackageName Value="CorePkg"/>
+      </Item>
+    </RequiredPackages>
+    <Units>
+      <Unit>
+        <Filename Value="src\LazarusProject.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="LazarusProject"/>
+      </Unit>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Target>
+      <OS Value="win32"/>
+      <CPU Value="i386"/>
+    </Target>
+    <SearchPaths>
+      <OtherUnitFiles Value="src"/>
+      <IncludeFiles Value="include"/>
+    </SearchPaths>
+    <Other>
+      <CustomOptions Value="-dPROJECT_BUILD"/>
+    </Other>
+  </CompilerOptions>
+</CONFIG>
