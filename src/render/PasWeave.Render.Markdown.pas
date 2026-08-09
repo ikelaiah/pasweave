@@ -19,7 +19,8 @@ procedure WriteMarkdownDocumentation(AProject: TDocProject;
 implementation
 
 uses
-  Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Render.Support;
+  Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Render.Support,
+  PasWeave.Render.Links;
 
 type
   TSymbolKinds = set of TSymbolKind;
@@ -74,18 +75,6 @@ begin
     UnitModel := TDocUnit(AProject.Units[I]);
     Result.AddObject(UnitModel.Name + #1 + UnitModel.SourceFilename, UnitModel);
   end;
-end;
-
-function FindSymbolByID(AUnit: TDocUnit; const AID: string): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  if AID = '' then
-    Exit;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if TDocSymbol(AUnit.Symbols[I]).ID = AID then
-      Exit(TDocSymbol(AUnit.Symbols[I]));
 end;
 
 function FindUnitByName(AProject: TDocProject; const AName: string): TDocUnit;
@@ -173,88 +162,6 @@ begin
       (Trim(Symbol.MarkdownDocumentation) <> '') then
       Inc(Result);
   end;
-end;
-
-function FindSymbolReference(AProject: TDocProject; ACurrentUnit: TDocUnit;
-  const AReference: string; out ATargetUnit: TDocUnit): TDocSymbol;
-var
-  I: Integer;
-  J: Integer;
-  Candidate: TDocSymbol;
-  UnitModel: TDocUnit;
-  UniqueNameMatch: TDocSymbol;
-  UniqueNameUnit: TDocUnit;
-  NameMatchCount: Integer;
-begin
-  Result := nil;
-  ATargetUnit := nil;
-  UniqueNameMatch := nil;
-  UniqueNameUnit := nil;
-  NameMatchCount := 0;
-  if AReference = '' then
-    Exit;
-
-  for I := 0 to ACurrentUnit.Symbols.Count - 1 do
-  begin
-    Candidate := TDocSymbol(ACurrentUnit.Symbols[I]);
-    if SameText(Candidate.ID, AReference) or
-       SameText(Candidate.QualifiedName, AReference) or
-       SameText(Candidate.QualifiedName,
-         ACurrentUnit.Name + '.' + AReference) then
-    begin
-      ATargetUnit := ACurrentUnit;
-      Exit(Candidate);
-    end;
-  end;
-
-  for I := 0 to AProject.Units.Count - 1 do
-  begin
-    UnitModel := TDocUnit(AProject.Units[I]);
-    for J := 0 to UnitModel.Symbols.Count - 1 do
-    begin
-      Candidate := TDocSymbol(UnitModel.Symbols[J]);
-      if SameText(Candidate.ID, AReference) or
-         SameText(Candidate.QualifiedName, AReference) then
-      begin
-        ATargetUnit := UnitModel;
-        Exit(Candidate);
-      end;
-      if SameText(Candidate.Name, AReference) then
-      begin
-        Inc(NameMatchCount);
-        if NameMatchCount = 1 then
-        begin
-          UniqueNameMatch := Candidate;
-          UniqueNameUnit := UnitModel;
-        end;
-      end;
-    end;
-  end;
-
-  if NameMatchCount = 1 then
-  begin
-    Result := UniqueNameMatch;
-    ATargetUnit := UniqueNameUnit;
-  end;
-end;
-
-function LinkToSymbol(AProject: TDocProject; ACurrentUnit: TDocUnit;
-  const AReference: string): UTF8String;
-var
-  TargetSymbol: TDocSymbol;
-  TargetUnit: TDocUnit;
-  Target: string;
-begin
-  TargetSymbol := FindSymbolReference(AProject, ACurrentUnit, AReference,
-    TargetUnit);
-  if not Assigned(TargetSymbol) or not Assigned(TargetUnit) then
-    Exit('`' + UTF8String(AReference) + '`');
-  if TargetUnit = ACurrentUnit then
-    Target := '#' + MarkdownSymbolAnchor(TargetSymbol)
-  else
-    Target := MarkdownUnitFilename(TargetUnit) + '#' +
-      MarkdownSymbolAnchor(TargetSymbol);
-  Result := '[`' + UTF8String(AReference) + '`](' + UTF8String(Target) + ')';
 end;
 
 procedure RenderDirectives(var AOutput: UTF8String; AProject: TDocProject;
@@ -364,11 +271,11 @@ begin
       end;
       Directive := TDocDirective(ASymbol.Directives[I]);
       if Directive.Text <> '' then
-        AppendLine(AOutput, '- ' + LinkToSymbol(AProject, AUnit,
-          Directive.Subject) + ' - ' + UTF8String(Directive.Text))
+        AppendLine(AOutput, '- ' + RenderMarkdownSeeLink(AProject, AUnit,
+          Directive) + ' - ' + UTF8String(Directive.Text))
       else
-        AppendLine(AOutput, '- ' + LinkToSymbol(AProject, AUnit,
-          Directive.Subject));
+        AppendLine(AOutput, '- ' + RenderMarkdownSeeLink(AProject, AUnit,
+          Directive));
     end;
   if HasSee then
     AppendLine(AOutput);
@@ -539,14 +446,14 @@ begin
     for I := 0 to AProject.Warnings.Count - 1 do
     begin
       Diagnostic := TDiagnostic(AProject.Warnings[I]);
-      AppendLine(Result, '- **Warning** `' +
+      AppendLine(Result, '- **Warning ' + UTF8String(Diagnostic.Code) + '** `' +
         UTF8String(DiagnosticLocation(Diagnostic)) + '`: ' +
         UTF8String(Diagnostic.MessageText));
     end;
     for I := 0 to AProject.Errors.Count - 1 do
     begin
       Diagnostic := TDiagnostic(AProject.Errors[I]);
-      AppendLine(Result, '- **Error** `' +
+      AppendLine(Result, '- **Error ' + UTF8String(Diagnostic.Code) + '** `' +
         UTF8String(DiagnosticLocation(Diagnostic)) + '`: ' +
         UTF8String(Diagnostic.MessageText));
     end;

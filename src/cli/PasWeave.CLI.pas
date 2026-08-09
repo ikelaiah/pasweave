@@ -13,7 +13,7 @@ uses
   PasWeave.Diagnostics, PasWeave.Lazarus, PasWeave.Model,
   PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.Markdown,
-  PasWeave.Render.HTML, PasWeave.Version;
+  PasWeave.Render.HTML, PasWeave.Validation, PasWeave.Version;
 
 procedure PrintUsage;
 begin
@@ -27,6 +27,8 @@ begin
   WriteLn('                 [--unit-path=<directory>] [--include-path=<directory>]');
   WriteLn('                 [--define=<name>] [--target-os=<os>] [--target-cpu=<cpu>]');
   WriteLn('                 [--build-mode=<name>] [--package-path=<directory>]');
+  WriteLn('                 [--min-documentation-coverage=<0-100>]');
+  WriteLn('                 [--fail-on=<error|warning>]');
   WriteLn('                 [--verbose]');
   WriteLn;
   WriteLn('Source discovery:');
@@ -45,6 +47,11 @@ begin
   WriteLn('  --build-mode selects a named Lazarus project build mode');
   WriteLn('  --package-path is repeatable and opts into additional package roots');
   WriteLn('  automatic package search prunes build, vendor, example, and test trees');
+  WriteLn;
+  WriteLn('Authoring feedback and CI:');
+  WriteLn('  --min-documentation-coverage fails the build below the percentage');
+  WriteLn('  --fail-on=error is the default; warning also fails on authoring feedback');
+  WriteLn('  diagnostics.json is written beside api-model.json');
   WriteLn;
   WriteLn('Documentation comment styles:');
   WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
@@ -72,7 +79,8 @@ begin
     if ADiagnostic.SourceColumn > 0 then
       Location := Location + ':' + IntToStr(ADiagnostic.SourceColumn);
   end;
-  WriteLn('[error] ', Location, '  ', ADiagnostic.MessageText);
+  WriteLn('[', DiagnosticSeverityName(ADiagnostic.Severity), ' ',
+    ADiagnostic.Code, '] ', Location, '  ', ADiagnostic.MessageText);
   if AVerbose then
   begin
     WriteLn('        severity=', DiagnosticSeverityName(ADiagnostic.Severity));
@@ -94,6 +102,7 @@ var
   ParsedCount: Integer;
   Diagnostic: TDiagnostic;
   OutputFile: string;
+  DiagnosticOutputFile: string;
   MarkdownOutputPath: string;
   HTMLOutputPath: string;
   CommentStyleValue: string;
@@ -105,6 +114,10 @@ var
   LazarusConfiguration: TLazarusConfiguration;
   ProjectNameExplicit: Boolean;
   IsLazarusInput: Boolean;
+  FailureSeverity: TDiagnosticSeverity;
+  MinimumCoverage: Integer;
+  HasMinimumCoverage: Boolean;
+  ThresholdValue: string;
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
@@ -112,6 +125,9 @@ begin
   ProjectNameExplicit := False;
   BuildMode := '';
   Verbose := False;
+  FailureSeverity := dsError;
+  HasMinimumCoverage := False;
+  MinimumCoverage := 0;
   CommentStyles := DefaultDocumentationCommentStyles;
   DiscoveryOptions := TSourceDiscoveryOptions.Create;
   CompilerOptions := TCompilerOptions.Create;
@@ -209,6 +225,39 @@ begin
       else if Pos('--package-path=', ParamStr(I)) = 1 then
         PackagePaths.Add(Copy(ParamStr(I), Length('--package-path=') + 1,
           MaxInt))
+      else if ParamStr(I) = '--min-documentation-coverage' then
+      begin
+        ThresholdValue := RequireOptionValue(I, '--min-documentation-coverage');
+        if not TryStrToInt(ThresholdValue, MinimumCoverage) or
+          (MinimumCoverage < 0) or (MinimumCoverage > 100) then
+          raise EPasWeaveInputError.Create(
+            '--min-documentation-coverage must be an integer from 0 to 100');
+        HasMinimumCoverage := True;
+      end
+      else if Pos('--min-documentation-coverage=', ParamStr(I)) = 1 then
+      begin
+        ThresholdValue := Copy(ParamStr(I),
+          Length('--min-documentation-coverage=') + 1, MaxInt);
+        if not TryStrToInt(ThresholdValue, MinimumCoverage) or
+          (MinimumCoverage < 0) or (MinimumCoverage > 100) then
+          raise EPasWeaveInputError.Create(
+            '--min-documentation-coverage must be an integer from 0 to 100');
+        HasMinimumCoverage := True;
+      end
+      else if ParamStr(I) = '--fail-on' then
+      begin
+        ThresholdValue := RequireOptionValue(I, '--fail-on');
+        if not TryParseDiagnosticSeverity(ThresholdValue, FailureSeverity) then
+          raise EPasWeaveInputError.Create(
+            '--fail-on must be warning or error');
+      end
+      else if Pos('--fail-on=', ParamStr(I)) = 1 then
+      begin
+        ThresholdValue := Copy(ParamStr(I), Length('--fail-on=') + 1, MaxInt);
+        if not TryParseDiagnosticSeverity(ThresholdValue, FailureSeverity) then
+          raise EPasWeaveInputError.Create(
+            '--fail-on must be warning or error');
+      end
       else if ParamStr(I) = '--verbose' then
         Verbose := True
       else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
@@ -264,8 +313,13 @@ begin
     DiscoveryOptions.Free;
   end;
   try
+    if HasMinimumCoverage then
+      AddDocumentationCoverageDiagnostic(Project, MinimumCoverage);
     OutputFile := IncludeTrailingPathDelimiter(OutputPath) + 'api-model.json';
     WriteProjectJSON(Project, OutputFile);
+    DiagnosticOutputFile := IncludeTrailingPathDelimiter(OutputPath) +
+      'diagnostics.json';
+    WriteDiagnosticsJSON(Project, DiagnosticOutputFile);
     MarkdownOutputPath := IncludeTrailingPathDelimiter(OutputPath) +
       'markdown';
     WriteMarkdownDocumentation(Project, MarkdownOutputPath);
@@ -283,6 +337,11 @@ begin
       Diagnostic := TDiagnostic(Project.Errors[I]);
       PrintDiagnostic(Diagnostic, Verbose);
     end;
+    for I := 0 to Project.Warnings.Count - 1 do
+    begin
+      Diagnostic := TDiagnostic(Project.Warnings[I]);
+      PrintDiagnostic(Diagnostic, Verbose);
+    end;
 
     ParsedCount := Project.Units.Count;
     WriteLn;
@@ -290,12 +349,13 @@ begin
       ' of ', AttemptedCount, ' units, with ', Project.Warnings.Count,
       ' warnings and ', Project.Errors.Count, ' errors.');
     WriteLn('Wrote ', OutputFile);
+    WriteLn('Wrote ', DiagnosticOutputFile);
     WriteLn('Wrote ', IncludeTrailingPathDelimiter(MarkdownOutputPath),
       'index.md and ', Project.Units.Count, ' unit pages');
     WriteLn('Wrote ', IncludeTrailingPathDelimiter(HTMLOutputPath),
       'index.html, search assets, and ', Project.Units.Count, ' unit pages');
 
-    if Project.Errors.Count > 0 then
+    if HasDiagnosticsAtOrAbove(Project, FailureSeverity) then
       Result := 1
     else
       Result := 0;

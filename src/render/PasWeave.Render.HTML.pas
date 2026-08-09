@@ -24,7 +24,7 @@ implementation
 uses
   Classes, Contnrs, SysUtils, FPJSON, PasWeave.Diagnostics,
   PasWeave.Render.Support, PasWeave.Render.HTML.Markdown,
-  PasWeave.Render.HTML.Assets;
+  PasWeave.Render.HTML.Assets, PasWeave.Render.Links;
 
 type
   TSymbolKinds = set of TSymbolKind;
@@ -83,18 +83,6 @@ begin
     UnitModel := TDocUnit(AProject.Units[I]);
     Result.AddObject(UnitModel.Name + #1 + UnitModel.SourceFilename, UnitModel);
   end;
-end;
-
-function FindSymbolByID(AUnit: TDocUnit; const AID: string): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  if AID = '' then
-    Exit;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if TDocSymbol(AUnit.Symbols[I]).ID = AID then
-      Exit(TDocSymbol(AUnit.Symbols[I]));
 end;
 
 function FindUnitByName(AProject: TDocProject; const AName: string): TDocUnit;
@@ -198,25 +186,6 @@ begin
       Break;
     Result := IsDirectlyRenderable(ParentSymbol);
   end;
-end;
-
-function FindProjectSymbolByID(AProject: TDocProject; const AID: string;
-  out AUnit: TDocUnit): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  AUnit := nil;
-  if AID = '' then
-    Exit;
-  for I := 0 to AProject.Units.Count - 1 do
-  begin
-    AUnit := TDocUnit(AProject.Units[I]);
-    Result := FindSymbolByID(AUnit, AID);
-    if Assigned(Result) then
-      Exit;
-  end;
-  AUnit := nil;
 end;
 
 function IndexOfObject(AList: TStringList; AObject: TObject): Integer;
@@ -446,69 +415,6 @@ begin
   end;
 end;
 
-function FindSymbolReference(AProject: TDocProject; ACurrentUnit: TDocUnit;
-  const AReference: string; out ATargetUnit: TDocUnit): TDocSymbol;
-var
-  I: Integer;
-  J: Integer;
-  Candidate: TDocSymbol;
-  UnitModel: TDocUnit;
-  UniqueNameMatch: TDocSymbol;
-  UniqueNameUnit: TDocUnit;
-  NameMatchCount: Integer;
-begin
-  Result := nil;
-  ATargetUnit := nil;
-  UniqueNameMatch := nil;
-  UniqueNameUnit := nil;
-  NameMatchCount := 0;
-  if AReference = '' then
-    Exit;
-
-  for I := 0 to ACurrentUnit.Symbols.Count - 1 do
-  begin
-    Candidate := TDocSymbol(ACurrentUnit.Symbols[I]);
-    if SameText(Candidate.ID, AReference) or
-       SameText(Candidate.QualifiedName, AReference) or
-       SameText(Candidate.QualifiedName,
-         ACurrentUnit.Name + '.' + AReference) then
-    begin
-      ATargetUnit := ACurrentUnit;
-      Exit(Candidate);
-    end;
-  end;
-
-  for I := 0 to AProject.Units.Count - 1 do
-  begin
-    UnitModel := TDocUnit(AProject.Units[I]);
-    for J := 0 to UnitModel.Symbols.Count - 1 do
-    begin
-      Candidate := TDocSymbol(UnitModel.Symbols[J]);
-      if SameText(Candidate.ID, AReference) or
-         SameText(Candidate.QualifiedName, AReference) then
-      begin
-        ATargetUnit := UnitModel;
-        Exit(Candidate);
-      end;
-      if SameText(Candidate.Name, AReference) then
-      begin
-        Inc(NameMatchCount);
-        if NameMatchCount = 1 then
-        begin
-          UniqueNameMatch := Candidate;
-          UniqueNameUnit := UnitModel;
-        end;
-      end;
-    end;
-  end;
-
-  if NameMatchCount = 1 then
-  begin
-    Result := UniqueNameMatch;
-    ATargetUnit := UniqueNameUnit;
-  end;
-end;
-
 function SymbolLocation(ASymbol: TDocSymbol): string;
 begin
   Result := ASymbol.SourceFilename;
@@ -529,26 +435,6 @@ begin
     if ADiagnostic.SourceColumn > 0 then
       Result := Result + ':' + IntToStr(ADiagnostic.SourceColumn);
   end;
-end;
-
-function LinkToSymbol(AProject: TDocProject; ACurrentUnit: TDocUnit;
-  const AReference: string): UTF8String;
-var
-  TargetSymbol: TDocSymbol;
-  TargetUnit: TDocUnit;
-  Target: string;
-begin
-  TargetSymbol := FindSymbolReference(AProject, ACurrentUnit, AReference,
-    TargetUnit);
-  if not Assigned(TargetSymbol) or not Assigned(TargetUnit) then
-    Exit('<code>' + EscapeHTML(AReference) + '</code>');
-  if TargetUnit = ACurrentUnit then
-    Target := '#' + HTMLSymbolAnchor(TargetSymbol)
-  else
-    Target := HTMLUnitFilename(TargetUnit) + '#' +
-      HTMLSymbolAnchor(TargetSymbol);
-  Result := '<a href="' + EscapeHTML(Target) + '"><code>' +
-    EscapeHTML(AReference) + '</code></a>';
 end;
 
 procedure RenderDirectives(var AOutput: UTF8String; AProject: TDocProject;
@@ -670,12 +556,12 @@ begin
       end;
       Directive := TDocDirective(ASymbol.Directives[I]);
       if Directive.Text <> '' then
-        AppendLine(AOutput, '<li>' + LinkToSymbol(AProject, AUnit,
-          Directive.Subject) + ' &mdash; ' +
+        AppendLine(AOutput, '<li>' + RenderHTMLSeeLink(AProject, AUnit,
+          Directive) + ' &mdash; ' +
           RenderInlineMarkdown(Directive.Text) + '</li>')
       else
-        AppendLine(AOutput, '<li>' + LinkToSymbol(AProject, AUnit,
-          Directive.Subject) + '</li>');
+        AppendLine(AOutput, '<li>' + RenderHTMLSeeLink(AProject, AUnit,
+          Directive) + '</li>');
     end;
   if HasSee then
     AppendLine(AOutput, '</ul></section>');
@@ -1144,14 +1030,16 @@ begin
     for I := 0 to AProject.Warnings.Count - 1 do
     begin
       Diagnostic := TDiagnostic(AProject.Warnings[I]);
-      AppendLine(Result, '<li><strong>Warning</strong> <code>' +
+      AppendLine(Result, '<li><strong>Warning ' + EscapeHTML(Diagnostic.Code) +
+        '</strong> <code>' +
         EscapeHTML(DiagnosticLocation(Diagnostic)) + '</code>: ' +
         EscapeHTML(Diagnostic.MessageText) + '</li>');
     end;
     for I := 0 to AProject.Errors.Count - 1 do
     begin
       Diagnostic := TDiagnostic(AProject.Errors[I]);
-      AppendLine(Result, '<li><strong>Error</strong> <code>' +
+      AppendLine(Result, '<li><strong>Error ' + EscapeHTML(Diagnostic.Code) +
+        '</strong> <code>' +
         EscapeHTML(DiagnosticLocation(Diagnostic)) + '</code>: ' +
         EscapeHTML(Diagnostic.MessageText) + '</li>');
     end;

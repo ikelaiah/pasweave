@@ -136,6 +136,12 @@ Exit criteria:
 **Outcome:** maintainers can use PasWeave in CI to find documentation defects,
 not only to render the documentation that already exists.
 
+Status: completed on 2026-08-10. The diagnostic contract, conservative
+reference rules, output-integrity checks, CI thresholds, fixtures, and model
+design rationale are recorded in [authoring feedback and reference
+integrity](docs/authoring-feedback.md), [ADR-0001](docs/decisions/0001-model-driven-authoring-validation.md),
+the [changelog](CHANGELOG.md), and the v0.4.0 release note.
+
 Exit criteria:
 
 - Assign stable diagnostic codes and documented severity levels.

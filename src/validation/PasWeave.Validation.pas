@@ -39,33 +39,6 @@ implementation
 uses
   Classes, SysUtils;
 
-function FindSymbolByID(AUnit: TDocUnit; const AID: string): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if SameText(TDocSymbol(AUnit.Symbols[I]).ID, AID) then
-      Exit(TDocSymbol(AUnit.Symbols[I]));
-end;
-
-function FindProjectSymbolByID(AProject: TDocProject; const AID: string;
-  out AUnit: TDocUnit): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  AUnit := nil;
-  for I := 0 to AProject.Units.Count - 1 do
-  begin
-    AUnit := TDocUnit(AProject.Units[I]);
-    Result := FindSymbolByID(AUnit, AID);
-    if Assigned(Result) then
-      Exit;
-  end;
-  AUnit := nil;
-end;
-
 function FindUnitByName(AProject: TDocProject; const AName: string): TDocUnit;
 var
   I: Integer;
@@ -266,7 +239,7 @@ begin
     TargetSymbol := ResolveSeeTarget(AProject, AUnit, Directive.Subject);
     if Assigned(TargetSymbol) then
       TargetSymbol := FindProjectSymbolByID(AProject, TargetSymbol.ID, TargetUnit);
-    if Assigned(TargetSymbol) and
+    if Assigned(TargetSymbol) and (TargetSymbol.Kind <> skUnit) and
       IsEffectivelyRenderable(TargetUnit, TargetSymbol) then
       Directive.TargetSymbolID := TargetSymbol.ID
     else

@@ -1,10 +1,10 @@
 # v0.4.0 task checklist
 
-- [ ] Stable coded diagnostics and machine-readable output
-- [ ] Parsed-signature parameter and return validation
-- [ ] Conservative, model-level `@see` resolution
-- [ ] Generated-link, anchor, and page-route integrity checks
-- [ ] Coverage and diagnostic CI thresholds
-- [ ] Slash, brace, and paren regression fixtures
-- [ ] Markdown and HTML shared resolved-link rendering
-- [ ] Documentation, release metadata, and final validation
+- [x] Stable coded diagnostics and machine-readable output
+- [x] Parsed-signature parameter and return validation
+- [x] Conservative, model-level `@see` resolution
+- [x] Generated-link, anchor, and page-route integrity checks
+- [x] Coverage and diagnostic CI thresholds
+- [x] Slash, brace, and paren regression fixtures
+- [x] Markdown and HTML shared resolved-link rendering
+- [x] Documentation, release metadata, and final validation

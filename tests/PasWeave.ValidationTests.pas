@@ -171,7 +171,16 @@ var
   Parsed: TJSONData;
   Markdown: UTF8String;
   HTML: UTF8String;
+  FailureSeverity: TDiagnosticSeverity;
 begin
+  Check(TryParseDiagnosticSeverity('warning', FailureSeverity) and
+    (FailureSeverity = dsWarning),
+    'warning should be a supported diagnostic failure threshold');
+  Check(TryParseDiagnosticSeverity('error', FailureSeverity) and
+    (FailureSeverity = dsError),
+    'error should be a supported diagnostic failure threshold');
+  Check(not TryParseDiagnosticSeverity('info', FailureSeverity),
+    'unsupported diagnostic failure severities should be rejected');
   CheckStyleFixture('tests/fixtures/validation/slash', 'FeedbackSlash',
     'slash', [dcsSlash]);
   CheckStyleFixture('tests/fixtures/validation/brace', 'FeedbackBrace',
@@ -194,6 +203,13 @@ begin
       'Markdown should consume the resolved dependency @see target');
     Check(Pos('href="FeedbackDependency.html#', string(HTML)) > 0,
       'HTML should consume the resolved dependency @see target');
+    DependencySee.TargetSymbolID := '';
+    Check(Pos('FeedbackDependency.md#',
+      string(RenderMarkdownUnit(Project, UnitModel))) = 0,
+      'Markdown should not independently guess an unresolved @see target');
+    Check(Pos('FeedbackDependency.html#',
+      string(RenderHTMLUnit(Project, UnitModel))) = 0,
+      'HTML should not independently guess an unresolved @see target');
 
     Coverage := CalculateDocumentationCoverage(Project);
     Check((Coverage.EligibleSymbols > 0) and

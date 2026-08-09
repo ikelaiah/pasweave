@@ -27,38 +27,38 @@ the default local workflow noisy.
 
 ### Phase 1: Validation foundation
 
-- [ ] Add stable diagnostic codes, routine-signature model data, and
+- [x] Add stable diagnostic codes, routine-signature model data, and
   deterministic diagnostics JSON serialization.
-- [ ] Add parser-independent authoring validation for parameter, return, and
+- [x] Add parser-independent authoring validation for parameter, return, and
   conservative project-local `@see` rules.
-- [ ] Add focused slash, brace, and paren fixtures plus failing validation
+- [x] Add focused slash, brace, and paren fixtures plus failing validation
   tests before the implementation.
 
 ### Checkpoint: Model validation
 
-- [ ] Focused validation tests pass.
-- [ ] Existing parser and renderer tests stay green.
+- [x] Focused validation tests pass.
+- [x] Existing parser and renderer tests stay green.
 
 ### Phase 2: Build integrity and CI controls
 
-- [ ] Validate rendered-route invariants: duplicate anchors/pages, dangling
+- [x] Validate rendered-route invariants: duplicate anchors/pages, dangling
   generated links, and route reachability as build defects.
-- [ ] Add coverage calculation, `--min-documentation-coverage`, and
+- [x] Add coverage calculation, `--min-documentation-coverage`, and
   `--fail-on` CLI behavior.
-- [ ] Write `diagnostics.json` alongside `api-model.json`.
+- [x] Write `diagnostics.json` alongside `api-model.json`.
 
 ### Checkpoint: CI behavior
 
-- [ ] The executable reports coded diagnostics and exits according to the
+- [x] The executable reports coded diagnostics and exits according to the
   configured failure severity.
-- [ ] HTML and Markdown consume resolved `@see` IDs consistently.
+- [x] HTML and Markdown consume resolved `@see` IDs consistently.
 
 ### Phase 3: Release contract
 
-- [ ] Document diagnostic codes, severities, CI usage, and the validation
+- [x] Document diagnostic codes, severities, CI usage, and the validation
   design decision.
-- [ ] Update README, changelog, roadmap, release note, and version metadata.
-- [ ] Run the full suite, build the executable, perform focused CLI smoke
+- [x] Update README, changelog, roadmap, release note, and version metadata.
+- [x] Run the full suite, build the executable, perform focused CLI smoke
   checks, and review the change across correctness, architecture, security,
   and performance.
 
@@ -73,8 +73,8 @@ the default local workflow noisy.
 
 ## Definition of done
 
-- [ ] Branch is `release/v0.5.0` as requested.
-- [ ] v0.4.0 exit criteria are documented and covered across all three accepted
+- [x] Branch is `release/v0.5.0` as requested.
+- [x] v0.4.0 exit criteria are documented and covered across all three accepted
   documentation-comment forms.
-- [ ] The full test suite and production build pass.
-- [ ] Direct input and default `///` rendering continue to work end to end.
+- [x] The full test suite and production build pass.
+- [x] Direct input and default `///` rendering continue to work end to end.

@@ -7,6 +7,37 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-10
+
+### Added
+
+- Model-level authoring diagnostics with stable codes and documented warning
+  and error severities.
+- Parsed-signature checks for missing, duplicate, and unknown `@param`
+  directives and invalid or conflicting `@returns` directives.
+- Conservative project-local `@see` resolution stored as a symbol ID in the
+  directive model, plus shared Markdown/HTML rendering of that result.
+- Generated-route and anchor integrity diagnostics, deterministic
+  `diagnostics.json`, `--min-documentation-coverage`, and `--fail-on` CI
+  controls.
+- Slash, brace, and paren fixtures covering every authoring rule.
+
+### Changed
+
+- Build diagnostics shown by the CLI, Markdown, and HTML now include their
+  stable code.
+- Version metadata and release guidance now describe v0.4.0 authoring
+  feedback.
+
+### Validation
+
+- The complete FPC 3.2.2 suite and application build pass.
+- Focused command-line checks confirm that default warning output exits 0,
+  `--fail-on=warning` exits 1, and a missed 100% coverage target emits
+  `PW411` and exits 1.
+- The 45-unit `mathlib-fp` source corpus produced 2,338 symbols with zero
+  errors and 2,676 actionable `PW401` warnings under the default local policy.
+
 ## [0.3.0] - 2026-08-09
 
 ### Added
@@ -123,7 +154,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ikelaiah/pasweave/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ikelaiah/pasweave/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ikelaiah/pasweave/compare/v0.1.0-alpha.1...v0.2.0
 [0.1.0-alpha.1]: https://github.com/ikelaiah/pasweave/releases/tag/v0.1.0-alpha.1

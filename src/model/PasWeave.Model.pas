@@ -109,6 +109,9 @@ function SymbolKindName(AKind: TSymbolKind): string;
 function SymbolVisibilityName(AVisibility: TSymbolVisibility): string;
 function TypeRelationshipKindName(AKind: TTypeRelationshipKind): string;
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
+function FindSymbolByID(AUnit: TDocUnit; const AID: string): TDocSymbol;
+function FindProjectSymbolByID(AProject: TDocProject; const AID: string;
+  out AUnit: TDocUnit): TDocSymbol;
 
 implementation
 
@@ -193,6 +196,33 @@ begin
   Result := 0;
   for I := 0 to Units.Count - 1 do
     Inc(Result, TDocUnit(Units[I]).Symbols.Count);
+end;
+
+function FindSymbolByID(AUnit: TDocUnit; const AID: string): TDocSymbol;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to AUnit.Symbols.Count - 1 do
+    if SameText(TDocSymbol(AUnit.Symbols[I]).ID, AID) then
+      Exit(TDocSymbol(AUnit.Symbols[I]));
+end;
+
+function FindProjectSymbolByID(AProject: TDocProject; const AID: string;
+  out AUnit: TDocUnit): TDocSymbol;
+var
+  I: Integer;
+begin
+  Result := nil;
+  AUnit := nil;
+  for I := 0 to AProject.Units.Count - 1 do
+  begin
+    AUnit := TDocUnit(AProject.Units[I]);
+    Result := FindSymbolByID(AUnit, AID);
+    if Assigned(Result) then
+      Exit;
+  end;
+  AUnit := nil;
 end;
 
 function SymbolKindName(AKind: TSymbolKind): string;
