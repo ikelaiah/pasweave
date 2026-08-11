@@ -2,7 +2,7 @@
 
 [Project index](../index.md)
 
-**Source:** `Scientific.Core.pas`
+**Source:** [`Scientific.Core.pas`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L8)
 
 Defines geometric primitives and scalar-function abstractions.
 Vectors use Cartesian coordinates:
@@ -19,7 +19,7 @@ None.
 <a id="symbol-scientific-core-irealfunction-7542e455abe9e55d"></a>
 ### `Scientific.Core.IRealFunction`
 
-**Kind:** `interface`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:16:16`
+**Kind:** `interface`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:16:16`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L16)
 
 ```pascal
 IRealFunction = interface
@@ -31,7 +31,12 @@ Represents a real-valued function $f\colon\mathbb{R}\to\mathbb{R}$.
 <a id="symbol-scientific-core-trealfunction-58d841dcd63cc0c9"></a>
 ### `Scientific.Core.TRealFunction`
 
-**Kind:** `class`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:26:16`
+**Kind:** `class`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:26:16`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L26)
+
+**Relationships:**
+
+- Inherits from `TInterfacedObject`
+- Implements [`IRealFunction`](#symbol-scientific-core-irealfunction-7542e455abe9e55d)
 
 ```pascal
 TRealFunction = class(TInterfacedObject, IRealFunction)
@@ -43,7 +48,7 @@ Supplies reference counting for concrete real-valued functions.
 <a id="symbol-scientific-core-tvector2-75d9385235314a7d"></a>
 ### `Scientific.Core.TVector2`
 
-**Kind:** `record`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:36:11`
+**Kind:** `record`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:36:11`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L36)
 
 ```pascal
 TVector2 = record
@@ -57,7 +62,7 @@ Stores a vector $\mathbf{v}=(v_x,v_y)$ in the Euclidean plane.
 <a id="symbol-scientific-core-anglebetween-b9e1c2e554d472b6"></a>
 ### `Scientific.Core.AngleBetween`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:123:22`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:123:22`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L123)
 
 ```pascal
 function AngleBetween(const A: TVector2; const B: TVector2): Double
@@ -85,7 +90,7 @@ The angle $\theta\in[0,\pi]$, or zero for a zero input.
 <a id="symbol-scientific-core-distance-b680cb2a8a7a51be"></a>
 ### `Scientific.Core.Distance`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:80:18`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:80:18`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L80)
 
 ```pascal
 function Distance(const A: TVector2; const B: TVector2): Double
@@ -110,7 +115,7 @@ Their Euclidean distance.
 <a id="symbol-scientific-core-dot-8ee6776b6c79d1ca"></a>
 ### `Scientific.Core.Dot`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:59:13`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:59:13`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L59)
 
 ```pascal
 function Dot(const A: TVector2; const B: TVector2): Double
@@ -135,7 +140,7 @@ The scalar inner product.
 <a id="symbol-scientific-core-magnitude-29282b0347b7cb87"></a>
 ### `Scientific.Core.Magnitude`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:69:19`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:69:19`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L69)
 
 ```pascal
 function Magnitude(const Value: TVector2): Double
@@ -159,7 +164,7 @@ Its non-negative magnitude.
 <a id="symbol-scientific-core-normalize-8422b95fea32ee9b"></a>
 ### `Scientific.Core.Normalize`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:93:19`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:93:19`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L93)
 
 ```pascal
 function Normalize(const Value: TVector2): TVector2
@@ -185,7 +190,7 @@ $\widehat{\mathbf{v}}$ or $(0,0)$ for a zero input.
 <a id="symbol-scientific-core-rotate-55b28a27294a60c3"></a>
 ### `Scientific.Core.Rotate`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:109:16`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:109:16`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L109)
 
 ```pascal
 function Rotate(const Value: TVector2; const Angle: Double): TVector2
@@ -215,7 +220,7 @@ The rotated vector $\mathbf{v}'$.
 <a id="symbol-scientific-core-vector2-21cc96d192844bf4"></a>
 ### `Scientific.Core.Vector2`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:48:17`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:48:17`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L48)
 
 ```pascal
 function Vector2(const X: Double; const Y: Double): TVector2
@@ -239,7 +244,7 @@ A vector containing both components.
 <a id="symbol-scientific-core-irealfunction-evaluate-1d445661aa025b6e"></a>
 ### `Scientific.Core.IRealFunction.Evaluate`
 
-**Kind:** `method`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:22:22`
+**Kind:** `method`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:22:22`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L22)
 
 **Parent:** [`Scientific.Core.IRealFunction`](#symbol-scientific-core-irealfunction-7542e455abe9e55d)
 
@@ -262,7 +267,7 @@ The scalar value $f(X)$.
 <a id="symbol-scientific-core-trealfunction-evaluate-93e4b8afef78467c"></a>
 ### `Scientific.Core.TRealFunction.Evaluate`
 
-**Kind:** `method`; **Visibility:** `public`; **Source:** `Scientific.Core.pas:32:22`
+**Kind:** `method`; **Visibility:** `public`; **Source:** [`Scientific.Core.pas:32:22`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L32)
 
 **Parent:** [`Scientific.Core.TRealFunction`](#symbol-scientific-core-trealfunction-58d841dcd63cc0c9)
 
@@ -285,7 +290,7 @@ The scalar value $f(X)$.
 <a id="symbol-scientific-core-tvector2-x-06c946e523114366"></a>
 ### `Scientific.Core.TVector2.X`
 
-**Kind:** `field`; **Visibility:** `default`; **Source:** `Scientific.Core.pas:38:5`
+**Kind:** `field`; **Visibility:** `default`; **Source:** [`Scientific.Core.pas:38:5`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L38)
 
 **Parent:** [`Scientific.Core.TVector2`](#symbol-scientific-core-tvector2-75d9385235314a7d)
 
@@ -298,7 +303,7 @@ Horizontal component $v_x$.
 <a id="symbol-scientific-core-tvector2-y-06c947e523114519"></a>
 ### `Scientific.Core.TVector2.Y`
 
-**Kind:** `field`; **Visibility:** `default`; **Source:** `Scientific.Core.pas:40:5`
+**Kind:** `field`; **Visibility:** `default`; **Source:** [`Scientific.Core.pas:40:5`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L40)
 
 **Parent:** [`Scientific.Core.TVector2`](#symbol-scientific-core-tvector2-75d9385235314a7d)
 

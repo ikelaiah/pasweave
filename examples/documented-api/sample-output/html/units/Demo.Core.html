@@ -20,8 +20,30 @@
 <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Documented API example</strong><small>API documentation</small></span></a>
 <div class="site-search" data-search-container>
 <label class="sr-only" for="site-search">Search API</label>
-<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
-<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-haspopup="true" aria-expanded="false">
+<div id="search-results" class="search-panel" data-search-panel hidden>
+<fieldset class="search-filters"><legend class="sr-only">Search filters</legend>
+<label>Unit<select data-search-unit><option value="">All units</option>
+<option value="Demo.Core">Demo.Core</option>
+<option value="Demo.Services">Demo.Services</option>
+</select></label>
+<label>Kind<select data-search-kind><option value="">All kinds</option>
+<option value="class">class</option>
+<option value="constructor">constructor</option>
+<option value="enumeration">enumeration</option>
+<option value="method">method</option>
+<option value="property">property</option>
+<option value="routine">routine</option>
+<option value="unit">unit</option>
+</select></label>
+<label>Visibility<select data-search-visibility><option value="">All visibilities</option>
+<option value="default">default</option>
+<option value="public">public</option>
+</select></label>
+<label>Documentation<select data-search-documentation><option value="">Any status</option><option value="documented">Documented</option><option value="undocumented">Undocumented</option></select></label>
+</fieldset>
+<p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
+</div>
 </div>
 </div>
 </header>
@@ -29,7 +51,7 @@
 <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Demo.Core</span></nav>
 <section class="unit-heading">
 <p class="eyebrow">Unit</p><h1><code>Demo.Core</code></h1>
-<p>Declared in <code>Demo.Core.pas</code></p></section>
+<p>Declared in <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Core.pas#L5"><code>Demo.Core.pas</code></a></p></section>
 <div class="prose">
 <p>Defines the core API for the documented PasWeave example. Every renderable declaration in this unit uses PasWeave&#39;s explicit <code>///</code> documentation marker.</p>
 </div>
@@ -44,7 +66,7 @@
 <div><span class="kind-badge">class</span><h3><code>Demo.Core.TGreeter</code></h3></div>
 <a class="permalink" href="#symbol-demo-core-tgreeter-fb605899cec8779b" aria-label="Permanent link to Demo.Core.TGreeter">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:16:11</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Core.pas#L16"><code>Demo.Core.pas:16:11</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 TGreeter = class
 end
@@ -58,7 +80,7 @@ end
 <div><span class="kind-badge">enumeration</span><h3><code>Demo.Core.TGreetingStyle</code></h3></div>
 <a class="permalink" href="#symbol-demo-core-tgreetingstyle-10cc0ecc6a6635c8" aria-label="Permanent link to Demo.Core.TGreetingStyle">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:13:17</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Core.pas#L13"><code>Demo.Core.pas:13:17</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 TGreetingStyle = (gsFriendly,gsExcited)
 </code></pre>
@@ -74,7 +96,7 @@ TGreetingStyle = (gsFriendly,gsExcited)
 <div><span class="kind-badge">routine</span><h3><code>Demo.Core.Add</code></h3></div>
 <a class="permalink" href="#symbol-demo-core-add-ce92e6099fa0d067" aria-label="Permanent link to Demo.Core.Add">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:34:13</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Core.pas#L34"><code>Demo.Core.pas:34:13</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Add(const A: Integer; const B: Integer): Integer
 </code></pre>
@@ -101,7 +123,7 @@ function Add(const A: Integer; const B: Integer): Integer
 <div><span class="kind-badge">method</span><h3><code>Demo.Core.TGreeter.GreetingFor</code></h3></div>
 <a class="permalink" href="#symbol-demo-core-tgreeter-greetingfor-26da7ea6d7daae6a" aria-label="Permanent link to Demo.Core.TGreeter.GreetingFor">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Core.pas:23:25</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Core.pas#L23"><code>Demo.Core.pas:23:25</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-demo-core-tgreeter-fb605899cec8779b"><code>Demo.Core.TGreeter</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 function GreetingFor(

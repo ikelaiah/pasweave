@@ -30,36 +30,36 @@ examples, `mathlib-fp`, and the nested Lazarus fixture.
 
 ### Phase 1: Source traceability
 
-- [ ] Task 1: Add failing model/CLI tests for accepted and rejected repository
+- [x] Task 1: Add failing model/CLI tests for accepted and rejected repository
   URL plus source-link templates.
-- [ ] Task 2: Implement normalized source-link configuration and shared,
+- [x] Task 2: Implement normalized source-link configuration and shared,
   line-aware URL generation for units and symbols.
-- [ ] Task 3: Render source links consistently in Markdown and HTML and expose
+- [x] Task 3: Render source links consistently in Markdown and HTML and expose
   the additive configuration in JSON.
 
 ### Checkpoint: Source links
 
-- [ ] Focused tests prove root-relative normalization, line fragments,
+- [x] Focused tests prove root-relative normalization, line fragments,
   escaping rejection, deterministic output, and unchanged output when source
   links are not configured.
-- [ ] The full parser/renderer suite remains green.
+- [x] The full parser/renderer suite remains green.
 
 ### Phase 2: Navigation and offline search
 
-- [ ] Task 4: Add failing renderer tests for relationship-link parity and
+- [x] Task 4: Add failing renderer tests for relationship-link parity and
   search metadata/filter controls.
-- [ ] Task 5: Complete dependency, parent, resolved `@see`, and type-
+- [x] Task 5: Complete dependency, parent, resolved `@see`, and type-
   relationship links in both Markdown and HTML without changing routes or
   anchors.
-- [ ] Task 6: Add unit, symbol-kind, visibility, and documentation-status
+- [x] Task 6: Add unit, symbol-kind, visibility, and documentation-status
   filters plus keyboard result navigation, visible focus, live status, and
   useful empty states.
 
 ### Checkpoint: Navigation
 
-- [ ] Focused tests cover filters, ArrowUp/ArrowDown/Enter/Escape behavior,
+- [x] Focused tests cover filters, ArrowUp/ArrowDown/Enter/Escape behavior,
   visible focus styles, zero matches, and consistent link targets.
-- [ ] Search remains a local JavaScript asset and generated files remain
+- [x] Search remains a local JavaScript asset and generated files remain
   deterministic UTF-8 with LF endings.
 
 ### Phase 3: Showcase, validation, and release contract

@@ -53,6 +53,9 @@ begin
   AppendLine(Result, 'a { color: var(--accent); text-decoration-thickness: .08em; ' +
     'text-underline-offset: .18em; }');
   AppendLine(Result, 'a:hover { color: var(--accent-2); }');
+  AppendLine(Result, ':where(a, button, input, select, summary):focus-visible { ' +
+    'outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent); ' +
+    'outline-offset: 2px; }');
   AppendLine(Result, 'code { font-family: "Cascadia Code", "SFMono-Regular", ' +
     'Consolas, monospace; font-size: .9em; }');
   AppendLine(Result, '.shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }');
@@ -87,6 +90,16 @@ begin
   AppendLine(Result, '.search-panel[hidden] { display: none; }');
   AppendLine(Result, '.search-status { margin: 4px 8px 8px; color: var(--muted); ' +
     'font-size: .84rem; }');
+  AppendLine(Result, '.search-filters { display: grid; grid-template-columns: ' +
+    'repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 10px; padding: 4px 8px 12px; ' +
+    'min-width: 0; border: 0; border-bottom: 1px solid var(--line); }');
+  AppendLine(Result, '.search-filters label { display: grid; gap: 4px; color: ' +
+    'var(--muted); font-size: .72rem; font-weight: 750; letter-spacing: .04em; ' +
+    'text-transform: uppercase; }');
+  AppendLine(Result, '.search-filters select { min-width: 0; height: 34px; padding: ' +
+    '0 8px; border: 1px solid var(--line); border-radius: 8px; background: ' +
+    'var(--surface); color: var(--text); font: inherit; font-weight: 500; ' +
+    'letter-spacing: normal; text-transform: none; }');
   AppendLine(Result, '.search-panel ul { list-style: none; margin: 0; padding: 0; }');
   AppendLine(Result, '.search-panel li + li { border-top: 1px solid var(--line); }');
   AppendLine(Result, '.search-result { display: grid; grid-template-columns: 1fr auto; ' +
@@ -219,6 +232,8 @@ begin
   AppendLine(Result, '.symbol-meta { display: flex; flex-wrap: wrap; gap: 8px 20px; ' +
     'margin: 16px 0; color: var(--muted); font-size: .82rem; }');
   AppendLine(Result, '.parent-link { font-size: .9rem; }');
+  AppendLine(Result, '.type-relationships { margin: 12px 0; font-size: .9rem; }');
+  AppendLine(Result, '.type-relationships ul { margin: 6px 0 0; }');
   AppendLine(Result, 'pre { overflow: auto; margin: 18px 0; padding: 18px; ' +
     'border-radius: 13px; background: var(--code); color: #eef2ff; line-height: 1.55; }');
   AppendLine(Result, 'pre code { font-size: .84rem; }');
@@ -253,6 +268,8 @@ begin
   AppendLine(Result, '  .header-inner { min-height: 64px; gap: 12px; }');
   AppendLine(Result, '  .brand small { display: none; }');
   AppendLine(Result, '  .site-search { width: 52vw; }');
+  AppendLine(Result, '  .search-panel { right: -4px; width: min(94vw, 620px); }');
+  AppendLine(Result, '  .search-filters { grid-template-columns: 1fr; }');
   AppendLine(Result, '  .main-content { padding-top: 28px; }');
   AppendLine(Result, '  .hero { padding: 32px 24px; border-radius: 20px; }');
   AppendLine(Result, '  .stats { grid-template-columns: repeat(2, 1fr); }');
@@ -262,6 +279,13 @@ begin
   AppendLine(Result, '  .diagram-toolbar { align-items: flex-start; }');
   AppendLine(Result, '  .diagram-control-group { flex-wrap: wrap; }');
   AppendLine(Result, '  .architecture-diagram { max-height: 65vh; padding: 12px; }');
+  AppendLine(Result, '}');
+  AppendLine(Result, '@media (max-width: 480px) {');
+  AppendLine(Result, '  .header-inner { flex-wrap: wrap; padding: 10px 0; }');
+  AppendLine(Result, '  .site-search { width: 100%; }');
+  AppendLine(Result, '  .search-panel { right: 0; width: 100%; }');
+  AppendLine(Result, '  .stats { grid-template-columns: 1fr; }');
+  AppendLine(Result, '  .hero { padding: 28px 24px; }');
   AppendLine(Result, '}');
   AppendLine(Result, '@media (prefers-color-scheme: dark) {');
   AppendLine(Result, '  :root { --bg: #10131c; --surface: #171c28; ' +
@@ -284,6 +308,10 @@ begin
   AppendLine(Result, '  var panel = document.querySelector("[data-search-panel]");');
   AppendLine(Result, '  var list = document.querySelector("[data-search-results]");');
   AppendLine(Result, '  var status = document.querySelector("[data-search-status]");');
+  AppendLine(Result, '  var unitFilter = document.querySelector("[data-search-unit]");');
+  AppendLine(Result, '  var kindFilter = document.querySelector("[data-search-kind]");');
+  AppendLine(Result, '  var visibilityFilter = document.querySelector("[data-search-visibility]");');
+  AppendLine(Result, '  var documentationFilter = document.querySelector("[data-search-documentation]");');
   AppendLine(Result, '  var entries = window.PASWEAVE_SEARCH_INDEX || [];');
   AppendLine(Result, '  var root = document.body.dataset.siteRoot || "";');
   AppendLine(Result, '  function searchable(item) {');
@@ -302,6 +330,17 @@ begin
   AppendLine(Result, '    else if (qualified.indexOf(query) === 0) result += 220;');
   AppendLine(Result, '    else if (name.indexOf(query) >= 0) result += 120;');
   AppendLine(Result, '    return result;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function matchesFilters(item) {');
+  AppendLine(Result, '    if (unitFilter.value && item.unit !== unitFilter.value) return false;');
+  AppendLine(Result, '    if (kindFilter.value && item.kind !== kindFilter.value) return false;');
+  AppendLine(Result, '    if (visibilityFilter.value && item.visibility !== visibilityFilter.value) return false;');
+  AppendLine(Result, '    if (documentationFilter.value === "documented" && !item.documented) return false;');
+  AppendLine(Result, '    if (documentationFilter.value === "undocumented" && item.documented) return false;');
+  AppendLine(Result, '    return true;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function hasActiveFilter() {');
+  AppendLine(Result, '    return unitFilter.value || kindFilter.value || visibilityFilter.value || documentationFilter.value;');
   AppendLine(Result, '  }');
   AppendLine(Result, '  function addResult(item) {');
   AppendLine(Result, '    var li = document.createElement("li");');
@@ -326,26 +365,62 @@ begin
   AppendLine(Result, '    panel.hidden = true;');
   AppendLine(Result, '    input.setAttribute("aria-expanded", "false");');
   AppendLine(Result, '  }');
+  AppendLine(Result, '  function openSearch() {');
+  AppendLine(Result, '    panel.hidden = false;');
+  AppendLine(Result, '    input.setAttribute("aria-expanded", "true");');
+  AppendLine(Result, '    if (!input.value.trim() && !hasActiveFilter()) status.textContent = "Type to search or choose filters.";');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function resultLinks() {');
+  AppendLine(Result, '    return Array.prototype.slice.call(list.querySelectorAll("a.search-result"));');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function moveResultFocus(current, offset) {');
+  AppendLine(Result, '    var links = resultLinks();');
+  AppendLine(Result, '    if (!links.length) return;');
+  AppendLine(Result, '    var index = links.indexOf(current);');
+  AppendLine(Result, '    links[(index + offset + links.length) % links.length].focus();');
+  AppendLine(Result, '  }');
   AppendLine(Result, '  function update() {');
   AppendLine(Result, '    var query = input.value.trim().toLowerCase();');
   AppendLine(Result, '    list.replaceChildren();');
-  AppendLine(Result, '    if (!query) { closeSearch(); return; }');
+  AppendLine(Result, '    if (!query && !hasActiveFilter()) { closeSearch(); return; }');
   AppendLine(Result, '    var matches = entries.map(function (item) {');
   AppendLine(Result, '      return { item: item, score: score(item, query) };');
-  AppendLine(Result, '    }).filter(function (match) { return match.score >= 0; });');
+  AppendLine(Result, '    }).filter(function (match) { return match.score >= 0 && matchesFilters(match.item); });');
   AppendLine(Result, '    matches.sort(function (left, right) {');
   AppendLine(Result, '      return right.score - left.score || ' +
     'left.item.qualifiedName.localeCompare(right.item.qualifiedName);');
   AppendLine(Result, '    });');
   AppendLine(Result, '    matches.slice(0, 24).forEach(function (match) { addResult(match.item); });');
   AppendLine(Result, '    status.textContent = matches.length ? ' +
-    'matches.length + (matches.length === 1 ? " result" : " results") : "No results";');
+    'matches.length + (matches.length === 1 ? " result" : " results") + ' +
+    '(matches.length > 24 ? "; first 24 shown" : "") : ' +
+    '"No symbols match the current search and filters.";');
   AppendLine(Result, '    panel.hidden = false;');
   AppendLine(Result, '    input.setAttribute("aria-expanded", "true");');
   AppendLine(Result, '  }');
   AppendLine(Result, '  input.addEventListener("input", update);');
+  AppendLine(Result, '  input.addEventListener("focus", openSearch);');
   AppendLine(Result, '  input.addEventListener("keydown", function (event) {');
   AppendLine(Result, '    if (event.key === "Escape") { closeSearch(); input.blur(); }');
+  AppendLine(Result, '    else if (event.key === "ArrowDown") {');
+  AppendLine(Result, '      var links = resultLinks();');
+  AppendLine(Result, '      if (links.length) { event.preventDefault(); links[0].focus(); }');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '  });');
+  AppendLine(Result, '  list.addEventListener("keydown", function (event) {');
+  AppendLine(Result, '    var link = event.target.closest("a.search-result");');
+  AppendLine(Result, '    if (!link) return;');
+  AppendLine(Result, '    if (event.key === "ArrowDown") { event.preventDefault(); moveResultFocus(link, 1); }');
+  AppendLine(Result, '    else if (event.key === "ArrowUp") { event.preventDefault(); moveResultFocus(link, -1); }');
+  AppendLine(Result, '    else if (event.key === "Escape") { event.preventDefault(); input.focus(); closeSearch(); }');
+  AppendLine(Result, '  });');
+  AppendLine(Result, '  panel.addEventListener("keydown", function (event) {');
+  AppendLine(Result, '    if (event.key === "Escape" && !event.target.closest("[data-search-results]")) {');
+  AppendLine(Result, '      event.preventDefault(); input.focus(); closeSearch();');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '  });');
+  AppendLine(Result, '  [unitFilter, kindFilter, visibilityFilter, documentationFilter].forEach(function (filter) {');
+  AppendLine(Result, '    filter.addEventListener("change", update);');
   AppendLine(Result, '  });');
   AppendLine(Result, '  document.addEventListener("keydown", function (event) {');
   AppendLine(Result, '    var tag = document.activeElement && document.activeElement.tagName;');

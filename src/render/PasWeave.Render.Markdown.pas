@@ -313,17 +313,6 @@ begin
   AppendLine(AOutput);
 end;
 
-function SymbolLocation(ASymbol: TDocSymbol): string;
-begin
-  Result := ASymbol.SourceFilename;
-  if ASymbol.SourceLine > 0 then
-  begin
-    Result := Result + ':' + IntToStr(ASymbol.SourceLine);
-    if ASymbol.SourceColumn > 0 then
-      Result := Result + ':' + IntToStr(ASymbol.SourceColumn);
-  end;
-end;
-
 function RenderSourceLocation(AProject: TDocProject;
   const ASourceFilename: string; ASourceLine, ASourceColumn: Integer): UTF8String;
 var
@@ -359,7 +348,10 @@ end;
 procedure RenderSymbol(var AOutput: UTF8String; AProject: TDocProject;
   AUnit: TDocUnit; ASymbol: TDocSymbol);
 var
+  I: Integer;
   ParentSymbol: TDocSymbol;
+  Relationship: TDocTypeRelationship;
+  RelationshipLabel: string;
 begin
   AppendLine(AOutput, '<a id="' +
     UTF8String(MarkdownSymbolAnchor(ASymbol)) + '"></a>');
@@ -375,9 +367,26 @@ begin
   ParentSymbol := FindSymbolByID(AUnit, ASymbol.ParentSymbolID);
   if Assigned(ParentSymbol) and (ParentSymbol.Kind <> skUnit) then
   begin
-    AppendLine(AOutput, '**Parent:** [`' +
-      UTF8String(ParentSymbol.QualifiedName) + '`](#' +
-      UTF8String(MarkdownSymbolAnchor(ParentSymbol)) + ')');
+    AppendLine(AOutput, '**Parent:** ' + RenderMarkdownSymbolLink(AProject,
+      AUnit, ParentSymbol.ID, ParentSymbol.QualifiedName));
+    AppendLine(AOutput);
+  end;
+
+  if ASymbol.TypeRelationships.Count > 0 then
+  begin
+    AppendLine(AOutput, '**Relationships:**');
+    AppendLine(AOutput);
+    for I := 0 to ASymbol.TypeRelationships.Count - 1 do
+    begin
+      Relationship := TDocTypeRelationship(ASymbol.TypeRelationships[I]);
+      if Relationship.Kind = trkImplementation then
+        RelationshipLabel := 'Implements'
+      else
+        RelationshipLabel := 'Inherits from';
+      AppendLine(AOutput, '- ' + UTF8String(RelationshipLabel) + ' ' +
+        RenderMarkdownSymbolLink(AProject, AUnit,
+        Relationship.TargetSymbolID, Relationship.DisplayName));
+    end;
     AppendLine(AOutput);
   end;
 

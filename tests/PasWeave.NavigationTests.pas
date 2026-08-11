@@ -10,7 +10,8 @@ implementation
 
 uses
   SysUtils, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
-  PasWeave.Render.HTML, PasWeave.Render.Markdown, PasWeave.SourceLinks;
+  PasWeave.Render.HTML, PasWeave.Render.HTML.Assets,
+  PasWeave.Render.Markdown, PasWeave.SourceLinks;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
 begin
@@ -108,6 +109,16 @@ begin
       Exit(TDocSymbol(AUnit.Symbols[I]));
 end;
 
+function FindUnit(AProject: TDocProject; const AName: string): TDocUnit;
+var
+  I: Integer;
+begin
+  Result := nil;
+  for I := 0 to AProject.Units.Count - 1 do
+    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
+      Exit(TDocUnit(AProject.Units[I]));
+end;
+
 procedure CheckRenderedSourceLinks;
 var
   AddSymbol: TDocSymbol;
@@ -164,10 +175,111 @@ begin
   end;
 end;
 
+procedure CheckRelationshipNavigation;
+var
+  AttemptedCount: Integer;
+  BaseSymbol: TDocSymbol;
+  BaseUnit: TDocUnit;
+  ChildSymbol: TDocSymbol;
+  ImplementationUnit: TDocUnit;
+  HTML: UTF8String;
+  Markdown: UTF8String;
+  Project: TDocProject;
+begin
+  Project := BuildProject('tests/fixtures/relationships',
+    'Relationship navigation', AttemptedCount);
+  try
+    BaseUnit := FindUnit(Project, 'RelationshipBase');
+    ImplementationUnit := FindUnit(Project, 'RelationshipImplementations');
+    Check(Assigned(BaseUnit) and Assigned(ImplementationUnit),
+      'relationship navigation requires both fixture units');
+    BaseSymbol := FindSymbol(BaseUnit, 'TBase');
+    ChildSymbol := FindSymbol(ImplementationUnit, 'TChild');
+    Check(Assigned(BaseSymbol) and Assigned(ChildSymbol),
+      'relationship navigation requires source and target types');
+
+    Markdown := RenderMarkdownUnit(Project, ImplementationUnit);
+    HTML := RenderHTMLUnit(Project, ImplementationUnit);
+    Check(Pos('RelationshipBase.md#' + MarkdownSymbolAnchor(BaseSymbol),
+      string(Markdown)) > 0,
+      'Markdown should link a resolved cross-unit type relationship');
+    Check(Pos('RelationshipBase.html#' + HTMLSymbolAnchor(BaseSymbol),
+      string(HTML)) > 0,
+      'HTML should link a resolved cross-unit type relationship');
+    Check(Pos('`TMissingBase`', string(Markdown)) > 0,
+      'Markdown should preserve an unresolved relationship as plain code');
+    Check(Pos('<code>TMissingBase</code>', string(HTML)) > 0,
+      'HTML should preserve an unresolved relationship as plain code');
+  finally
+    Project.Free;
+  end;
+end;
+
+procedure CheckSearchContracts;
+var
+  AttemptedCount: Integer;
+  IndexHTML: UTF8String;
+  Project: TDocProject;
+  Script: UTF8String;
+  SearchIndex: UTF8String;
+  Stylesheet: UTF8String;
+begin
+  Project := BuildProject('tests/fixtures/SimpleUnit.pas',
+    'Search filters', AttemptedCount);
+  try
+    IndexHTML := RenderHTMLIndex(Project);
+    SearchIndex := RenderHTMLSearchIndex(Project);
+    Check(Pos('data-search-unit', string(IndexHTML)) > 0,
+      'search should expose a unit filter');
+    Check(Pos('data-search-kind', string(IndexHTML)) > 0,
+      'search should expose a symbol-kind filter');
+    Check(Pos('data-search-visibility', string(IndexHTML)) > 0,
+      'search should expose a visibility filter');
+    Check(Pos('data-search-documentation', string(IndexHTML)) > 0,
+      'search should expose a documentation-status filter');
+    Check(Pos('role="status" aria-live="polite"', string(IndexHTML)) > 0,
+      'search result changes should be announced politely');
+    Check(Pos('"visibility" : "public"', string(SearchIndex)) > 0,
+      'the offline search index should include symbol visibility');
+    Check(Pos('"documented" : true', string(SearchIndex)) > 0,
+      'the offline search index should identify documented symbols');
+    Check(Pos('"documented" : false', string(SearchIndex)) > 0,
+      'the offline search index should identify undocumented symbols');
+  finally
+    Project.Free;
+  end;
+
+  Script := HTMLApplicationScript;
+  Check(Pos('item.visibility', string(Script)) > 0,
+    'offline search should apply the visibility filter');
+  Check(Pos('item.documented', string(Script)) > 0,
+    'offline search should apply the documentation-status filter');
+  Check(Pos('event.key === "ArrowDown"', string(Script)) > 0,
+    'search should move forward through results with ArrowDown');
+  Check(Pos('event.key === "ArrowUp"', string(Script)) > 0,
+    'search should move backward through results with ArrowUp');
+  Check(Pos('.focus()', string(Script)) > 0,
+    'search keyboard navigation should move browser focus');
+  Check(Pos('No symbols match the current search and filters.',
+    string(Script)) > 0,
+    'search should provide a useful filtered empty state');
+
+  Stylesheet := HTMLStylesheet;
+  Check(Pos(':focus-visible', string(Stylesheet)) > 0,
+    'interactive search and navigation controls should have visible focus');
+  Check(Pos('@media (max-width: 480px)', string(Stylesheet)) > 0,
+    'the generated site should define a phone-width layout');
+  Check(Pos('.stats { grid-template-columns: 1fr; }',
+    string(Stylesheet)) > 0,
+    'phone-width statistics should not force horizontal overflow');
+end;
+
 procedure RunNavigationTests;
 begin
   CheckSourceLinkConfiguration;
   CheckRenderedSourceLinks;
+  CheckRelationshipNavigation;
+  CheckSearchContracts;
 end;
 
 end.

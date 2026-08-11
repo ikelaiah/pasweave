@@ -415,17 +415,6 @@ begin
   end;
 end;
 
-function SymbolLocation(ASymbol: TDocSymbol): string;
-begin
-  Result := ASymbol.SourceFilename;
-  if ASymbol.SourceLine > 0 then
-  begin
-    Result := Result + ':' + IntToStr(ASymbol.SourceLine);
-    if ASymbol.SourceColumn > 0 then
-      Result := Result + ':' + IntToStr(ASymbol.SourceColumn);
-  end;
-end;
-
 function RenderSourceLocation(AProject: TDocProject;
   const ASourceFilename: string; ASourceLine, ASourceColumn: Integer): UTF8String;
 var
@@ -617,6 +606,77 @@ begin
   RenderDirectives(AOutput, AProject, AUnit, ASymbol);
 end;
 
+procedure RenderSearchFilters(var AOutput: UTF8String; AProject: TDocProject);
+var
+  I: Integer;
+  J: Integer;
+  Kinds: TStringList;
+  Symbols: TStringList;
+  UnitModel: TDocUnit;
+  Units: TStringList;
+  Visibilities: TStringList;
+begin
+  Units := SortedUnits(AProject);
+  Kinds := TStringList.Create;
+  Visibilities := TStringList.Create;
+  try
+    Kinds.Sorted := True;
+    Kinds.CaseSensitive := True;
+    Kinds.Duplicates := dupIgnore;
+    Visibilities.Sorted := True;
+    Visibilities.CaseSensitive := True;
+    Visibilities.Duplicates := dupIgnore;
+    for I := 0 to Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Units.Objects[I]);
+      Symbols := SortedSymbols(UnitModel, AllKinds);
+      try
+        for J := 0 to Symbols.Count - 1 do
+        begin
+          Kinds.Add(SymbolKindName(TDocSymbol(Symbols.Objects[J]).Kind));
+          Visibilities.Add(SymbolVisibilityName(
+            TDocSymbol(Symbols.Objects[J]).Visibility));
+        end;
+      finally
+        Symbols.Free;
+      end;
+    end;
+
+    AppendLine(AOutput, '<fieldset class="search-filters"><legend ' +
+      'class="sr-only">Search filters</legend>');
+    AppendLine(AOutput, '<label>Unit<select data-search-unit>' +
+      '<option value="">All units</option>');
+    for I := 0 to Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Units.Objects[I]);
+      AppendLine(AOutput, '<option value="' + EscapeHTML(UnitModel.Name) +
+        '">' + EscapeHTML(UnitModel.Name) + '</option>');
+    end;
+    AppendLine(AOutput, '</select></label>');
+    AppendLine(AOutput, '<label>Kind<select data-search-kind>' +
+      '<option value="">All kinds</option>');
+    for I := 0 to Kinds.Count - 1 do
+      AppendLine(AOutput, '<option value="' + EscapeHTML(Kinds[I]) + '">' +
+        EscapeHTML(Kinds[I]) + '</option>');
+    AppendLine(AOutput, '</select></label>');
+    AppendLine(AOutput, '<label>Visibility<select data-search-visibility>' +
+      '<option value="">All visibilities</option>');
+    for I := 0 to Visibilities.Count - 1 do
+      AppendLine(AOutput, '<option value="' + EscapeHTML(Visibilities[I]) +
+        '">' + EscapeHTML(Visibilities[I]) + '</option>');
+    AppendLine(AOutput, '</select></label>');
+    AppendLine(AOutput, '<label>Documentation<select ' +
+      'data-search-documentation><option value="">Any status</option>' +
+      '<option value="documented">Documented</option>' +
+      '<option value="undocumented">Undocumented</option></select></label>');
+    AppendLine(AOutput, '</fieldset>');
+  finally
+    Visibilities.Free;
+    Kinds.Free;
+    Units.Free;
+  end;
+end;
+
 function PageStart(AProject: TDocProject; const ATitle, ARoot,
   ADescription: string; AIncludeDiagram: Boolean): UTF8String;
 begin
@@ -666,10 +726,13 @@ begin
   AppendLine(Result, '<input id="site-search" data-testid="site-search" ' +
     'data-search-input type="search" autocomplete="off" ' +
     'placeholder="Search symbols…" aria-controls="search-results" ' +
-    'aria-expanded="false">');
+    'aria-haspopup="true" aria-expanded="false">');
   AppendLine(Result, '<div id="search-results" class="search-panel" ' +
-    'data-search-panel hidden><p class="search-status" ' +
-    'data-search-status></p><ul data-search-results></ul></div>');
+    'data-search-panel hidden>');
+  RenderSearchFilters(Result, AProject);
+  AppendLine(Result, '<p class="search-status" data-search-status ' +
+    'role="status" aria-live="polite"></p><ul data-search-results></ul>');
+  AppendLine(Result, '</div>');
   AppendLine(Result, '</div>');
   AppendLine(Result, '</div>');
   AppendLine(Result, '</header>');
@@ -916,8 +979,11 @@ end;
 procedure RenderSymbol(var AOutput: UTF8String; AProject: TDocProject;
   AUnit: TDocUnit; ASymbol: TDocSymbol);
 var
+  I: Integer;
   ParentSymbol: TDocSymbol;
   Anchor: string;
+  Relationship: TDocTypeRelationship;
+  RelationshipLabel: string;
 begin
   Anchor := HTMLSymbolAnchor(ASymbol);
   AppendLine(AOutput, '<article class="symbol" id="' + EscapeHTML(Anchor) +
@@ -938,9 +1004,27 @@ begin
 
   ParentSymbol := FindSymbolByID(AUnit, ASymbol.ParentSymbolID);
   if Assigned(ParentSymbol) and (ParentSymbol.Kind <> skUnit) then
-    AppendLine(AOutput, '<p class="parent-link">Parent: <a href="#' +
-      EscapeHTML(HTMLSymbolAnchor(ParentSymbol)) + '"><code>' +
-      EscapeHTML(ParentSymbol.QualifiedName) + '</code></a></p>');
+    AppendLine(AOutput, '<p class="parent-link">Parent: ' +
+      RenderHTMLSymbolLink(AProject, AUnit, ParentSymbol.ID,
+      ParentSymbol.QualifiedName) + '</p>');
+
+  if ASymbol.TypeRelationships.Count > 0 then
+  begin
+    AppendLine(AOutput, '<div class="type-relationships"><strong>' +
+      'Relationships:</strong><ul>');
+    for I := 0 to ASymbol.TypeRelationships.Count - 1 do
+    begin
+      Relationship := TDocTypeRelationship(ASymbol.TypeRelationships[I]);
+      if Relationship.Kind = trkImplementation then
+        RelationshipLabel := 'Implements'
+      else
+        RelationshipLabel := 'Inherits from';
+      AppendLine(AOutput, '<li>' + EscapeHTML(RelationshipLabel) + ' ' +
+        RenderHTMLSymbolLink(AProject, AUnit, Relationship.TargetSymbolID,
+        Relationship.DisplayName) + '</li>');
+    end;
+    AppendLine(AOutput, '</ul></div>');
+  end;
 
   if ASymbol.DeclarationText <> '' then
   begin
@@ -1206,6 +1290,8 @@ begin
           Item.Add('qualifiedName', Symbol.QualifiedName);
           Item.Add('kind', SymbolKindName(Symbol.Kind));
           Item.Add('unit', UnitModel.Name);
+          Item.Add('visibility', SymbolVisibilityName(Symbol.Visibility));
+          Item.Add('documented', Trim(Symbol.MarkdownDocumentation) <> '');
           Item.Add('url', URL);
           Item.Add('summary', SearchSummary(Symbol.MarkdownDocumentation));
           Items.Add(Item);

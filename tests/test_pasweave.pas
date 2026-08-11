@@ -6,6 +6,7 @@ uses
   Classes, SysUtils, FPJSON, JSONParser,
   PasWeave.Comments, PasWeave.Compiler, PasWeave.Diagnostics, PasWeave.Model,
   PasWeave.Lazarus, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.SourceLinks,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
   PasWeave.NavigationTests, PasWeave.ValidationTests,
@@ -209,6 +210,7 @@ var
   CompilerSymbol: TDocSymbol;
   NormalisedTarget: string;
   InputErrorRaised: Boolean;
+  SourceLinkError: string;
   LazarusConfiguration: TLazarusConfiguration;
   LazarusCompilerOptions: TCompilerOptions;
   LazarusProject: TDocProject;
@@ -1465,6 +1467,10 @@ begin
   ExampleProject := BuildProject('examples/documented-api',
     'Documented API example', AttemptedCount);
   try
+    Check(TryConfigureSourceLinks(ExampleProject,
+      'https://github.com/ikelaiah/pasweave',
+      'blob/main/examples/documented-api/{path}#L{line}', SourceLinkError),
+      'the documented example source links should be valid');
     Check(AttemptedCount = 2,
       'both documented example units should be attempted');
     Check((ExampleProject.Errors.Count = 0) and
@@ -1527,6 +1533,10 @@ begin
   ScientificProject := BuildProject('examples/scientific-api',
     'Scientific API showcase', AttemptedCount);
   try
+    Check(TryConfigureSourceLinks(ScientificProject,
+      'https://github.com/ikelaiah/pasweave',
+      'blob/main/examples/scientific-api/{path}#L{line}', SourceLinkError),
+      'the scientific example source links should be valid');
     Check((AttemptedCount = 2) and (ScientificProject.Units.Count = 2) and
       (ScientificProject.Errors.Count = 0),
       'the scientific example should parse both units without errors');
@@ -1635,8 +1645,8 @@ end;
 
 begin
   try
-    RunTests;
     RunNavigationTests;
+    RunTests;
     RunValidationTests;
     WriteLn('All PasWeave tests passed.');
   except
