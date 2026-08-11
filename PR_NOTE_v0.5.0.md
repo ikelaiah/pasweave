@@ -1,10 +1,4 @@
-# PasWeave v0.5.0: navigation and source traceability
-
-Suggested PR title:
-
-```text
-feat(navigation): add source traceability and filtered search for v0.5.0
-```
+# feat(navigation): add source traceability and filtered search for v0.5.0
 
 ## Summary
 
