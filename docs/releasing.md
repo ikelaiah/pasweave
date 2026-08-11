@@ -63,3 +63,19 @@ build, and the workflow creates the release only after that build succeeds.
 If a Windows build fails, consult the
 [Windows CI troubleshooting guide](windows-ci-troubleshooting.md) before
 changing or recreating a release tag.
+
+## Publish the documentation showcase
+
+The `Publish documentation showcase` workflow builds and tests PasWeave on
+Ubuntu, regenerates the scientific example from committed sources, validates
+its coverage, navigation metadata, source links, diagrams, and mathematics,
+then uploads only the self-contained HTML tree. Pull requests run the build
+gate without configuring or publishing Pages. A push to `main` enables Pages
+when necessary and deploys automatically; once the workflow exists on the
+default branch, a maintainer may also dispatch it on another reviewed branch.
+
+The deploy job publishes through the protected `github-pages` environment to
+`https://ikelaiah.github.io/pasweave/`, then requests the deployed index, unit
+page, and search index and checks the milestone contract again. Treat a
+successful deployment and deployed-site smoke test as part of the v0.5.0
+release gate.

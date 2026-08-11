@@ -6,7 +6,7 @@
 - [x] Offline search filters for unit, kind, visibility, and documentation
 - [x] Keyboard-accessible search, visible focus, and useful empty states
 - [x] Stable URL and anchor regression coverage
-- [ ] GitHub Pages scientific showcase and deployment workflow
-- [ ] Example, nested multi-package, and `mathlib-fp` validation evidence
-- [ ] README, detailed docs, changelog, roadmap, release note, and version bump
-- [ ] Full verification and five-axis review
+- [ ] Published GitHub Pages scientific showcase (workflow is ready)
+- [x] Example, nested multi-package, and `mathlib-fp` validation evidence
+- [x] README, detailed docs, changelog, roadmap, release note, and version bump
+- [x] Full verification and five-axis review

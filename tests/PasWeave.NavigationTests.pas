@@ -87,8 +87,17 @@ begin
     'src/{path}#L{line}', 'a repository URL with a query');
   CheckRejected('https://example.test/repo#readme',
     'src/{path}#L{line}', 'a repository URL with a fragment');
+  CheckRejected('https://example.test/owner/repo/../other',
+    'src/{path}#L{line}', 'a parent-traversing repository URL');
+  CheckRejected('https://example.test/owner/%2e%2e/other',
+    'src/{path}#L{line}', 'a percent-encoded traversing repository URL');
   CheckRejected('https://example.test/repo', '../src/{path}#L{line}',
     'a parent-traversing template');
+  CheckRejected('https://example.test/repo',
+    'blob/%2e%2e/{path}#L{line}', 'a percent-encoded traversing template');
+  CheckRejected('https://example.test/repo',
+    'blob%2f..%2fmain/{path}#L{line}',
+    'a percent-encoded path-separator template');
   CheckRejected('https://example.test/repo',
     'https://attacker.test/{path}#L{line}', 'an absolute template');
   CheckRejected('https://example.test/repo', 'src/{path}',

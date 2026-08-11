@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave is currently at `v0.3.0`. The parser-to-site pipeline works;
+PasWeave is currently at `v0.5.0`. The parser-to-site pipeline works;
 the path to `v1.0.0` is about making that pipeline understand real project
 builds, improving author feedback and navigation, scaling it safely, and then
 freezing the public contracts.
@@ -162,6 +162,14 @@ Exit criteria:
 
 **Outcome:** readers can move efficiently from project overview to API symbol,
 related type, and original source in both small and large documentation sets.
+
+Status: implementation and local validation completed on 2026-08-12; the
+GitHub Pages publication gate remains pending. The source-template safety
+contract, relationship-link rules, search behavior, accessibility checks,
+browser evidence, and real-project validation are recorded in [navigation and
+source traceability](docs/navigation-and-source-traceability.md),
+[ADR-0002](docs/decisions/0002-repository-relative-source-links.md), the
+[changelog](CHANGELOG.md), and the v0.5.0 release note.
 
 Exit criteria:
 

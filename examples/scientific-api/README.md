@@ -15,7 +15,7 @@ build/bin/ScientificDemo
 Generate the documentation site with:
 
 ```text
-build/bin/pasweave build examples/scientific-api --output build/scientific-api --project-name "Scientific API showcase"
+build/bin/pasweave build examples/scientific-api --output build/scientific-api --project-name "Scientific API showcase" --repository-url=https://github.com/ikelaiah/pasweave '--source-link-template=blob/main/examples/scientific-api/{path}#L{line}'
 ```
 
 The example deliberately exercises:
@@ -26,6 +26,7 @@ The example deliberately exercises:
 - interface implementation and cross-unit inheritance relationships;
 - fully documented public API coverage;
 - deterministic Markdown, HTML, search, and diagram output.
+- line-aware repository links and filtered, keyboard-accessible offline search.
 
 A compact generated snapshot is checked in so the result can be inspected
 without compiling PasWeave:
@@ -33,6 +34,7 @@ without compiling PasWeave:
 - [Markdown project index](sample-output/markdown/index.md)
 - [HTML project index](sample-output/html/index.html) — clone the repository
   and open this file locally for styling, search, KaTeX, and Mermaid diagrams
+- [GitHub Pages deployment target](https://ikelaiah.github.io/pasweave/)
 
 The snapshot reports 30 of 30 public API symbols documented and contains 16
 display equations plus 65 inline mathematical expressions. See the

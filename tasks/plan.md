@@ -13,8 +13,8 @@ examples, `mathlib-fp`, and the nested Lazarus fixture.
 - Store the normalized repository URL and relative source-link template in the
   project model. Validate them at the CLI boundary, then let both renderers use
   one URL builder over normalized root-relative source paths.
-- Accept only deterministic relative templates containing `{path}` and
-  optional `{line}`. Reject absolute URLs, parent traversal, query strings,
+- Accept only deterministic relative templates containing exactly one
+  `{path}` and `{line}`. Reject absolute URLs, parent traversal, query strings,
   fragments before the line placeholder, unknown placeholders, and repository
   URLs with query/fragment components.
 - Preserve the existing route and anchor functions. Extend shared link helpers
@@ -23,7 +23,7 @@ examples, `mathlib-fp`, and the nested Lazarus fixture.
 - Keep search dependency-free and offline. Emit explicit unit, kind,
   visibility, and documentation-status metadata, then filter and keyboard-
   navigate the deterministic in-memory index.
-- Publish only committed generated output from the scientific example through
+- Publish output generated from the committed scientific example through
   GitHub Pages; the workflow regenerates and verifies it before deployment.
 
 ## Task list
@@ -64,14 +64,14 @@ examples, `mathlib-fp`, and the nested Lazarus fixture.
 
 ### Phase 3: Showcase, validation, and release contract
 
-- [ ] Task 7: Add a GitHub Pages workflow and committed scientific showcase
+- [x] Task 7: Add a GitHub Pages workflow and committed scientific showcase
   generated with repository source links.
-- [ ] Task 8: Validate examples, the nested multi-package fixture, and
+- [x] Task 8: Validate examples, the nested multi-package fixture, and
   `mathlib-fp`; record routes, filters, accessibility, math, diagrams, and
   stable-link evidence.
-- [ ] Task 9: Update README, detailed docs, changelog, roadmap, release note,
+- [x] Task 9: Update README, detailed docs, changelog, roadmap, release note,
   release/version metadata, and sample outputs.
-- [ ] Task 10: Run the complete suite, production/portable builds where
+- [x] Task 10: Run the complete suite, production/portable builds where
   available, deterministic regeneration checks, and a five-axis code review.
 
 ## Risks and mitigations
@@ -86,9 +86,9 @@ examples, `mathlib-fp`, and the nested Lazarus fixture.
 
 ## Definition of done
 
-- [ ] Branch is `release/v0.5.0`.
+- [x] Branch is `release/v0.5.0`.
 - [ ] Every v0.5.0 roadmap exit criterion has code, fixtures, documentation,
   or explicit deployed-site evidence.
-- [ ] Existing unit URLs and symbol anchors are unchanged.
-- [ ] Full tests and production build pass, and direct-file/default-`///`
+- [x] Existing unit URLs and symbol anchors are unchanged.
+- [x] Full tests and production build pass, and direct-file/default-`///`
   workflows still work end to end.

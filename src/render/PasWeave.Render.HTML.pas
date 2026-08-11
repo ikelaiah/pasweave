@@ -726,7 +726,7 @@ begin
   AppendLine(Result, '<input id="site-search" data-testid="site-search" ' +
     'data-search-input type="search" autocomplete="off" ' +
     'placeholder="Search symbols…" aria-controls="search-results" ' +
-    'aria-haspopup="true" aria-expanded="false">');
+    'aria-expanded="false">');
   AppendLine(Result, '<div id="search-results" class="search-panel" ' +
     'data-search-panel hidden>');
   RenderSearchFilters(Result, AProject);

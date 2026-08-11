@@ -217,7 +217,7 @@ var
   LazarusProjectSecond: TDocProject;
   LazarusErrorMessage: string;
 begin
-  Check(PasWeaveVersion = '0.4.0',
+  Check(PasWeaveVersion = '0.5.0',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');

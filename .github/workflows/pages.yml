@@ -1,0 +1,108 @@
+name: Publish documentation showcase
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+
+    steps:
+      - name: Check out the source
+        uses: actions/checkout@v6
+
+      - name: Install Free Pascal
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes fp-compiler fp-units-fcl
+
+      - name: Test and build PasWeave
+        run: |
+          make test
+          make
+
+      - name: Generate the scientific API showcase
+        run: |
+          build/bin/pasweave build examples/scientific-api \
+            --output build/pages \
+            --project-name "Scientific API showcase" \
+            --repository-url=https://github.com/ikelaiah/pasweave \
+            '--source-link-template=blob/main/examples/scientific-api/{path}#L{line}'
+          touch build/pages/html/.nojekyll
+
+      - name: Validate the generated showcase
+        run: |
+          grep --quiet '30 of 30 API symbols documented' build/pages/html/index.html
+          grep --quiet 'data-search-unit' build/pages/html/index.html
+          grep --quiet 'data-search-documentation' build/pages/html/index.html
+          grep --quiet 'data-dependency-diagram' build/pages/html/index.html
+          grep --quiet 'id="type-relationship-diagram"' build/pages/html/index.html
+          grep --quiet 'data-math-display' build/pages/html/units/Scientific.Core.html
+          grep --quiet 'github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/' \
+            build/pages/html/units/Scientific.Core.html
+          grep --quiet '"visibility"' build/pages/html/assets/search-index.js
+          grep --quiet '"documented"' build/pages/html/assets/search-index.js
+
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: build/pages/html
+
+  deploy:
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
+
+      - name: Validate the deployed site
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          site="${PAGE_URL%/}"
+          curl --fail --location --retry 8 --retry-delay 5 \
+            "$site/" --output index.html
+          curl --fail --location --retry 8 --retry-delay 5 \
+            "$site/units/Scientific.Core.html" --output unit.html
+          curl --fail --location --retry 8 --retry-delay 5 \
+            "$site/assets/search-index.js" --output search-index.js
+          grep --quiet '30 of 30 API symbols documented' index.html
+          grep --quiet 'data-search-unit' index.html
+          grep --quiet 'data-dependency-diagram' index.html
+          grep --quiet 'id="type-relationship-diagram"' index.html
+          grep --quiet 'data-math-display' unit.html
+          grep --quiet 'class="source-link"' unit.html
+          grep --quiet 'symbol-scientific-core-trealfunction-' unit.html
+          grep --quiet '"documented"' search-index.js

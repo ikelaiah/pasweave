@@ -1,6 +1,6 @@
 ![PasWeave — Documentation, woven from Pascal source](assets/pasweave-banner.svg)
 
-[![Version](https://img.shields.io/badge/version-0.4.0-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.5.0-635bff)](CHANGELOG.md)
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Portable release](https://img.shields.io/badge/portable-Windows%20x86--64-2563eb)](docs/releasing.md)
 [![Model schema](https://img.shields.io/badge/model%20schema-v1-64748b)](src/model/PasWeave.Model.JSON.pas)
@@ -39,9 +39,11 @@ The working parser-to-site pipeline includes:
 - stable overload-aware anchors, internal dependency links, parent links,
   fenced Pascal declarations, directive sections, and visible undocumented
   API warnings;
+- validated repository-relative source templates that link unit and symbol
+  locations to their exact declaration lines in HTML and Markdown;
 - a responsive static HTML project index and one page per parsed unit;
 - dependency-free, offline client-side search across every renderable API
-  symbol;
+  symbol, with composable unit, kind, visibility, and documentation filters;
 - shared styling with light and dark colour schemes, safe Markdown-to-HTML
   conversion, and offline KaTeX rendering for marked inline and display
   mathematics;
@@ -89,7 +91,7 @@ Early pre-release executables are not code-signed, so Windows may display a
 SmartScreen warning. Download only from the PasWeave release page and compare
 the SHA-256 value before running the executable.
 
-Read the [v0.4.0 release notes](RELEASE_NOTE_v0.4.0.md) for the highlights,
+Read the [v0.5.0 release notes](RELEASE_NOTE_v0.5.0.md) for the highlights,
 compatibility details, validation results, and known limitations. The
 complete project history is maintained in the
 [changelog](CHANGELOG.md).
@@ -180,7 +182,23 @@ For a more substantial equation-rich demonstration, see the runnable
 [Markdown output](examples/scientific-api/sample-output/markdown/index.md) and
 [HTML output](examples/scientific-api/sample-output/html/index.html) document
 30 of 30 public API symbols with 16 display equations and 65 inline
-mathematical expressions.
+mathematical expressions. The same committed sources publish the
+[PasWeave Pages showcase](https://ikelaiah.github.io/pasweave/) after the
+deployment workflow succeeds.
+
+To add declaration-line links back to a repository, provide the repository
+base and a relative template together:
+
+```text
+pasweave build src \
+  --repository-url=https://github.com/example/project \
+  '--source-link-template=blob/main/{path}#L{line}'
+```
+
+The template must contain exactly one `{path}` and `{line}` placeholder and
+cannot be absolute, traverse upward, or change the configured origin. See
+[navigation and source traceability](docs/navigation-and-source-traceability.md)
+for the complete validation and normalization contract.
 
 For a nested source tree, enable recursive discovery explicitly and exclude
 trees that are not part of the public API:
@@ -288,6 +306,9 @@ project. An empty target ID is an explicit unresolved result.
 Routine symbols additionally expose parser-derived `parameterNames` and
 `hasReturnValue`. Directive objects contain `targetSymbolId` for a resolved
 project-local `@see`; an empty value is deliberately unresolved.
+When source links are configured, the top-level model also records the
+normalized `repositoryUrl` and `sourceLinkTemplate`; this is an additive
+schema-v1 change.
 
 ## Documentation comments
 
@@ -399,8 +420,10 @@ fonts, and licenses are copied into the output. It contains:
   keyboard shortcuts, mouse dragging, reduced-motion support, and independent
   view state;
 - an offline search index covering names, qualified names, kinds, units, and
-  documentation summaries;
-- keyboard search focus with `/` and dismissal with Escape;
+  documentation summaries, plus unit, kind, visibility, and documentation
+  status facets;
+- keyboard search focus with `/`, Arrow-key result navigation, explicit empty
+  states, visible focus, and dismissal with Escape;
 - build diagnostics and visible documentation-coverage totals.
 
 Both generated indexes show the stable diagnostic code. The separate
@@ -428,6 +451,9 @@ for its offline-search, safety, and Markdown-subset contracts.
   `.ppu` files, and do not recurse;
 - explicit OS and CPU values are validated independently, but PasWeave does
   not claim every possible pair is a real FPC code-generation target;
+- source links require both CLI options, an HTTP(S) repository base, and a
+  relative path-and-fragment template; project-file configuration is planned
+  for v0.7.0;
 - no fixture coverage yet for every requested symbol kind or unusual FPC
   syntax.
 
@@ -439,6 +465,7 @@ components retain their own licenses; see
 
 ## 🧭 Roadmap
 
-The authoring-feedback milestone is complete in `v0.4.0`. See
-[ROADMAP.md](ROADMAP.md) for its acceptance evidence and the remaining
-longer-term sequence.
+The navigation and source-traceability implementation is complete on the
+`v0.5.0` release branch; publishing the Pages showcase is the remaining
+external release gate. See [ROADMAP.md](ROADMAP.md) for its acceptance evidence
+and the longer-term sequence.

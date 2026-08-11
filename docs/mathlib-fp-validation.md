@@ -4,6 +4,41 @@ PasWeave's first substantial external test is
 [`ikelaiah/mathlib-fp`](https://github.com/ikelaiah/mathlib-fp), as planned in
 the project brief.
 
+## `v0.5.0` navigation and source-traceability revalidation
+
+Commit `6f3480b7e9494fcd4f72abb0f5c21dd30fde3e42` was built twice with brace
+documentation, explicit `win64`/`x86_64` compiler settings, and a source-link
+template pinned to that exact commit:
+
+```text
+pasweave build C:\tmp\mathlib-fp\src --output build\mathlib-v050 \
+  --project-name mathlib-fp --doc-comments=brace \
+  --unit-path C:\tmp\mathlib-fp\src --target-os win64 --target-cpu x86_64 \
+  --repository-url=https://github.com/ikelaiah/mathlib-fp \
+  '--source-link-template=blob/6f3480b7e9494fcd4f72abb0f5c21dd30fde3e42/src/{path}#L{line}'
+```
+
+| Check | Result |
+|---|---:|
+| Source units parsed | 45 of 45 |
+| Model symbols | 2,338 |
+| Renderable search entries | 2,227 |
+| Line-aware source links | 2,227 |
+| Search facets | 4 |
+| Authoring warnings | 2,370 |
+| Errors | 0 |
+| Escaping source links | 0 |
+| Generated files | 164 |
+
+Every rendered source link retained the configured GitHub repository and
+commit prefix. Both complete output trees had SHA-256
+`467EC29C5BE937C6A22165E18ADAD9A72FF8C3715C463518F1A779BF4596A826`,
+confirming deterministic JSON, Markdown, HTML, search metadata, and source
+URLs. The warning count reflects v0.4.0 authoring rules applied to ordinary
+brace comments and remains non-fatal under the default local policy. Detailed
+navigation and browser evidence is recorded in [navigation and source
+traceability](navigation-and-source-traceability.md).
+
 ## `v0.2.0` configured-build revalidation
 
 The same tested revision was re-run with settings matching its Windows
