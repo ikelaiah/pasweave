@@ -97,6 +97,8 @@ type
   public
     Name: string;
     SourceRoot: string;
+    RepositoryURL: string;
+    SourceLinkTemplate: string;
     Units: TObjectList;
     Warnings: TObjectList;
     Errors: TObjectList;

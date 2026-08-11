@@ -24,7 +24,7 @@ implementation
 uses
   Classes, Contnrs, SysUtils, FPJSON, PasWeave.Diagnostics,
   PasWeave.Render.Support, PasWeave.Render.HTML.Markdown,
-  PasWeave.Render.HTML.Assets, PasWeave.Render.Links;
+  PasWeave.Render.HTML.Assets, PasWeave.Render.Links, PasWeave.SourceLinks;
 
 type
   TSymbolKinds = set of TSymbolKind;
@@ -424,6 +424,40 @@ begin
     if ASymbol.SourceColumn > 0 then
       Result := Result + ':' + IntToStr(ASymbol.SourceColumn);
   end;
+end;
+
+function RenderSourceLocation(AProject: TDocProject;
+  const ASourceFilename: string; ASourceLine, ASourceColumn: Integer): UTF8String;
+var
+  Location: string;
+  URL: string;
+begin
+  Location := ASourceFilename;
+  if ASourceLine > 0 then
+  begin
+    Location := Location + ':' + IntToStr(ASourceLine);
+    if ASourceColumn > 0 then
+      Location := Location + ':' + IntToStr(ASourceColumn);
+  end;
+  URL := SourceLinkURL(AProject, ASourceFilename, ASourceLine);
+  if URL = '' then
+    Result := '<code>' + EscapeHTML(Location) + '</code>'
+  else
+    Result := '<a class="source-link" href="' + EscapeHTML(URL) +
+      '"><code>' + EscapeHTML(Location) + '</code></a>';
+end;
+
+function RenderSourceFile(AProject: TDocProject; const ASourceFilename: string;
+  ASourceLine: Integer): UTF8String;
+var
+  URL: string;
+begin
+  URL := SourceLinkURL(AProject, ASourceFilename, ASourceLine);
+  if URL = '' then
+    Result := '<code>' + EscapeHTML(ASourceFilename) + '</code>'
+  else
+    Result := '<a class="source-link" href="' + EscapeHTML(URL) +
+      '"><code>' + EscapeHTML(ASourceFilename) + '</code></a>';
 end;
 
 function DiagnosticLocation(ADiagnostic: TDiagnostic): string;
@@ -898,8 +932,9 @@ begin
   AppendLine(AOutput, '</div>');
   AppendLine(AOutput, '<p class="symbol-meta"><span>Visibility <code>' +
     EscapeHTML(SymbolVisibilityName(ASymbol.Visibility)) +
-    '</code></span><span>Source <code>' + EscapeHTML(SymbolLocation(ASymbol)) +
-    '</code></span></p>');
+    '</code></span><span>Source ' + RenderSourceLocation(AProject,
+    ASymbol.SourceFilename, ASymbol.SourceLine, ASymbol.SourceColumn) +
+    '</span></p>');
 
   ParentSymbol := FindSymbolByID(AUnit, ASymbol.ParentSymbolID);
   if Assigned(ParentSymbol) and (ParentSymbol.Kind <> skUnit) then
@@ -1063,10 +1098,14 @@ begin
   AppendLine(Result, '<section class="unit-heading">');
   AppendLine(Result, '<p class="eyebrow">Unit</p><h1><code>' +
     EscapeHTML(AUnit.Name) + '</code></h1>');
-  AppendLine(Result, '<p>Declared in <code>' +
-    EscapeHTML(AUnit.SourceFilename) + '</code></p></section>');
-
   ThisUnitSymbol := UnitSymbol(AUnit);
+  if Assigned(ThisUnitSymbol) then
+    AppendLine(Result, '<p>Declared in ' + RenderSourceFile(AProject,
+      AUnit.SourceFilename, ThisUnitSymbol.SourceLine) + '</p></section>')
+  else
+    AppendLine(Result, '<p>Declared in <code>' +
+      EscapeHTML(AUnit.SourceFilename) + '</code></p></section>');
+
   if Assigned(ThisUnitSymbol) then
     RenderDocumentation(Result, AProject, AUnit, ThisUnitSymbol,
       'This unit has no documentation.');

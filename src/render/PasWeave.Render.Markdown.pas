@@ -20,7 +20,7 @@ implementation
 
 uses
   Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Render.Support,
-  PasWeave.Render.Links;
+  PasWeave.Render.Links, PasWeave.SourceLinks;
 
 type
   TSymbolKinds = set of TSymbolKind;
@@ -324,6 +324,38 @@ begin
   end;
 end;
 
+function RenderSourceLocation(AProject: TDocProject;
+  const ASourceFilename: string; ASourceLine, ASourceColumn: Integer): UTF8String;
+var
+  Location: string;
+  URL: string;
+begin
+  Location := ASourceFilename;
+  if ASourceLine > 0 then
+  begin
+    Location := Location + ':' + IntToStr(ASourceLine);
+    if ASourceColumn > 0 then
+      Location := Location + ':' + IntToStr(ASourceColumn);
+  end;
+  URL := SourceLinkURL(AProject, ASourceFilename, ASourceLine);
+  if URL = '' then
+    Result := '`' + UTF8String(Location) + '`'
+  else
+    Result := '[`' + UTF8String(Location) + '`](' + UTF8String(URL) + ')';
+end;
+
+function RenderSourceFile(AProject: TDocProject; const ASourceFilename: string;
+  ASourceLine: Integer): UTF8String;
+var
+  URL: string;
+begin
+  URL := SourceLinkURL(AProject, ASourceFilename, ASourceLine);
+  if URL = '' then
+    Result := '`' + UTF8String(ASourceFilename) + '`'
+  else
+    Result := '[`' + UTF8String(ASourceFilename) + '`](' + UTF8String(URL) + ')';
+end;
+
 procedure RenderSymbol(var AOutput: UTF8String; AProject: TDocProject;
   AUnit: TDocUnit; ASymbol: TDocSymbol);
 var
@@ -336,7 +368,8 @@ begin
   AppendLine(AOutput, '**Kind:** `' + UTF8String(SymbolKindName(ASymbol.Kind)) +
     '`; **Visibility:** `' +
     UTF8String(SymbolVisibilityName(ASymbol.Visibility)) +
-    '`; **Source:** `' + UTF8String(SymbolLocation(ASymbol)) + '`');
+    '`; **Source:** ' + RenderSourceLocation(AProject,
+    ASymbol.SourceFilename, ASymbol.SourceLine, ASymbol.SourceColumn));
   AppendLine(AOutput);
 
   ParentSymbol := FindSymbolByID(AUnit, ASymbol.ParentSymbolID);
@@ -474,10 +507,14 @@ begin
   AppendLine(Result);
   AppendLine(Result, '[Project index](../index.md)');
   AppendLine(Result);
-  AppendLine(Result, '**Source:** `' + UTF8String(AUnit.SourceFilename) + '`');
+  ThisUnitSymbol := UnitSymbol(AUnit);
+  if Assigned(ThisUnitSymbol) then
+    AppendLine(Result, '**Source:** ' + RenderSourceFile(AProject,
+      AUnit.SourceFilename, ThisUnitSymbol.SourceLine))
+  else
+    AppendLine(Result, '**Source:** `' + UTF8String(AUnit.SourceFilename) + '`');
   AppendLine(Result);
 
-  ThisUnitSymbol := UnitSymbol(AUnit);
   if Assigned(ThisUnitSymbol) then
   begin
     if Trim(ThisUnitSymbol.MarkdownDocumentation) = '' then
