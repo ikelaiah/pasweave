@@ -105,12 +105,12 @@ for the detailed contracts and alternatives.
       examples, and golden output are updated.
 - [x] Local tests, production build, portable release build, browser checks,
       nested-project validation, and `mathlib-fp` determinism checks pass.
-- [ ] Push `release/v0.5.0` and open the pull request against `main`.
-- [ ] PR checks, including the Pages generated-site build gate, pass.
-- [ ] Merge the reviewed PR into `main`.
-- [ ] Confirm the Pages deployment job and deployed-site smoke test pass at
+- [x] Push `release/v0.5.0` and open the pull request against `main`.
+- [x] PR checks, including the Pages generated-site build gate, pass.
+- [x] Merge the reviewed PR into `main`.
+- [x] Confirm the Pages deployment job and deployed-site smoke test pass at
       `https://ikelaiah.github.io/pasweave/`.
-- [ ] Confirm the post-merge Windows build on `main` passes.
-- [ ] Tag the verified merge commit as `v0.5.0` and push the tag.
-- [ ] Confirm the tag workflow publishes `pasweave.exe` and
+- [x] Confirm the post-merge Windows build on `main` passes.
+- [x] Tag the verified merge commit as `v0.5.0` and push the tag.
+- [x] Confirm the tag workflow publishes `pasweave.exe` and
       `pasweave.exe.sha256` with the v0.5.0 release note.
