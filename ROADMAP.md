@@ -199,7 +199,8 @@ the API index or using global symbol search.
 
 Exit criteria:
 
-- Add a keyboard-accessible unit switcher to every generated unit page.
+- Add a keyboard-accessible, searchable unit switcher to every generated unit
+  page.
 - Allow any unit to be reached from another unit in at most two actions.
 - Add an on-page navigator for the symbol categories present in the current
   unit, such as types, constants, variables, routines, classes, and
@@ -210,7 +211,8 @@ Exit criteria:
   do not add declarations to a project-wide graph.
 - Preserve dependency-free offline behavior and useful no-JavaScript
   navigation.
-- Validate keyboard navigation, responsive layout, and the deployed showcase.
+- Validate keyboard navigation and responsive layout against the examples,
+  the latest `mathlib-fp` corpus, and the deployed showcase.
 
 ## `v0.6.0` — Safe incremental builds
 
