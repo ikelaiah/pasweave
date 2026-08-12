@@ -12,6 +12,12 @@ function RenderMarkdownSeeLink(AProject: TDocProject; ACurrentUnit: TDocUnit;
   ADirective: TDocDirective): UTF8String;
 function RenderHTMLSeeLink(AProject: TDocProject; ACurrentUnit: TDocUnit;
   ADirective: TDocDirective): UTF8String;
+function RenderMarkdownSymbolLink(AProject: TDocProject;
+  ACurrentUnit: TDocUnit; const ATargetSymbolID,
+  ADisplayName: string): UTF8String;
+function RenderHTMLSymbolLink(AProject: TDocProject;
+  ACurrentUnit: TDocUnit; const ATargetSymbolID,
+  ADisplayName: string): UTF8String;
 
 implementation
 
@@ -26,40 +32,54 @@ end;
 
 function RenderMarkdownSeeLink(AProject: TDocProject; ACurrentUnit: TDocUnit;
   ADirective: TDocDirective): UTF8String;
+begin
+  Result := RenderMarkdownSymbolLink(AProject, ACurrentUnit,
+    ADirective.TargetSymbolID, ADirective.Subject);
+end;
+
+function RenderMarkdownSymbolLink(AProject: TDocProject;
+  ACurrentUnit: TDocUnit; const ATargetSymbolID,
+  ADisplayName: string): UTF8String;
 var
   TargetSymbol: TDocSymbol;
   TargetUnit: TDocUnit;
   Target: string;
 begin
-  TargetSymbol := FindProjectSymbolByID(AProject, ADirective.TargetSymbolID,
-    TargetUnit);
+  TargetSymbol := FindProjectSymbolByID(AProject, ATargetSymbolID, TargetUnit);
   if not Assigned(TargetSymbol) or not Assigned(TargetUnit) then
-    Exit(MarkdownCode(ADirective.Subject));
+    Exit(MarkdownCode(ADisplayName));
   if TargetUnit = ACurrentUnit then
     Target := '#' + DocumentationSymbolAnchor(TargetSymbol)
   else
     Target := TargetUnit.Name + '.md#' + DocumentationSymbolAnchor(TargetSymbol);
-  Result := '[' + MarkdownCode(ADirective.Subject) + '](' +
+  Result := '[' + MarkdownCode(ADisplayName) + '](' +
     UTF8String(Target) + ')';
 end;
 
 function RenderHTMLSeeLink(AProject: TDocProject; ACurrentUnit: TDocUnit;
   ADirective: TDocDirective): UTF8String;
+begin
+  Result := RenderHTMLSymbolLink(AProject, ACurrentUnit,
+    ADirective.TargetSymbolID, ADirective.Subject);
+end;
+
+function RenderHTMLSymbolLink(AProject: TDocProject;
+  ACurrentUnit: TDocUnit; const ATargetSymbolID,
+  ADisplayName: string): UTF8String;
 var
   TargetSymbol: TDocSymbol;
   TargetUnit: TDocUnit;
   Target: string;
 begin
-  TargetSymbol := FindProjectSymbolByID(AProject, ADirective.TargetSymbolID,
-    TargetUnit);
+  TargetSymbol := FindProjectSymbolByID(AProject, ATargetSymbolID, TargetUnit);
   if not Assigned(TargetSymbol) or not Assigned(TargetUnit) then
-    Exit('<code>' + EscapeHTML(ADirective.Subject) + '</code>');
+    Exit('<code>' + EscapeHTML(ADisplayName) + '</code>');
   if TargetUnit = ACurrentUnit then
     Target := '#' + DocumentationSymbolAnchor(TargetSymbol)
   else
     Target := TargetUnit.Name + '.html#' + DocumentationSymbolAnchor(TargetSymbol);
   Result := '<a href="' + EscapeHTML(Target) + '"><code>' +
-    EscapeHTML(ADirective.Subject) + '</code></a>';
+    EscapeHTML(ADisplayName) + '</code></a>';
 end;
 
 end.

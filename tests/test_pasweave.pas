@@ -6,9 +6,10 @@ uses
   Classes, SysUtils, FPJSON, JSONParser,
   PasWeave.Comments, PasWeave.Compiler, PasWeave.Diagnostics, PasWeave.Model,
   PasWeave.Lazarus, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.SourceLinks,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
-  PasWeave.ValidationTests,
+  PasWeave.NavigationTests, PasWeave.ValidationTests,
   PasWeave.Version;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -209,13 +210,14 @@ var
   CompilerSymbol: TDocSymbol;
   NormalisedTarget: string;
   InputErrorRaised: Boolean;
+  SourceLinkError: string;
   LazarusConfiguration: TLazarusConfiguration;
   LazarusCompilerOptions: TCompilerOptions;
   LazarusProject: TDocProject;
   LazarusProjectSecond: TDocProject;
   LazarusErrorMessage: string;
 begin
-  Check(PasWeaveVersion = '0.4.0',
+  Check(PasWeaveVersion = '0.5.0',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -1465,6 +1467,10 @@ begin
   ExampleProject := BuildProject('examples/documented-api',
     'Documented API example', AttemptedCount);
   try
+    Check(TryConfigureSourceLinks(ExampleProject,
+      'https://github.com/ikelaiah/pasweave',
+      'blob/main/examples/documented-api/{path}#L{line}', SourceLinkError),
+      'the documented example source links should be valid');
     Check(AttemptedCount = 2,
       'both documented example units should be attempted');
     Check((ExampleProject.Errors.Count = 0) and
@@ -1527,6 +1533,10 @@ begin
   ScientificProject := BuildProject('examples/scientific-api',
     'Scientific API showcase', AttemptedCount);
   try
+    Check(TryConfigureSourceLinks(ScientificProject,
+      'https://github.com/ikelaiah/pasweave',
+      'blob/main/examples/scientific-api/{path}#L{line}', SourceLinkError),
+      'the scientific example source links should be valid');
     Check((AttemptedCount = 2) and (ScientificProject.Units.Count = 2) and
       (ScientificProject.Errors.Count = 0),
       'the scientific example should parse both units without errors');
@@ -1635,6 +1645,7 @@ end;
 
 begin
   try
+    RunNavigationTests;
     RunTests;
     RunValidationTests;
     WriteLn('All PasWeave tests passed.');

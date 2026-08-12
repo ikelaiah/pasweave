@@ -2,7 +2,7 @@
 
 [Project index](../index.md)
 
-**Source:** `Scientific.Analysis.pas`
+**Source:** [`Scientific.Analysis.pas`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L5)
 
 Provides numerical methods and elementary statistical transforms.
 The routines illustrate documentation ranging from short inline symbols
@@ -17,7 +17,7 @@ such as $\mu$ and $\sigma$ to complete display equations.
 <a id="symbol-scientific-analysis-tdoublearray-62038572069cc187"></a>
 ### `Scientific.Analysis.TDoubleArray`
 
-**Kind:** `type-alias`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:16:15`
+**Kind:** `type-alias`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:16:15`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L16)
 
 ```pascal
 TDoubleArray = Array of Double
@@ -28,7 +28,11 @@ Owns a finite sequence $(x_1,\ldots,x_n)$ of real values.
 <a id="symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"></a>
 ### `Scientific.Analysis.TGaussianFunction`
 
-**Kind:** `class`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:25:20`
+**Kind:** `class`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:25:20`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L25)
+
+**Relationships:**
+
+- Inherits from [`TRealFunction`](Scientific.Core.md#symbol-scientific-core-trealfunction-58d841dcd63cc0c9)
 
 ```pascal
 TGaussianFunction = class(TRealFunction)
@@ -47,7 +51,7 @@ $$
 <a id="symbol-scientific-analysis-arithmeticmean-32bb31d6362baf9d"></a>
 ### `Scientific.Analysis.ArithmeticMean`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:113:24`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:113:24`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L113)
 
 ```pascal
 function ArithmeticMean(const Values: Array of Double): Double
@@ -77,7 +81,7 @@ Their arithmetic mean $\bar{x}$.
 <a id="symbol-scientific-analysis-entropy-d5b13cab52c688ec"></a>
 ### `Scientific.Analysis.Entropy`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:151:17`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:151:17`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L151)
 
 ```pascal
 function Entropy(const Probabilities: Array of Double): Double
@@ -108,7 +112,7 @@ The information entropy $H(P)$ in bits.
 <a id="symbol-scientific-analysis-logistic-82af6173e9041dc9"></a>
 ### `Scientific.Analysis.Logistic`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:58:18`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:58:18`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L58)
 
 ```pascal
 function Logistic(const X: Double): Double
@@ -132,7 +136,7 @@ A value strictly between zero and one.
 <a id="symbol-scientific-analysis-newtonstep-06f8729a1729c0f4"></a>
 ### `Scientific.Analysis.NewtonStep`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:85:20`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:85:20`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L85)
 
 ```pascal
 function NewtonStep(
@@ -168,7 +172,7 @@ The next approximation $x_{k+1}$.
 <a id="symbol-scientific-analysis-normalpdf-e5fe8f59d32c3ffa"></a>
 ### `Scientific.Analysis.NormalPDF`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:72:19`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:72:19`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L72)
 
 ```pascal
 function NormalPDF(
@@ -205,7 +209,7 @@ The normal density $p(x)$.
 <a id="symbol-scientific-analysis-populationvariance-58d817a56398aab5"></a>
 ### `Scientific.Analysis.PopulationVariance`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:124:28`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:124:28`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L124)
 
 ```pascal
 function PopulationVariance(const Values: Array of Double): Double
@@ -235,7 +239,7 @@ Their population variance $\sigma^2$.
 <a id="symbol-scientific-analysis-simpsonestimate-49bedd72e6d0699c"></a>
 ### `Scientific.Analysis.SimpsonEstimate`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:101:25`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:101:25`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L101)
 
 ```pascal
 function SimpsonEstimate(
@@ -268,7 +272,7 @@ The Simpson estimate of the definite integral.
 <a id="symbol-scientific-analysis-softmax-9058366060f8b88c"></a>
 ### `Scientific.Analysis.Softmax`
 
-**Kind:** `routine`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:139:17`
+**Kind:** `routine`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:139:17`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L139)
 
 ```pascal
 function Softmax(const Values: Array of Double): TDoubleArray
@@ -298,7 +302,7 @@ Probabilities whose sum is one, or an empty sequence.
 <a id="symbol-scientific-analysis-tgaussianfunction-create-1444eec387cfd1a5"></a>
 ### `Scientific.Analysis.TGaussianFunction.Create`
 
-**Kind:** `constructor`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:35:23`
+**Kind:** `constructor`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:35:23`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L35)
 
 **Parent:** [`Scientific.Analysis.TGaussianFunction`](#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487)
 
@@ -324,7 +328,7 @@ Creates $\mathcal{N}(\mu,\sigma^2)$ for a positive $\sigma$.
 <a id="symbol-scientific-analysis-tgaussianfunction-evaluate-bf9e752cc02b5d70"></a>
 ### `Scientific.Analysis.TGaussianFunction.Evaluate`
 
-**Kind:** `method`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:41:22`
+**Kind:** `method`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:41:22`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L41)
 
 **Parent:** [`Scientific.Analysis.TGaussianFunction`](#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487)
 
@@ -347,7 +351,7 @@ The density $\mathcal{N}(x\mid\mu,\sigma^2)$.
 <a id="symbol-scientific-analysis-tgaussianfunction-mean-0a1055396fe14598"></a>
 ### `Scientific.Analysis.TGaussianFunction.Mean`
 
-**Kind:** `property`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:44:18`
+**Kind:** `property`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:44:18`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L44)
 
 **Parent:** [`Scientific.Analysis.TGaussianFunction`](#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487)
 
@@ -360,7 +364,7 @@ Distribution mean $\mu=\mathbb{E}[X]$.
 <a id="symbol-scientific-analysis-tgaussianfunction-standarddeviation-8f4e58e1f2de6bd0"></a>
 ### `Scientific.Analysis.TGaussianFunction.StandardDeviation`
 
-**Kind:** `property`; **Visibility:** `public`; **Source:** `Scientific.Analysis.pas:47:31`
+**Kind:** `property`; **Visibility:** `public`; **Source:** [`Scientific.Analysis.pas:47:31`](https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L47)
 
 **Parent:** [`Scientific.Analysis.TGaussianFunction`](#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487)
 

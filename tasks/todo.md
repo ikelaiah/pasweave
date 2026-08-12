@@ -1,10 +1,12 @@
-# v0.4.0 task checklist
+# v0.5.0 task checklist
 
-- [x] Stable coded diagnostics and machine-readable output
-- [x] Parsed-signature parameter and return validation
-- [x] Conservative, model-level `@see` resolution
-- [x] Generated-link, anchor, and page-route integrity checks
-- [x] Coverage and diagnostic CI thresholds
-- [x] Slash, brace, and paren regression fixtures
-- [x] Markdown and HTML shared resolved-link rendering
-- [x] Documentation, release metadata, and final validation
+- [x] Validated repository URL and deterministic source-link template contract
+- [x] Normalized root-relative, line-aware source links in HTML and Markdown
+- [x] Consistent `@see`, dependency, parent, and type-relationship navigation
+- [x] Offline search filters for unit, kind, visibility, and documentation
+- [x] Keyboard-accessible search, visible focus, and useful empty states
+- [x] Stable URL and anchor regression coverage
+- [ ] Published GitHub Pages scientific showcase (workflow is ready)
+- [x] Example, nested multi-package, and `mathlib-fp` validation evidence
+- [x] README, detailed docs, changelog, roadmap, release note, and version bump
+- [x] Full verification and five-axis review

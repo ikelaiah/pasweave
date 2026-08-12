@@ -7,7 +7,7 @@ the triple-slash form because `slash` is the default documentation style.
 Build PasWeave from the repository root, then generate the example site:
 
 ```text
-build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example"
+build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example" --repository-url=https://github.com/ikelaiah/pasweave '--source-link-template=blob/main/examples/documented-api/{path}#L{line}'
 ```
 
 On Windows, use `build\bin\pasweave.exe` if your shell does not resolve the
@@ -17,7 +17,8 @@ afterward.
 The generated index reports `10 of 10 API symbols documented`: five in
 `Demo.Core` and five in `Demo.Services`. It also demonstrates structured
 directives, inline mathematics, a project dependency, class inheritance,
-offline search, and the interactive diagrams.
+line-aware repository links, filtered offline search, and the interactive
+diagrams.
 
 A compact generated snapshot is checked in for visitors who want to inspect
 the output before building PasWeave:

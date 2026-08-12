@@ -21,7 +21,29 @@
 <div class="site-search" data-search-container>
 <label class="sr-only" for="site-search">Search API</label>
 <input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
-<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+<div id="search-results" class="search-panel" data-search-panel hidden>
+<fieldset class="search-filters"><legend class="sr-only">Search filters</legend>
+<label>Unit<select data-search-unit><option value="">All units</option>
+<option value="Demo.Core">Demo.Core</option>
+<option value="Demo.Services">Demo.Services</option>
+</select></label>
+<label>Kind<select data-search-kind><option value="">All kinds</option>
+<option value="class">class</option>
+<option value="constructor">constructor</option>
+<option value="enumeration">enumeration</option>
+<option value="method">method</option>
+<option value="property">property</option>
+<option value="routine">routine</option>
+<option value="unit">unit</option>
+</select></label>
+<label>Visibility<select data-search-visibility><option value="">All visibilities</option>
+<option value="default">default</option>
+<option value="public">public</option>
+</select></label>
+<label>Documentation<select data-search-documentation><option value="">Any status</option><option value="documented">Documented</option><option value="undocumented">Undocumented</option></select></label>
+</fieldset>
+<p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
+</div>
 </div>
 </div>
 </header>
@@ -29,7 +51,7 @@
 <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Demo.Services</span></nav>
 <section class="unit-heading">
 <p class="eyebrow">Unit</p><h1><code>Demo.Services</code></h1>
-<p>Declared in <code>Demo.Services.pas</code></p></section>
+<p>Declared in <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Services.pas#L2"><code>Demo.Services.pas</code></a></p></section>
 <div class="prose">
 <p>Demonstrates documented APIs that depend on another project unit.</p>
 </div>
@@ -46,7 +68,10 @@
 <div><span class="kind-badge">class</span><h3><code>Demo.Services.TNamedGreeter</code></h3></div>
 <a class="permalink" href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d" aria-label="Permanent link to Demo.Services.TNamedGreeter">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:13:16</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Services.pas#L13"><code>Demo.Services.pas:13:16</code></a></span></p>
+<div class="type-relationships"><strong>Relationships:</strong><ul>
+<li>Inherits from <a href="Demo.Core.html#symbol-demo-core-tgreeter-fb605899cec8779b"><code>TGreeter</code></a></li>
+</ul></div>
 <pre class="declaration"><code class="language-pascal">
 TNamedGreeter = class(TGreeter)
 end
@@ -63,7 +88,7 @@ end
 <div><span class="kind-badge">constructor</span><h3><code>Demo.Services.TNamedGreeter.Create</code></h3></div>
 <a class="permalink" href="#symbol-demo-services-tnamedgreeter-create-495e8336f5e7fef9" aria-label="Permanent link to Demo.Services.TNamedGreeter.Create">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:20:23</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Services.pas#L20"><code>Demo.Services.pas:20:23</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d"><code>Demo.Services.TNamedGreeter</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 constructor Create(const AName: string)
@@ -83,7 +108,7 @@ constructor Create(const AName: string)
 <div><span class="kind-badge">property</span><h3><code>Demo.Services.TNamedGreeter.Name</code></h3></div>
 <a class="permalink" href="#symbol-demo-services-tnamedgreeter-name-65470d0c8492e87a" aria-label="Permanent link to Demo.Services.TNamedGreeter.Name">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:28:18</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Services.pas#L28"><code>Demo.Services.pas:28:18</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d"><code>Demo.Services.TNamedGreeter</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 Name : string
@@ -97,7 +122,7 @@ Name : string
 <div><span class="kind-badge">method</span><h3><code>Demo.Services.TNamedGreeter.Welcome</code></h3></div>
 <a class="permalink" href="#symbol-demo-services-tnamedgreeter-welcome-39c026d5b69e81c2" aria-label="Permanent link to Demo.Services.TNamedGreeter.Welcome">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Demo.Services.pas:25:21</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/documented-api/Demo.Services.pas#L25"><code>Demo.Services.pas:25:21</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d"><code>Demo.Services.TNamedGreeter</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 function Welcome: string

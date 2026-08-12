@@ -23,7 +23,29 @@
 <div class="site-search" data-search-container>
 <label class="sr-only" for="site-search">Search API</label>
 <input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
-<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+<div id="search-results" class="search-panel" data-search-panel hidden>
+<fieldset class="search-filters"><legend class="sr-only">Search filters</legend>
+<label>Unit<select data-search-unit><option value="">All units</option>
+<option value="Demo.Core">Demo.Core</option>
+<option value="Demo.Services">Demo.Services</option>
+</select></label>
+<label>Kind<select data-search-kind><option value="">All kinds</option>
+<option value="class">class</option>
+<option value="constructor">constructor</option>
+<option value="enumeration">enumeration</option>
+<option value="method">method</option>
+<option value="property">property</option>
+<option value="routine">routine</option>
+<option value="unit">unit</option>
+</select></label>
+<label>Visibility<select data-search-visibility><option value="">All visibilities</option>
+<option value="default">default</option>
+<option value="public">public</option>
+</select></label>
+<label>Documentation<select data-search-documentation><option value="">Any status</option><option value="documented">Documented</option><option value="undocumented">Undocumented</option></select></label>
+</fieldset>
+<p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
+</div>
 </div>
 </div>
 </header>

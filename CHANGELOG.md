@@ -7,6 +7,45 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-12
+
+### Added
+
+- Paired `--repository-url` and `--source-link-template` options with strict
+  origin, traversal, placeholder, path, and declaration-line validation.
+- Model-backed source links in HTML and Markdown plus additive schema-v1
+  repository metadata in `api-model.json`.
+- Unit, symbol-kind, visibility, and documentation-status facets for the
+  dependency-free offline search index.
+- Keyboard result navigation, polite result status, explicit empty states,
+  visible focus, and narrow-screen search layout.
+- Per-symbol inheritance and implementation links in HTML and Markdown using
+  the same resolved model identities as relationship diagrams.
+- A GitHub Pages workflow that builds, validates, publishes, and smoke-checks
+  the scientific API showcase from committed sources.
+
+### Changed
+
+- Resolved `@see`, dependency, parent, inheritance, and implementation links
+  now share stable symbol-link helpers across renderers.
+- Checked-in example output now includes repository source links without
+  changing generated unit routes or overload-aware anchors.
+- Version metadata and portable-build defaults now report v0.5.0.
+
+### Validation
+
+- The complete FPC 3.2.2 test suite, CLI build, production build, and portable
+  Windows release smoke test pass.
+- Browser checks cover search filtering and keyboard focus, empty results,
+  Mermaid and KaTeX runtime output, console errors, and 320-pixel responsive
+  layout.
+- The three-unit nested Lazarus fixture produced six symbols and six source
+  links with no warnings, errors, or escaping URLs.
+- Two runs of pinned 45-unit `mathlib-fp` produced 2,338 symbols, 2,227
+  searchable source links, zero errors or escaping URLs, and the identical
+  full-tree SHA-256 digest
+  `467EC29C5BE937C6A22165E18ADAD9A72FF8C3715C463518F1A779BF4596A826`.
+
 ## [0.4.0] - 2026-08-10
 
 ### Added
@@ -154,7 +193,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/ikelaiah/pasweave/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ikelaiah/pasweave/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ikelaiah/pasweave/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ikelaiah/pasweave/compare/v0.1.0-alpha.1...v0.2.0

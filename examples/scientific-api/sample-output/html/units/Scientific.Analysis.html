@@ -21,7 +21,32 @@
 <div class="site-search" data-search-container>
 <label class="sr-only" for="site-search">Search API</label>
 <input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
-<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+<div id="search-results" class="search-panel" data-search-panel hidden>
+<fieldset class="search-filters"><legend class="sr-only">Search filters</legend>
+<label>Unit<select data-search-unit><option value="">All units</option>
+<option value="Scientific.Analysis">Scientific.Analysis</option>
+<option value="Scientific.Core">Scientific.Core</option>
+</select></label>
+<label>Kind<select data-search-kind><option value="">All kinds</option>
+<option value="class">class</option>
+<option value="constructor">constructor</option>
+<option value="field">field</option>
+<option value="interface">interface</option>
+<option value="method">method</option>
+<option value="property">property</option>
+<option value="record">record</option>
+<option value="routine">routine</option>
+<option value="type-alias">type-alias</option>
+<option value="unit">unit</option>
+</select></label>
+<label>Visibility<select data-search-visibility><option value="">All visibilities</option>
+<option value="default">default</option>
+<option value="public">public</option>
+</select></label>
+<label>Documentation<select data-search-documentation><option value="">Any status</option><option value="documented">Documented</option><option value="undocumented">Undocumented</option></select></label>
+</fieldset>
+<p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
+</div>
 </div>
 </div>
 </header>
@@ -29,7 +54,7 @@
 <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Scientific.Analysis</span></nav>
 <section class="unit-heading">
 <p class="eyebrow">Unit</p><h1><code>Scientific.Analysis</code></h1>
-<p>Declared in <code>Scientific.Analysis.pas</code></p></section>
+<p>Declared in <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L5"><code>Scientific.Analysis.pas</code></a></p></section>
 <div class="prose">
 <p>Provides numerical methods and elementary statistical transforms. The routines illustrate documentation ranging from short inline symbols such as <span class="math-inline" data-math-inline>$\mu$</span> and <span class="math-inline" data-math-inline>$\sigma$</span> to complete display equations.</p>
 </div>
@@ -46,7 +71,7 @@
 <div><span class="kind-badge">type-alias</span><h3><code>Scientific.Analysis.TDoubleArray</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-tdoublearray-62038572069cc187" aria-label="Permanent link to Scientific.Analysis.TDoubleArray">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:16:15</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L16"><code>Scientific.Analysis.pas:16:15</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 TDoubleArray = Array of Double
 </code></pre>
@@ -59,7 +84,10 @@ TDoubleArray = Array of Double
 <div><span class="kind-badge">class</span><h3><code>Scientific.Analysis.TGaussianFunction</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:25:20</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L25"><code>Scientific.Analysis.pas:25:20</code></a></span></p>
+<div class="type-relationships"><strong>Relationships:</strong><ul>
+<li>Inherits from <a href="Scientific.Core.html#symbol-scientific-core-trealfunction-58d841dcd63cc0c9"><code>TRealFunction</code></a></li>
+</ul></div>
 <pre class="declaration"><code class="language-pascal">
 TGaussianFunction = class(TRealFunction)
 end
@@ -83,7 +111,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.ArithmeticMean</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-arithmeticmean-32bb31d6362baf9d" aria-label="Permanent link to Scientific.Analysis.ArithmeticMean">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:113:24</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L113"><code>Scientific.Analysis.pas:113:24</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function ArithmeticMean(const Values: Array of Double): Double
 </code></pre>
@@ -117,7 +145,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.Entropy</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-entropy-d5b13cab52c688ec" aria-label="Permanent link to Scientific.Analysis.Entropy">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:151:17</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L151"><code>Scientific.Analysis.pas:151:17</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Entropy(const Probabilities: Array of Double): Double
 </code></pre>
@@ -152,7 +180,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.Logistic</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-logistic-82af6173e9041dc9" aria-label="Permanent link to Scientific.Analysis.Logistic">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:58:18</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L58"><code>Scientific.Analysis.pas:58:18</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Logistic(const X: Double): Double
 </code></pre>
@@ -180,7 +208,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.NewtonStep</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-newtonstep-06f8729a1729c0f4" aria-label="Permanent link to Scientific.Analysis.NewtonStep">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:85:20</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L85"><code>Scientific.Analysis.pas:85:20</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function NewtonStep(
   const F: IRealFunction;
@@ -220,7 +248,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.NormalPDF</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-normalpdf-e5fe8f59d32c3ffa" aria-label="Permanent link to Scientific.Analysis.NormalPDF">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:72:19</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L72"><code>Scientific.Analysis.pas:72:19</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function NormalPDF(
   const X: Double;
@@ -261,7 +289,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.PopulationVariance</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-populationvariance-58d817a56398aab5" aria-label="Permanent link to Scientific.Analysis.PopulationVariance">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:124:28</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L124"><code>Scientific.Analysis.pas:124:28</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function PopulationVariance(const Values: Array of Double): Double
 </code></pre>
@@ -295,7 +323,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.SimpsonEstimate</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-simpsonestimate-49bedd72e6d0699c" aria-label="Permanent link to Scientific.Analysis.SimpsonEstimate">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:101:25</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L101"><code>Scientific.Analysis.pas:101:25</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function SimpsonEstimate(
   const F: IRealFunction;
@@ -332,7 +360,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Analysis.Softmax</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-softmax-9058366060f8b88c" aria-label="Permanent link to Scientific.Analysis.Softmax">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:139:17</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L139"><code>Scientific.Analysis.pas:139:17</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Softmax(const Values: Array of Double): TDoubleArray
 </code></pre>
@@ -366,7 +394,7 @@ $$
 <div><span class="kind-badge">constructor</span><h3><code>Scientific.Analysis.TGaussianFunction.Create</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-create-1444eec387cfd1a5" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.Create">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:35:23</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L35"><code>Scientific.Analysis.pas:35:23</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 constructor Create(const AMean: Double; const AStandardDeviation: Double)
@@ -393,7 +421,7 @@ constructor Create(const AMean: Double; const AStandardDeviation: Double)
 <div><span class="kind-badge">method</span><h3><code>Scientific.Analysis.TGaussianFunction.Evaluate</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-evaluate-bf9e752cc02b5d70" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.Evaluate">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:41:22</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L41"><code>Scientific.Analysis.pas:41:22</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 function Evaluate(const X: Double): Double; override
@@ -417,7 +445,7 @@ function Evaluate(const X: Double): Double; override
 <div><span class="kind-badge">property</span><h3><code>Scientific.Analysis.TGaussianFunction.Mean</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-mean-0a1055396fe14598" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.Mean">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:44:18</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L44"><code>Scientific.Analysis.pas:44:18</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 Mean : Double
@@ -431,7 +459,7 @@ Mean : Double
 <div><span class="kind-badge">property</span><h3><code>Scientific.Analysis.TGaussianFunction.StandardDeviation</code></h3></div>
 <a class="permalink" href="#symbol-scientific-analysis-tgaussianfunction-standarddeviation-8f4e58e1f2de6bd0" aria-label="Permanent link to Scientific.Analysis.TGaussianFunction.StandardDeviation">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Analysis.pas:47:31</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Analysis.pas#L47"><code>Scientific.Analysis.pas:47:31</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-analysis-tgaussianfunction-e84b5f2e25221487"><code>Scientific.Analysis.TGaussianFunction</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 StandardDeviation : Double

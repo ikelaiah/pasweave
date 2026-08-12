@@ -11,7 +11,7 @@ implementation
 uses
   Classes, SysUtils, PasWeave.Comments, PasWeave.Compiler,
   PasWeave.Diagnostics, PasWeave.Lazarus, PasWeave.Model,
-  PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Model.JSON, PasWeave.Parser, PasWeave.SourceLinks,
   PasWeave.Render.Markdown,
   PasWeave.Render.HTML, PasWeave.Validation, PasWeave.Version;
 
@@ -27,6 +27,8 @@ begin
   WriteLn('                 [--unit-path=<directory>] [--include-path=<directory>]');
   WriteLn('                 [--define=<name>] [--target-os=<os>] [--target-cpu=<cpu>]');
   WriteLn('                 [--build-mode=<name>] [--package-path=<directory>]');
+  WriteLn('                 [--repository-url=<url>]');
+  WriteLn('                 [--source-link-template=<relative-template>]');
   WriteLn('                 [--min-documentation-coverage=<0-100>]');
   WriteLn('                 [--fail-on=<error|warning>]');
   WriteLn('                 [--verbose]');
@@ -52,6 +54,11 @@ begin
   WriteLn('  --min-documentation-coverage fails the build below the percentage');
   WriteLn('  --fail-on=error is the default; warning also fails on authoring feedback');
   WriteLn('  diagnostics.json is written beside api-model.json');
+  WriteLn;
+  WriteLn('Source links:');
+  WriteLn('  --repository-url and --source-link-template must be supplied together');
+  WriteLn('  the template is repository-relative and requires {path} and {line}');
+  WriteLn('  example: blob/main/{path}#L{line}');
   WriteLn;
   WriteLn('Documentation comment styles:');
   WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
@@ -118,6 +125,9 @@ var
   MinimumCoverage: Integer;
   HasMinimumCoverage: Boolean;
   ThresholdValue: string;
+  RepositoryURL: string;
+  SourceLinkTemplate: string;
+  SourceLinkError: string;
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
@@ -128,6 +138,8 @@ begin
   FailureSeverity := dsError;
   HasMinimumCoverage := False;
   MinimumCoverage := 0;
+  RepositoryURL := '';
+  SourceLinkTemplate := '';
   CommentStyles := DefaultDocumentationCommentStyles;
   DiscoveryOptions := TSourceDiscoveryOptions.Create;
   CompilerOptions := TCompilerOptions.Create;
@@ -225,6 +237,16 @@ begin
       else if Pos('--package-path=', ParamStr(I)) = 1 then
         PackagePaths.Add(Copy(ParamStr(I), Length('--package-path=') + 1,
           MaxInt))
+      else if ParamStr(I) = '--repository-url' then
+        RepositoryURL := RequireOptionValue(I, '--repository-url')
+      else if Pos('--repository-url=', ParamStr(I)) = 1 then
+        RepositoryURL := Copy(ParamStr(I), Length('--repository-url=') + 1,
+          MaxInt)
+      else if ParamStr(I) = '--source-link-template' then
+        SourceLinkTemplate := RequireOptionValue(I, '--source-link-template')
+      else if Pos('--source-link-template=', ParamStr(I)) = 1 then
+        SourceLinkTemplate := Copy(ParamStr(I),
+          Length('--source-link-template=') + 1, MaxInt)
       else if ParamStr(I) = '--min-documentation-coverage' then
       begin
         ThresholdValue := RequireOptionValue(I, '--min-documentation-coverage');
@@ -311,6 +333,12 @@ begin
     PackagePaths.Free;
     CompilerOptions.Free;
     DiscoveryOptions.Free;
+  end;
+  if not TryConfigureSourceLinks(Project, RepositoryURL, SourceLinkTemplate,
+    SourceLinkError) then
+  begin
+    Project.Free;
+    raise EPasWeaveInputError.Create(SourceLinkError);
   end;
   try
     if HasMinimumCoverage then

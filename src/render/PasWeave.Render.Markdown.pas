@@ -20,7 +20,7 @@ implementation
 
 uses
   Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Render.Support,
-  PasWeave.Render.Links;
+  PasWeave.Render.Links, PasWeave.SourceLinks;
 
 type
   TSymbolKinds = set of TSymbolKind;
@@ -66,14 +66,15 @@ var
   I: Integer;
   UnitModel: TDocUnit;
 begin
-  Result := TStringList.Create;
+  Result := TOrdinalStringList.Create;
   Result.Sorted := True;
   Result.CaseSensitive := True;
   Result.Duplicates := dupAccept;
   for I := 0 to AProject.Units.Count - 1 do
   begin
     UnitModel := TDocUnit(AProject.Units[I]);
-    Result.AddObject(UnitModel.Name + #1 + UnitModel.SourceFilename, UnitModel);
+    Result.AddObject(UnitModel.Name + DocumentationSortSeparator +
+      UnitModel.SourceFilename, UnitModel);
   end;
 end;
 
@@ -113,7 +114,7 @@ var
   I: Integer;
   Symbol: TDocSymbol;
 begin
-  Result := TStringList.Create;
+  Result := TOrdinalStringList.Create;
   Result.Sorted := True;
   Result.CaseSensitive := True;
   Result.Duplicates := dupAccept;
@@ -121,7 +122,7 @@ begin
   begin
     Symbol := TDocSymbol(AUnit.Symbols[I]);
     if (Symbol.Kind in AKinds) and IsEffectivelyRenderable(AUnit, Symbol) then
-      Result.AddObject(Symbol.QualifiedName + #1 + Symbol.ID, Symbol);
+      Result.AddObject(DocumentationSymbolSortKey(Symbol), Symbol);
   end;
 end;
 
@@ -313,21 +314,45 @@ begin
   AppendLine(AOutput);
 end;
 
-function SymbolLocation(ASymbol: TDocSymbol): string;
+function RenderSourceLocation(AProject: TDocProject;
+  const ASourceFilename: string; ASourceLine, ASourceColumn: Integer): UTF8String;
+var
+  Location: string;
+  URL: string;
 begin
-  Result := ASymbol.SourceFilename;
-  if ASymbol.SourceLine > 0 then
+  Location := ASourceFilename;
+  if ASourceLine > 0 then
   begin
-    Result := Result + ':' + IntToStr(ASymbol.SourceLine);
-    if ASymbol.SourceColumn > 0 then
-      Result := Result + ':' + IntToStr(ASymbol.SourceColumn);
+    Location := Location + ':' + IntToStr(ASourceLine);
+    if ASourceColumn > 0 then
+      Location := Location + ':' + IntToStr(ASourceColumn);
   end;
+  URL := SourceLinkURL(AProject, ASourceFilename, ASourceLine);
+  if URL = '' then
+    Result := '`' + UTF8String(Location) + '`'
+  else
+    Result := '[`' + UTF8String(Location) + '`](' + UTF8String(URL) + ')';
+end;
+
+function RenderSourceFile(AProject: TDocProject; const ASourceFilename: string;
+  ASourceLine: Integer): UTF8String;
+var
+  URL: string;
+begin
+  URL := SourceLinkURL(AProject, ASourceFilename, ASourceLine);
+  if URL = '' then
+    Result := '`' + UTF8String(ASourceFilename) + '`'
+  else
+    Result := '[`' + UTF8String(ASourceFilename) + '`](' + UTF8String(URL) + ')';
 end;
 
 procedure RenderSymbol(var AOutput: UTF8String; AProject: TDocProject;
   AUnit: TDocUnit; ASymbol: TDocSymbol);
 var
+  I: Integer;
   ParentSymbol: TDocSymbol;
+  Relationship: TDocTypeRelationship;
+  RelationshipLabel: string;
 begin
   AppendLine(AOutput, '<a id="' +
     UTF8String(MarkdownSymbolAnchor(ASymbol)) + '"></a>');
@@ -336,15 +361,33 @@ begin
   AppendLine(AOutput, '**Kind:** `' + UTF8String(SymbolKindName(ASymbol.Kind)) +
     '`; **Visibility:** `' +
     UTF8String(SymbolVisibilityName(ASymbol.Visibility)) +
-    '`; **Source:** `' + UTF8String(SymbolLocation(ASymbol)) + '`');
+    '`; **Source:** ' + RenderSourceLocation(AProject,
+    ASymbol.SourceFilename, ASymbol.SourceLine, ASymbol.SourceColumn));
   AppendLine(AOutput);
 
   ParentSymbol := FindSymbolByID(AUnit, ASymbol.ParentSymbolID);
   if Assigned(ParentSymbol) and (ParentSymbol.Kind <> skUnit) then
   begin
-    AppendLine(AOutput, '**Parent:** [`' +
-      UTF8String(ParentSymbol.QualifiedName) + '`](#' +
-      UTF8String(MarkdownSymbolAnchor(ParentSymbol)) + ')');
+    AppendLine(AOutput, '**Parent:** ' + RenderMarkdownSymbolLink(AProject,
+      AUnit, ParentSymbol.ID, ParentSymbol.QualifiedName));
+    AppendLine(AOutput);
+  end;
+
+  if ASymbol.TypeRelationships.Count > 0 then
+  begin
+    AppendLine(AOutput, '**Relationships:**');
+    AppendLine(AOutput);
+    for I := 0 to ASymbol.TypeRelationships.Count - 1 do
+    begin
+      Relationship := TDocTypeRelationship(ASymbol.TypeRelationships[I]);
+      if Relationship.Kind = trkImplementation then
+        RelationshipLabel := 'Implements'
+      else
+        RelationshipLabel := 'Inherits from';
+      AppendLine(AOutput, '- ' + UTF8String(RelationshipLabel) + ' ' +
+        RenderMarkdownSymbolLink(AProject, AUnit,
+        Relationship.TargetSymbolID, Relationship.DisplayName));
+    end;
     AppendLine(AOutput);
   end;
 
@@ -474,10 +517,14 @@ begin
   AppendLine(Result);
   AppendLine(Result, '[Project index](../index.md)');
   AppendLine(Result);
-  AppendLine(Result, '**Source:** `' + UTF8String(AUnit.SourceFilename) + '`');
+  ThisUnitSymbol := UnitSymbol(AUnit);
+  if Assigned(ThisUnitSymbol) then
+    AppendLine(Result, '**Source:** ' + RenderSourceFile(AProject,
+      AUnit.SourceFilename, ThisUnitSymbol.SourceLine))
+  else
+    AppendLine(Result, '**Source:** `' + UTF8String(AUnit.SourceFilename) + '`');
   AppendLine(Result);
 
-  ThisUnitSymbol := UnitSymbol(AUnit);
   if Assigned(ThisUnitSymbol) then
   begin
     if Trim(ThisUnitSymbol.MarkdownDocumentation) = '' then

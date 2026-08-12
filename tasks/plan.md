@@ -1,80 +1,94 @@
-# Implementation Plan: PasWeave v0.4.0 authoring feedback
+# Implementation Plan: PasWeave v0.5.0 navigation and source traceability
 
 ## Overview
 
-Add a deterministic, model-level authoring-validation pass. It will validate
-documentation directives and project-local references after parsing, expose
-stable coded diagnostics in both the API model and a dedicated diagnostics
-artifact, and let CI fail on coverage or warning-level feedback without making
-the default local workflow noisy.
+Add a renderer-neutral source-link contract, complete relationship navigation,
+and an accessible filtered offline search experience without changing existing
+unit URLs or stable symbol anchors. Publish the scientific example as the
+representative GitHub Pages showcase and record validation evidence for the
+examples, `mathlib-fp`, and the nested Lazarus fixture.
 
 ## Architecture decisions
 
-- Keep validation separate from the FPC adapter and renderers. The parser
-  populates parsed routine-signature data, then invokes one model-only
-  validation pass after type-relationship resolution.
-- Store a resolved `@see` symbol ID on the existing directive model. Markdown
-  and HTML therefore consume the same conservative resolution result rather
-  than independently guessing links.
-- Treat authoring-rule findings as warnings by default. Output-integrity
-  failures and an explicitly configured coverage threshold are errors; CI can
-  promote warnings with `--fail-on=warning`.
-- Preserve the existing JSON model schema version and add diagnostic fields
-  additively. Emit a separate `diagnostics.json` from those same model lists,
-  never by inspecting renderer output.
+- Store the normalized repository URL and relative source-link template in the
+  project model. Validate them at the CLI boundary, then let both renderers use
+  one URL builder over normalized root-relative source paths.
+- Accept only deterministic relative templates containing exactly one
+  `{path}` and `{line}`. Reject absolute URLs, parent traversal, query strings,
+  fragments before the line placeholder, unknown placeholders, and repository
+  URLs with query/fragment components.
+- Preserve the existing route and anchor functions. Extend shared link helpers
+  so `@see`, dependencies, parents, and resolved type relationships all use the
+  same model IDs and renderer-specific route rules.
+- Keep search dependency-free and offline. Emit explicit unit, kind,
+  visibility, and documentation-status metadata, then filter and keyboard-
+  navigate the deterministic in-memory index.
+- Publish output generated from the committed scientific example through
+  GitHub Pages; the workflow regenerates and verifies it before deployment.
 
 ## Task list
 
-### Phase 1: Validation foundation
+### Phase 1: Source traceability
 
-- [x] Add stable diagnostic codes, routine-signature model data, and
-  deterministic diagnostics JSON serialization.
-- [x] Add parser-independent authoring validation for parameter, return, and
-  conservative project-local `@see` rules.
-- [x] Add focused slash, brace, and paren fixtures plus failing validation
-  tests before the implementation.
+- [x] Task 1: Add failing model/CLI tests for accepted and rejected repository
+  URL plus source-link templates.
+- [x] Task 2: Implement normalized source-link configuration and shared,
+  line-aware URL generation for units and symbols.
+- [x] Task 3: Render source links consistently in Markdown and HTML and expose
+  the additive configuration in JSON.
 
-### Checkpoint: Model validation
+### Checkpoint: Source links
 
-- [x] Focused validation tests pass.
-- [x] Existing parser and renderer tests stay green.
+- [x] Focused tests prove root-relative normalization, line fragments,
+  escaping rejection, deterministic output, and unchanged output when source
+  links are not configured.
+- [x] The full parser/renderer suite remains green.
 
-### Phase 2: Build integrity and CI controls
+### Phase 2: Navigation and offline search
 
-- [x] Validate rendered-route invariants: duplicate anchors/pages, dangling
-  generated links, and route reachability as build defects.
-- [x] Add coverage calculation, `--min-documentation-coverage`, and
-  `--fail-on` CLI behavior.
-- [x] Write `diagnostics.json` alongside `api-model.json`.
+- [x] Task 4: Add failing renderer tests for relationship-link parity and
+  search metadata/filter controls.
+- [x] Task 5: Complete dependency, parent, resolved `@see`, and type-
+  relationship links in both Markdown and HTML without changing routes or
+  anchors.
+- [x] Task 6: Add unit, symbol-kind, visibility, and documentation-status
+  filters plus keyboard result navigation, visible focus, live status, and
+  useful empty states.
 
-### Checkpoint: CI behavior
+### Checkpoint: Navigation
 
-- [x] The executable reports coded diagnostics and exits according to the
-  configured failure severity.
-- [x] HTML and Markdown consume resolved `@see` IDs consistently.
+- [x] Focused tests cover filters, ArrowUp/ArrowDown/Enter/Escape behavior,
+  visible focus styles, zero matches, and consistent link targets.
+- [x] Search remains a local JavaScript asset and generated files remain
+  deterministic UTF-8 with LF endings.
 
-### Phase 3: Release contract
+### Phase 3: Showcase, validation, and release contract
 
-- [x] Document diagnostic codes, severities, CI usage, and the validation
-  design decision.
-- [x] Update README, changelog, roadmap, release note, and version metadata.
-- [x] Run the full suite, build the executable, perform focused CLI smoke
-  checks, and review the change across correctness, architecture, security,
-  and performance.
+- [x] Task 7: Add a GitHub Pages workflow and committed scientific showcase
+  generated with repository source links.
+- [x] Task 8: Validate examples, the nested multi-package fixture, and
+  `mathlib-fp`; record routes, filters, accessibility, math, diagrams, and
+  stable-link evidence.
+- [x] Task 9: Update README, detailed docs, changelog, roadmap, release note,
+  release/version metadata, and sample outputs.
+- [x] Task 10: Run the complete suite, production/portable builds where
+  available, deterministic regeneration checks, and a five-axis code review.
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| FPC routine forms are varied | Incorrect `@param` checks | Capture names directly from the parser AST, not declaration text. |
-| A guessed `@see` link misleads readers | Incorrect navigation | Resolve only current-unit, qualified, or dependency-unit candidates; ambiguity remains unresolved. |
-| New warnings disrupt local use | Poor adoption | Warning diagnostics do not change the default successful exit status. |
-| Renderer drift reintroduces broken links | Broken generated navigation | Renderers use the resolved directive ID and validation checks route/anchor invariants. |
+| Template expansion permits navigation outside the repository URL | Unsafe or misleading source links | Accept a constrained relative grammar and validate both the template and expanded URL. |
+| New search controls make keyboard use harder | Accessibility regression | Use native labelled controls, a live result count, roving result focus, and runtime browser checks. |
+| Renderer-specific link logic drifts | HTML and Markdown disagree | Resolve identities in the model and centralize route construction in shared helpers. |
+| Regenerated examples create noisy unrelated diffs | Review and stability risk | Keep anchors/routes unchanged and compare deterministic snapshots before updating them. |
+| GitHub Pages cannot deploy before merge | Milestone evidence is incomplete | Prepare and locally verify the workflow/site; report the exact external merge/deployment step if this branch cannot publish directly. |
 
 ## Definition of done
 
-- [x] Branch is `release/v0.5.0` as requested.
-- [x] v0.4.0 exit criteria are documented and covered across all three accepted
-  documentation-comment forms.
-- [x] The full test suite and production build pass.
-- [x] Direct input and default `///` rendering continue to work end to end.
+- [x] Branch is `release/v0.5.0`.
+- [ ] Every v0.5.0 roadmap exit criterion has code, fixtures, documentation,
+  or explicit deployed-site evidence.
+- [x] Existing unit URLs and symbol anchors are unchanged.
+- [x] Full tests and production build pass, and direct-file/default-`///`
+  workflows still work end to end.

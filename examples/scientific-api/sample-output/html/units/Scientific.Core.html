@@ -21,7 +21,32 @@
 <div class="site-search" data-search-container>
 <label class="sr-only" for="site-search">Search API</label>
 <input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
-<div id="search-results" class="search-panel" data-search-panel hidden><p class="search-status" data-search-status></p><ul data-search-results></ul></div>
+<div id="search-results" class="search-panel" data-search-panel hidden>
+<fieldset class="search-filters"><legend class="sr-only">Search filters</legend>
+<label>Unit<select data-search-unit><option value="">All units</option>
+<option value="Scientific.Analysis">Scientific.Analysis</option>
+<option value="Scientific.Core">Scientific.Core</option>
+</select></label>
+<label>Kind<select data-search-kind><option value="">All kinds</option>
+<option value="class">class</option>
+<option value="constructor">constructor</option>
+<option value="field">field</option>
+<option value="interface">interface</option>
+<option value="method">method</option>
+<option value="property">property</option>
+<option value="record">record</option>
+<option value="routine">routine</option>
+<option value="type-alias">type-alias</option>
+<option value="unit">unit</option>
+</select></label>
+<label>Visibility<select data-search-visibility><option value="">All visibilities</option>
+<option value="default">default</option>
+<option value="public">public</option>
+</select></label>
+<label>Documentation<select data-search-documentation><option value="">Any status</option><option value="documented">Documented</option><option value="undocumented">Undocumented</option></select></label>
+</fieldset>
+<p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
+</div>
 </div>
 </div>
 </header>
@@ -29,7 +54,7 @@
 <nav class="breadcrumb" aria-label="Breadcrumb"><a href="../index.html">API index</a><span aria-hidden="true">/</span><span>Scientific.Core</span></nav>
 <section class="unit-heading">
 <p class="eyebrow">Unit</p><h1><code>Scientific.Core</code></h1>
-<p>Declared in <code>Scientific.Core.pas</code></p></section>
+<p>Declared in <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L8"><code>Scientific.Core.pas</code></a></p></section>
 <div class="prose">
 <p>Defines geometric primitives and scalar-function abstractions. Vectors use Cartesian coordinates:</p>
 <div class="math-display" data-math-display>
@@ -49,7 +74,7 @@ $$
 <div><span class="kind-badge">interface</span><h3><code>Scientific.Core.IRealFunction</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-irealfunction-7542e455abe9e55d" aria-label="Permanent link to Scientific.Core.IRealFunction">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:16:16</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L16"><code>Scientific.Core.pas:16:16</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 IRealFunction = interface
 end
@@ -63,7 +88,11 @@ end
 <div><span class="kind-badge">class</span><h3><code>Scientific.Core.TRealFunction</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-trealfunction-58d841dcd63cc0c9" aria-label="Permanent link to Scientific.Core.TRealFunction">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:26:16</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L26"><code>Scientific.Core.pas:26:16</code></a></span></p>
+<div class="type-relationships"><strong>Relationships:</strong><ul>
+<li>Inherits from <code>TInterfacedObject</code></li>
+<li>Implements <a href="#symbol-scientific-core-irealfunction-7542e455abe9e55d"><code>IRealFunction</code></a></li>
+</ul></div>
 <pre class="declaration"><code class="language-pascal">
 TRealFunction = class(TInterfacedObject, IRealFunction)
 end
@@ -77,7 +106,7 @@ end
 <div><span class="kind-badge">record</span><h3><code>Scientific.Core.TVector2</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-tvector2-75d9385235314a7d" aria-label="Permanent link to Scientific.Core.TVector2">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:36:11</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L36"><code>Scientific.Core.pas:36:11</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 TVector2 = record
 end
@@ -94,7 +123,7 @@ end
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Core.AngleBetween</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-anglebetween-b9e1c2e554d472b6" aria-label="Permanent link to Scientific.Core.AngleBetween">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:123:22</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L123"><code>Scientific.Core.pas:123:22</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function AngleBetween(const A: TVector2; const B: TVector2): Double
 </code></pre>
@@ -126,7 +155,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Distance</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-distance-b680cb2a8a7a51be" aria-label="Permanent link to Scientific.Core.Distance">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:80:18</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L80"><code>Scientific.Core.pas:80:18</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Distance(const A: TVector2; const B: TVector2): Double
 </code></pre>
@@ -155,7 +184,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Dot</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-dot-8ee6776b6c79d1ca" aria-label="Permanent link to Scientific.Core.Dot">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:59:13</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L59"><code>Scientific.Core.pas:59:13</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Dot(const A: TVector2; const B: TVector2): Double
 </code></pre>
@@ -184,7 +213,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Magnitude</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-magnitude-29282b0347b7cb87" aria-label="Permanent link to Scientific.Core.Magnitude">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:69:19</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L69"><code>Scientific.Core.pas:69:19</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Magnitude(const Value: TVector2): Double
 </code></pre>
@@ -212,7 +241,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Normalize</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-normalize-8422b95fea32ee9b" aria-label="Permanent link to Scientific.Core.Normalize">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:93:19</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L93"><code>Scientific.Core.pas:93:19</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Normalize(const Value: TVector2): TVector2
 </code></pre>
@@ -242,7 +271,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Rotate</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-rotate-55b28a27294a60c3" aria-label="Permanent link to Scientific.Core.Rotate">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:109:16</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L109"><code>Scientific.Core.pas:109:16</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Rotate(const Value: TVector2; const Angle: Double): TVector2
 </code></pre>
@@ -276,7 +305,7 @@ $$
 <div><span class="kind-badge">routine</span><h3><code>Scientific.Core.Vector2</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-vector2-21cc96d192844bf4" aria-label="Permanent link to Scientific.Core.Vector2">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:48:17</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L48"><code>Scientific.Core.pas:48:17</code></a></span></p>
 <pre class="declaration"><code class="language-pascal">
 function Vector2(const X: Double; const Y: Double): TVector2
 </code></pre>
@@ -303,7 +332,7 @@ function Vector2(const X: Double; const Y: Double): TVector2
 <div><span class="kind-badge">method</span><h3><code>Scientific.Core.IRealFunction.Evaluate</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-irealfunction-evaluate-1d445661aa025b6e" aria-label="Permanent link to Scientific.Core.IRealFunction.Evaluate">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:22:22</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L22"><code>Scientific.Core.pas:22:22</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-core-irealfunction-7542e455abe9e55d"><code>Scientific.Core.IRealFunction</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 function Evaluate(const X: Double): Double
@@ -327,7 +356,7 @@ function Evaluate(const X: Double): Double
 <div><span class="kind-badge">method</span><h3><code>Scientific.Core.TRealFunction.Evaluate</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-trealfunction-evaluate-93e4b8afef78467c" aria-label="Permanent link to Scientific.Core.TRealFunction.Evaluate">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <code>Scientific.Core.pas:32:22</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>public</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L32"><code>Scientific.Core.pas:32:22</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-core-trealfunction-58d841dcd63cc0c9"><code>Scientific.Core.TRealFunction</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 function Evaluate(const X: Double): Double; virtual; abstract
@@ -351,7 +380,7 @@ function Evaluate(const X: Double): Double; virtual; abstract
 <div><span class="kind-badge">field</span><h3><code>Scientific.Core.TVector2.X</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-tvector2-x-06c946e523114366" aria-label="Permanent link to Scientific.Core.TVector2.X">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>default</code></span><span>Source <code>Scientific.Core.pas:38:5</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>default</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L38"><code>Scientific.Core.pas:38:5</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-core-tvector2-75d9385235314a7d"><code>Scientific.Core.TVector2</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 X : Double
@@ -365,7 +394,7 @@ X : Double
 <div><span class="kind-badge">field</span><h3><code>Scientific.Core.TVector2.Y</code></h3></div>
 <a class="permalink" href="#symbol-scientific-core-tvector2-y-06c947e523114519" aria-label="Permanent link to Scientific.Core.TVector2.Y">#</a>
 </div>
-<p class="symbol-meta"><span>Visibility <code>default</code></span><span>Source <code>Scientific.Core.pas:40:5</code></span></p>
+<p class="symbol-meta"><span>Visibility <code>default</code></span><span>Source <a class="source-link" href="https://github.com/ikelaiah/pasweave/blob/main/examples/scientific-api/Scientific.Core.pas#L40"><code>Scientific.Core.pas:40:5</code></a></span></p>
 <p class="parent-link">Parent: <a href="#symbol-scientific-core-tvector2-75d9385235314a7d"><code>Scientific.Core.TVector2</code></a></p>
 <pre class="declaration"><code class="language-pascal">
 Y : Double

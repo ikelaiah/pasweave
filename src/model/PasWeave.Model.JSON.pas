@@ -220,6 +220,8 @@ begin
     Root.Add('schemaVersion', 1);
     Root.Add('name', AProject.Name);
     Root.Add('sourceRoot', AProject.SourceRoot);
+    Root.Add('repositoryUrl', AProject.RepositoryURL);
+    Root.Add('sourceLinkTemplate', AProject.SourceLinkTemplate);
     Root.Add('units', UnitsToJSON(AProject.Units));
     Root.Add('warnings', DiagnosticListToJSON(AProject.Warnings));
     Root.Add('errors', DiagnosticListToJSON(AProject.Errors));

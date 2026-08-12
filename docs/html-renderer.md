@@ -36,6 +36,9 @@ rules for `file://` URLs do not disable search.
   strict-protected API. Private and strict-private symbols, including members
   beneath private parents, remain JSON-only.
 - HTML and Markdown use the same stable symbol anchors.
+- Resolved dependency, parent, `@see`, inheritance, and implementation targets
+  use model identities and those same anchors; unresolved targets remain
+  visible as plain text rather than becoming guessed links.
 - Declarations and documentation text are HTML-escaped.
 - Documentation links reject active `javascript:`, `data:`, and `vbscript:`
   schemes.
@@ -119,12 +122,29 @@ readable non-interactive view without exposing inert controls.
 ## Search
 
 The offline search index contains one entry per renderable API symbol. Entries
-include the name, qualified name, symbol kind, unit, target URL, and a short
-documentation summary. Search requires all query terms and ranks exact and
-prefix name matches ahead of general text matches. At most 24 results are
-shown at once.
+include the name, qualified name, symbol kind, unit, visibility,
+documentation status, target URL, and a short documentation summary. Search
+requires all query terms and ranks exact and prefix name matches ahead of
+general text matches. Native unit, kind, visibility, and documentation selects
+compose with the query and can also be used without text. At most 24 results
+are shown at once; the polite live status reports the total and explicitly
+states when no symbols match.
 
-Press `/` to focus search and Escape to close it.
+Press `/` to focus search, ArrowDown to enter the results, ArrowUp or
+ArrowDown to wrap through result links, and Escape to close it. Enter follows
+the focused native link. All interactive controls have a visible
+`:focus-visible` outline. At 480 CSS pixels or below the header, filters, and
+statistics reflow to a single viewport-width column.
+
+## Repository source links
+
+When both repository options are configured, unit and symbol source locations
+link to the exact declaration line in HTML and Markdown. The model owns the
+normalized repository base and relative template; a shared helper rejects
+unsafe source filenames and expands the link before either renderer escapes
+it for output. Without configuration, locations remain plain text and existing
+output routes are unchanged. See [navigation and source
+traceability](navigation-and-source-traceability.md) for the full contract.
 
 ## Markdown and mathematics
 
@@ -194,6 +214,9 @@ silently weakening the offline-output contract.
 - `PasWeave.Render.HTML.Markdown` safely converts the supported Markdown
   subset.
 - `PasWeave.Render.HTML.Assets` owns the generated stylesheet and JavaScript.
+- `PasWeave.SourceLinks` validates and expands renderer-neutral repository
+  links.
+- `PasWeave.Render.Links` owns shared symbol-target selection.
 - `PasWeave.Render.Support` owns renderer-neutral stable anchors.
 
 Brace-comment documentation is not part of the renderer. It remains a parser
