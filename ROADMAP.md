@@ -163,11 +163,11 @@ Exit criteria:
 **Outcome:** readers can move efficiently from project overview to API symbol,
 related type, and original source in both small and large documentation sets.
 
-Status: implementation and local validation completed on 2026-08-12; the
-GitHub Pages publication gate remains pending. The source-template safety
-contract, relationship-link rules, search behavior, accessibility checks,
-browser evidence, and real-project validation are recorded in [navigation and
-source traceability](docs/navigation-and-source-traceability.md),
+Status: completed on 2026-08-12. The source-template safety contract,
+relationship-link rules, search behavior, accessibility checks, browser
+evidence, deployed GitHub Pages showcase, and real-project validation are
+recorded in [navigation and source
+traceability](docs/navigation-and-source-traceability.md),
 [ADR-0002](docs/decisions/0002-repository-relative-source-links.md), the
 [changelog](CHANGELOG.md), and the v0.5.0 release note.
 
@@ -191,6 +191,26 @@ Exit criteria:
   committed example sources at `https://ikelaiah.github.io/pasweave/`, and
   validate its navigation, search, mathematics, diagrams, accessibility, and
   stable links as a deployed GitHub Pages site.
+
+## `v0.5.1` — Navigation polish
+
+**Outcome:** readers can move between units and sections without returning to
+the API index or using global symbol search.
+
+Exit criteria:
+
+- Add a keyboard-accessible unit switcher to every generated unit page.
+- Allow any unit to be reached from another unit in at most two actions.
+- Add an on-page navigator for the symbol categories present in the current
+  unit, such as types, constants, variables, routines, classes, and
+  interfaces.
+- Preserve stable unit URLs and symbol anchors.
+- Keep the API index as the canonical browse-all view.
+- Retain dependency and relationship diagrams for architectural exploration;
+  do not add declarations to a project-wide graph.
+- Preserve dependency-free offline behavior and useful no-JavaScript
+  navigation.
+- Validate keyboard navigation, responsive layout, and the deployed showcase.
 
 ## `v0.6.0` — Safe incremental builds
 
