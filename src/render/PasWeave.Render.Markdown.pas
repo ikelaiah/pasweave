@@ -121,7 +121,7 @@ begin
   begin
     Symbol := TDocSymbol(AUnit.Symbols[I]);
     if (Symbol.Kind in AKinds) and IsEffectivelyRenderable(AUnit, Symbol) then
-      Result.AddObject(Symbol.QualifiedName + #1 + Symbol.ID, Symbol);
+      Result.AddObject(DocumentationSymbolSortKey(Symbol), Symbol);
   end;
 end;
 

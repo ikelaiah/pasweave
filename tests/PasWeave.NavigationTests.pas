@@ -226,12 +226,14 @@ end;
 
 procedure CheckSearchContracts;
 var
+  AddPosition: Integer;
   AttemptedCount: Integer;
   IndexHTML: UTF8String;
   Project: TDocProject;
   Script: UTF8String;
   SearchIndex: UTF8String;
   Stylesheet: UTF8String;
+  UnitPosition: Integer;
 begin
   Project := BuildProject('tests/fixtures/SimpleUnit.pas',
     'Search filters', AttemptedCount);
@@ -254,6 +256,11 @@ begin
       'the offline search index should identify documented symbols');
     Check(Pos('"documented" : false', string(SearchIndex)) > 0,
       'the offline search index should identify undocumented symbols');
+    AddPosition := Pos('"name" : "Add"', string(SearchIndex));
+    UnitPosition := Pos('"name" : "SimpleUnit"', string(SearchIndex));
+    Check((AddPosition > 0) and (UnitPosition > AddPosition),
+      'search ordering should place API symbols before their unit entry ' +
+      'on every host platform');
   finally
     Project.Free;
   end;

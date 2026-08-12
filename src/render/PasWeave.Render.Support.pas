@@ -8,6 +8,7 @@ uses
   PasWeave.Model;
 
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
+function DocumentationSymbolSortKey(ASymbol: TDocSymbol): string;
 function EscapeHTML(const AText: string): UTF8String;
 
 implementation
@@ -18,6 +19,15 @@ uses
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
 begin
   Result := PasWeave.Model.DocumentationSymbolAnchor(ASymbol);
+end;
+
+function DocumentationSymbolSortKey(ASymbol: TDocSymbol): string;
+begin
+  if ASymbol.Kind = skUnit then
+    Result := '1'
+  else
+    Result := '0';
+  Result := Result + ASymbol.QualifiedName + #1 + ASymbol.ID;
 end;
 
 function EscapeHTML(const AText: string): UTF8String;
