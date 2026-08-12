@@ -229,6 +229,8 @@ var
   AddPosition: Integer;
   AttemptedCount: Integer;
   IndexHTML: UTF8String;
+  MemberPosition: Integer;
+  ParentPosition: Integer;
   Project: TDocProject;
   Script: UTF8String;
   SearchIndex: UTF8String;
@@ -260,6 +262,14 @@ begin
     UnitPosition := Pos('"name" : "SimpleUnit"', string(SearchIndex));
     Check((AddPosition > 0) and (UnitPosition > AddPosition),
       'search ordering should place API symbols before their unit entry ' +
+      'on every host platform');
+    MemberPosition := Pos(
+      '"qualifiedName" : "SimpleUnit.TCounter.GetValue"',
+      string(SearchIndex));
+    ParentPosition := Pos('"qualifiedName" : "SimpleUnit.TCounter"',
+      string(SearchIndex));
+    Check((MemberPosition > 0) and (ParentPosition > MemberPosition),
+      'search ordering should place a member before its prefix parent ' +
       'on every host platform');
   finally
     Project.Free;

@@ -74,14 +74,15 @@ var
   I: Integer;
   UnitModel: TDocUnit;
 begin
-  Result := TStringList.Create;
+  Result := TOrdinalStringList.Create;
   Result.Sorted := True;
   Result.CaseSensitive := True;
   Result.Duplicates := dupAccept;
   for I := 0 to AProject.Units.Count - 1 do
   begin
     UnitModel := TDocUnit(AProject.Units[I]);
-    Result.AddObject(UnitModel.Name + #1 + UnitModel.SourceFilename, UnitModel);
+    Result.AddObject(UnitModel.Name + DocumentationSortSeparator +
+      UnitModel.SourceFilename, UnitModel);
   end;
 end;
 
@@ -199,7 +200,8 @@ end;
 procedure AddRelationshipNode(ANodes: TStringList; ASymbol: TDocSymbol);
 begin
   if IndexOfObject(ANodes, ASymbol) < 0 then
-    ANodes.AddObject(ASymbol.QualifiedName + #1 + ASymbol.ID, ASymbol);
+    ANodes.AddObject(ASymbol.QualifiedName + DocumentationSortSeparator +
+      ASymbol.ID, ASymbol);
 end;
 
 function RelationshipEdgeKey(AEdge: TRelationshipDiagramEdge): string;
@@ -207,14 +209,16 @@ var
   TargetKey: string;
 begin
   if Assigned(AEdge.TargetSymbol) then
-    TargetKey := AEdge.TargetSymbol.QualifiedName + #1 +
+    TargetKey := AEdge.TargetSymbol.QualifiedName +
+      DocumentationSortSeparator +
       AEdge.TargetSymbol.ID
   else
-    TargetKey := AEdge.Relationship.TargetName + #1 +
+    TargetKey := AEdge.Relationship.TargetName + DocumentationSortSeparator +
       AEdge.Relationship.DisplayName;
-  Result := AEdge.SourceSymbol.QualifiedName + #1 +
-    TypeRelationshipKindName(AEdge.Relationship.Kind) + #1 + TargetKey +
-    #1 + AEdge.SourceSymbol.ID;
+  Result := AEdge.SourceSymbol.QualifiedName + DocumentationSortSeparator +
+    TypeRelationshipKindName(AEdge.Relationship.Kind) +
+    DocumentationSortSeparator + TargetKey + DocumentationSortSeparator +
+    AEdge.SourceSymbol.ID;
 end;
 
 procedure CollectRelationshipDiagram(AProject: TDocProject;
@@ -290,8 +294,8 @@ var
 begin
   Result := '';
   Edges := TObjectList.Create(True);
-  Nodes := TStringList.Create;
-  SortedEdges := TStringList.Create;
+  Nodes := TOrdinalStringList.Create;
+  SortedEdges := TOrdinalStringList.Create;
   try
     Nodes.Sorted := True;
     Nodes.CaseSensitive := True;
@@ -368,7 +372,7 @@ var
   I: Integer;
   Symbol: TDocSymbol;
 begin
-  Result := TStringList.Create;
+  Result := TOrdinalStringList.Create;
   Result.Sorted := True;
   Result.CaseSensitive := True;
   Result.Duplicates := dupAccept;
@@ -617,8 +621,8 @@ var
   Visibilities: TStringList;
 begin
   Units := SortedUnits(AProject);
-  Kinds := TStringList.Create;
-  Visibilities := TStringList.Create;
+  Kinds := TOrdinalStringList.Create;
+  Visibilities := TOrdinalStringList.Create;
   try
     Kinds.Sorted := True;
     Kinds.CaseSensitive := True;
@@ -855,8 +859,8 @@ var
   Verb: string;
 begin
   Edges := TObjectList.Create(True);
-  Nodes := TStringList.Create;
-  SortedEdges := TStringList.Create;
+  Nodes := TOrdinalStringList.Create;
+  SortedEdges := TOrdinalStringList.Create;
   try
     Nodes.Sorted := True;
     Nodes.CaseSensitive := True;

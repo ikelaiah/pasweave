@@ -66,14 +66,15 @@ var
   I: Integer;
   UnitModel: TDocUnit;
 begin
-  Result := TStringList.Create;
+  Result := TOrdinalStringList.Create;
   Result.Sorted := True;
   Result.CaseSensitive := True;
   Result.Duplicates := dupAccept;
   for I := 0 to AProject.Units.Count - 1 do
   begin
     UnitModel := TDocUnit(AProject.Units[I]);
-    Result.AddObject(UnitModel.Name + #1 + UnitModel.SourceFilename, UnitModel);
+    Result.AddObject(UnitModel.Name + DocumentationSortSeparator +
+      UnitModel.SourceFilename, UnitModel);
   end;
 end;
 
@@ -113,7 +114,7 @@ var
   I: Integer;
   Symbol: TDocSymbol;
 begin
-  Result := TStringList.Create;
+  Result := TOrdinalStringList.Create;
   Result.Sorted := True;
   Result.CaseSensitive := True;
   Result.Duplicates := dupAccept;
