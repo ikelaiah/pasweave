@@ -1,18 +1,27 @@
 ![PasWeave — Documentation, woven from Pascal source](assets/pasweave-banner.svg)
 
-# PasWeave
+# 🧶 PasWeave
 
-[![Version](https://img.shields.io/badge/version-0.5.0-635bff)](CHANGELOG.md)
-[![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
-[![Portable release](https://img.shields.io/badge/portable-Windows%20x86--64-2563eb)](docs/releasing.md)
-[![Model schema](https://img.shields.io/badge/model%20schema-v1-64748b)](src/model/PasWeave.Model.JSON.pas)
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
+[![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
+[![Lazarus](https://img.shields.io/badge/Lazarus-.lpi%20%7C%20.lpk-7c3aed)](docs/lazarus-projects.md)
+[![Windows](https://img.shields.io/badge/platform-Windows%20x86--64-2563eb)](docs/releasing.md)
+[![Version](https://img.shields.io/badge/version-0.5.0-635bff)](CHANGELOG.md)
+[![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-10b981)](https://github.com/ikelaiah/pasweave/releases)
+[![Tests](https://img.shields.io/github/actions/workflow/status/ikelaiah/pasweave/pages.yml?branch=main&label=tests)](https://github.com/ikelaiah/pasweave/actions/workflows/pages.yml)
+[![Documentation](https://img.shields.io/badge/docs-live-0ea5e9)](https://ikelaiah.github.io/pasweave/)
+[![Status: pre-release](https://img.shields.io/badge/status-pre--release-f59e0b)](ROADMAP.md)
 
 Modern API documentation for Free Pascal and Lazarus projects.
 
 PasWeave turns Pascal source into searchable, offline HTML documentation,
 linked Markdown, and structured JSON. Add `///` comments, run one command,
 and publish the generated files anywhere.
+
+**Zero runtime dependencies:** the portable Windows release is a single
+executable with everything PasWeave needs to generate documentation, including
+the assets for offline browsing—no installer, Free Pascal runtime, Lazarus,
+network connection, or registry changes.
 
 [View the live showcase](https://ikelaiah.github.io/pasweave/) ·
 [Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
@@ -22,7 +31,9 @@ and publish the generated files anywhere.
 > and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
 > before adopting it for production documentation.
 
-## Quick start
+<a id="quick-start"></a>
+
+## 🚀 Quick start
 
 Download the portable `pasweave.exe` from the
 [GitHub Releases page](https://github.com/ikelaiah/pasweave/releases), place it
@@ -64,18 +75,20 @@ Each build can produce:
 See [generated output](docs/generated-output.md) for the directory layout,
 format details, schema notes, and exit codes.
 
-## Why PasWeave?
+<a id="why-pasweave"></a>
 
-- **Free Pascal and Lazarus aware.** Read units directly or import project,
+## ✨ Why PasWeave?
+
+- 🧩 **Free Pascal and Lazarus aware.** Read units directly or import project,
   package, build-mode, path, define, and target settings from `.lpi` and
   `.lpk` files.
-- **Works offline.** Search, diagrams, KaTeX, styles, and fonts are included in
-  the generated HTML.
-- **Easy to navigate.** Stable overload-aware anchors, source links,
+- 📦 **Zero runtime dependencies.** The portable Windows executable bundles
+  search, diagrams, KaTeX, styles, and fonts for completely offline use.
+- 🔎 **Easy to navigate.** Stable overload-aware anchors, source links,
   dependency diagrams, and class/interface relationships connect the API.
-- **Useful while authoring.** Find undocumented symbols, broken references,
+- ✅ **Useful while authoring.** Find undocumented symbols, broken references,
   malformed directives, and coverage regressions before publishing.
-- **Automation friendly.** Deterministic Markdown and JSON make diffs and CI
+- ⚙️ **Automation friendly.** Deterministic Markdown and JSON make diffs and CI
   checks predictable.
 
 ## Document an API
