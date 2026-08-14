@@ -224,6 +224,102 @@ begin
   end;
 end;
 
+procedure CheckUnitPageNavigation;
+var
+  AttemptedCount: Integer;
+  ConsumerPosition: Integer;
+  CoreHTML: UTF8String;
+  CorePosition: Integer;
+  CoreUnit: TDocUnit;
+  I: Integer;
+  IndependentHTML: UTF8String;
+  IndependentPosition: Integer;
+  IndependentUnit: TDocUnit;
+  LeafHTML: UTF8String;
+  LeafPosition: Integer;
+  LeafUnit: TDocUnit;
+  Project: TDocProject;
+  UnitHTML: UTF8String;
+  UnitModel: TDocUnit;
+begin
+  Project := BuildProject('tests/fixtures/dependencies',
+    'Unit page navigation', AttemptedCount);
+  try
+    Check((AttemptedCount = 4) and (Project.Units.Count = 4),
+      'unit navigation requires all four dependency fixtures');
+    CoreUnit := FindUnit(Project, 'DependencyCore');
+    LeafUnit := FindUnit(Project, 'DependencyLeaf');
+    IndependentUnit := FindUnit(Project, 'IndependentUnit');
+    Check(Assigned(CoreUnit) and Assigned(LeafUnit) and
+      Assigned(IndependentUnit),
+      'unit navigation requires the type, routine, and value fixtures');
+
+    for I := 0 to Project.Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Project.Units[I]);
+      UnitHTML := RenderHTMLUnit(Project, UnitModel);
+      Check(Pos('<details class="unit-switcher" data-unit-switcher>',
+        string(UnitHTML)) > 0,
+        'every unit page should expose the native unit switcher');
+      Check(Pos('data-unit-switcher-filter', string(UnitHTML)) > 0,
+        'every unit switcher should expose its local search field');
+      Check(Pos('href="DependencyConsumer.html"', string(UnitHTML)) > 0,
+        'every unit page should directly link DependencyConsumer');
+      Check(Pos('href="DependencyCore.html"', string(UnitHTML)) > 0,
+        'every unit page should directly link DependencyCore');
+      Check(Pos('href="DependencyLeaf.html"', string(UnitHTML)) > 0,
+        'every unit page should directly link DependencyLeaf');
+      Check(Pos('href="IndependentUnit.html"', string(UnitHTML)) > 0,
+        'every unit page should directly link IndependentUnit');
+      Check(Pos('href="' + HTMLUnitFilename(UnitModel) +
+        '" aria-current="page"', string(UnitHTML)) > 0,
+        'the current unit link should expose page state');
+      Check(Pos('href="../index.html">API index</a>',
+        string(UnitHTML)) > 0,
+        'the API index should remain the canonical browse-all destination');
+    end;
+
+    LeafHTML := RenderHTMLUnit(Project, LeafUnit);
+    ConsumerPosition := Pos('href="DependencyConsumer.html"',
+      string(LeafHTML));
+    CorePosition := Pos('href="DependencyCore.html"', string(LeafHTML));
+    LeafPosition := Pos('href="DependencyLeaf.html"', string(LeafHTML));
+    IndependentPosition := Pos('href="IndependentUnit.html"',
+      string(LeafHTML));
+    Check((ConsumerPosition > 0) and (CorePosition > ConsumerPosition) and
+      (LeafPosition > CorePosition) and
+      (IndependentPosition > LeafPosition),
+      'the switcher should list units in deterministic alphabetical order');
+    Check(Pos('<nav class="page-navigator" aria-label="On this page">',
+      string(LeafHTML)) > 0,
+      'unit pages should expose a labelled on-page navigator');
+    Check(Pos('href="#routines">Routines</a>', string(LeafHTML)) > 0,
+      'the routine fixture should link its rendered routine group');
+    Check(Pos('href="#types">Types</a>', string(LeafHTML)) = 0,
+      'the routine fixture should not link an absent type group');
+    Check(Pos('href="#members">Members</a>', string(LeafHTML)) = 0,
+      'the routine fixture should not link an absent member group');
+    Check(Pos('href="#values">Constants and variables</a>',
+      string(LeafHTML)) = 0,
+      'the routine fixture should not link an absent value group');
+
+    CoreHTML := RenderHTMLUnit(Project, CoreUnit);
+    Check(Pos('href="#types">Types</a>', string(CoreHTML)) > 0,
+      'the type fixture should link its rendered type group');
+    Check(Pos('href="#routines">Routines</a>', string(CoreHTML)) = 0,
+      'the type fixture should not link an absent routine group');
+
+    IndependentHTML := RenderHTMLUnit(Project, IndependentUnit);
+    Check(Pos('href="#values">Constants and variables</a>',
+      string(IndependentHTML)) > 0,
+      'the value fixture should link its rendered value group');
+    Check(HTMLUnitFilename(LeafUnit) = 'DependencyLeaf.html',
+      'navigation polish must preserve stable unit filenames');
+  finally
+    Project.Free;
+  end;
+end;
+
 procedure CheckSearchContracts;
 var
   AddPosition: Integer;
@@ -289,6 +385,18 @@ begin
   Check(Pos('No symbols match the current search and filters.',
     string(Script)) > 0,
     'search should provide a useful filtered empty state');
+  Check(Pos('[data-unit-switcher]', string(Script)) > 0,
+    'unit navigation should be progressively enhanced when present');
+  Check(Pos('[data-unit-switcher-filter]', string(Script)) > 0,
+    'unit navigation should expose client-side filtering');
+  Check(Pos('item.hidden =', string(Script)) > 0,
+    'unit filtering should preserve the native link list and hide mismatches');
+  Check(Pos('No units match', string(Script)) > 0,
+    'unit filtering should announce a useful empty state');
+  Check(Pos('moveUnitFocus', string(Script)) > 0,
+    'unit navigation should support arrow-key focus movement');
+  Check(Pos('unitSwitcher.open = false', string(Script)) > 0,
+    'Escape should close the unit switcher');
 
   Stylesheet := HTMLStylesheet;
   Check(Pos(':focus-visible', string(Stylesheet)) > 0,
@@ -298,6 +406,22 @@ begin
   Check(Pos('.stats { grid-template-columns: 1fr; }',
     string(Stylesheet)) > 0,
     'phone-width statistics should not force horizontal overflow');
+  Check(Pos('.unit-switcher-panel {', string(Stylesheet)) > 0,
+    'the unit switcher should have a distinct, usable panel');
+  Check(Pos('.unit-switcher-list {', string(Stylesheet)) > 0,
+    'the unit link list should have dedicated layout rules');
+  Check(Pos('overflow-y: auto', string(Stylesheet)) > 0,
+    'large projects should keep the unit list within the viewport');
+  Check(Pos('.page-navigator {', string(Stylesheet)) > 0,
+    'symbol categories should have a compact on-page navigator');
+  Check(Pos('.symbol-group { scroll-margin-top:', string(Stylesheet)) > 0,
+    'category links should account for the sticky site header');
+  Check(Pos('  .unit-navigation { grid-template-columns: 1fr; }',
+    string(Stylesheet)) > 0,
+    'unit navigation should stack at narrow widths');
+  Check(Pos('  .unit-switcher-panel { position: static;',
+    string(Stylesheet)) > 0,
+    'the switcher panel should stay within a phone viewport');
 end;
 
 procedure RunNavigationTests;
@@ -305,6 +429,7 @@ begin
   CheckSourceLinkConfiguration;
   CheckRenderedSourceLinks;
   CheckRelationshipNavigation;
+  CheckUnitPageNavigation;
   CheckSearchContracts;
 end;
 
