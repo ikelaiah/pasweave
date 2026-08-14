@@ -158,13 +158,17 @@ begin
     'align-items: start; gap: 18px; margin: 24px 0 0; }');
   AppendLine(Result, '.unit-switcher { position: relative; min-width: 0; }');
   AppendLine(Result, '.unit-switcher summary { display: flex; align-items: center; ' +
-    'justify-content: space-between; gap: 12px; padding: 10px 13px; ' +
+    'justify-content: flex-start; gap: 9px; padding: 10px 13px; ' +
     'border: 1px solid var(--line); border-radius: 11px; background: ' +
     'var(--surface); color: var(--muted); font-size: .84rem; font-weight: 700; ' +
     'cursor: pointer; }');
-  AppendLine(Result, '.unit-switcher summary::marker { color: var(--accent); }');
+  AppendLine(Result, '.unit-switcher summary::before { content: "▸"; ' +
+    'flex: 0 0 auto; color: var(--accent); }');
+  AppendLine(Result, '.unit-switcher[open] summary::before { ' +
+    'transform: rotate(90deg); }');
   AppendLine(Result, '.unit-switcher-current { min-width: 0; color: var(--text); ' +
-    'font-weight: 600; overflow-wrap: anywhere; text-align: right; }');
+    'margin-left: auto; font-weight: 600; overflow-wrap: anywhere; ' +
+    'text-align: right; }');
   AppendLine(Result, '.unit-switcher-panel { position: absolute; z-index: 10; ' +
     'top: calc(100% + 8px); left: 0; width: 100%; min-width: min(320px, 90vw); ' +
     'padding: 13px; border: 1px solid var(--line); border-radius: 13px; ' +
