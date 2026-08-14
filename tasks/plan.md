@@ -82,7 +82,7 @@ all `v0.6.0+` work are out of scope.
   including no-JavaScript behavior and limitations.
 - [x] Task 10: Update changelog, roadmap status, release note, version
   metadata, portable-build default, and version regression test to `0.5.1`.
-- [ ] Task 11: Run the complete suite, production and portable builds where
+- [x] Task 11: Run the complete suite, production and portable builds where
   available, deterministic sample checks, and final five-axis review.
 
 ## Risks and mitigations
@@ -98,10 +98,10 @@ all `v0.6.0+` work are out of scope.
 
 ## Definition of done
 
-- [ ] Every `v0.5.1` exit criterion has code, focused tests, documentation, or
+- [x] Every `v0.5.1` exit criterion has code, focused tests, documentation, or
   explicit post-merge deployed-site evidence.
 - [x] No `v0.6.0+` capability or preparatory contract is introduced.
 - [x] Existing unit URLs, symbol anchors, API-index role, and diagram scope are
   unchanged.
-- [ ] Full tests and production build pass; direct-file and default-`///`
+- [x] Full tests and production build pass; direct-file and default-`///`
   workflows still work end to end.

@@ -12,5 +12,5 @@
 - [x] Pages workflow deployed-showcase assertions
 - [x] README, detailed docs, changelog, roadmap, and release note
 - [x] Version metadata and portable-build default updated to `0.5.1`
-- [ ] Full suite, builds, deterministic checks, and five-axis review
+- [x] Full suite, builds, deterministic checks, and five-axis review
 - [x] No `v0.6.0+` work included
