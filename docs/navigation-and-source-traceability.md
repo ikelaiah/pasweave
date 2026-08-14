@@ -4,6 +4,48 @@ PasWeave v0.5.0 adds repository source links, complete model-backed
 relationship navigation, and filtered offline search without changing the
 existing unit-page or stable-symbol-anchor formats.
 
+## v0.5.1 unit and section navigation
+
+PasWeave v0.5.1 adds direct navigation within and between generated unit
+pages. Every unit page renders a native **Switch unit** disclosure containing
+all units in deterministic alphabetical order. The current unit remains a
+link and is identified with `aria-current="page"`. A reader can therefore
+open the disclosure and follow any unit link in two actions without returning
+to the API index.
+
+The complete link list is present before JavaScript runs. The dependency-free
+application script progressively adds a labelled text filter, polite match
+count, ArrowUp and ArrowDown movement through visible links, and Escape-to-
+close behavior with focus restoration. With JavaScript disabled, the native
+disclosure and every direct unit link remain available; filtering and global
+symbol search do not.
+
+An **On this page** navigator links only to symbol groups that are actually
+rendered in the current unit: Types, Routines, Members, and Constants and
+variables. These links reuse the established group fragments. Unit filenames,
+overload-aware symbol anchors, the API index, and both project-wide diagrams
+retain their v0.5.0 contracts. Declarations have not been added to the project
+graphs.
+
+The documented and scientific examples are golden-output fixtures for the new
+markup and assets. An isolated Chrome run verified the scientific unit pages
+at 1280 and 390 CSS pixels, including filter status, ArrowDown, Escape, stable
+category fragments, direct no-JavaScript unit navigation, viewport fit, and a
+clean console.
+
+The latest `mathlib-fp` main commit
+`b5aea1c2d841fd82f9e98cb770c00fc04c2d9b17` contains 50 units. Two v0.5.1
+builds produced the same 174 files with zero byte differences. All 50 unit
+pages exposed all 50 unit links, one current-page state, and valid category
+targets. A real-browser check confirmed the height-bounded 50-unit list,
+filter and keyboard behavior, desktop layout, and 390-pixel phone layout.
+See the [full audit](mathlib-fp-validation.md).
+
+The Pages workflow applies the same switcher, direct-link, category, and
+application-script assertions before upload and after deployment. The public
+showcase check is the one post-merge release gate because the deployed site
+cannot contain this branch before it reaches `main`.
+
 ## Repository source links
 
 Source links are opt-in and require two command-line options together:

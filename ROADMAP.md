@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave is currently at `v0.5.0`. The parser-to-site pipeline works;
+PasWeave is currently preparing `v0.5.1`. The parser-to-site pipeline works;
 the path to `v1.0.0` is about making that pipeline understand real project
 builds, improving author feedback and navigation, scaling it safely, and then
 freezing the public contracts.
@@ -196,6 +196,17 @@ Exit criteria:
 
 **Outcome:** readers can move between units and sections without returning to
 the API index or using global symbol search.
+
+Status: implemented on 2026-08-15. Focused fixtures, both checked-in examples,
+the complete suite, isolated desktop/phone/no-JavaScript browser checks, and
+the latest 50-unit `mathlib-fp` audit pass. The Pages workflow now checks the
+same contract before upload and after deployment. The milestone remains
+pending until that public deployed-site smoke check succeeds after merge.
+Evidence is recorded in [navigation and source
+traceability](docs/navigation-and-source-traceability.md), the
+[HTML renderer guide](docs/html-renderer.md), the
+[real-project audit](docs/mathlib-fp-validation.md), the
+[changelog](CHANGELOG.md), and the v0.5.1 release note.
 
 Exit criteria:
 

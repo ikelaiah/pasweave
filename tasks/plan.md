@@ -50,37 +50,37 @@ all `v0.6.0+` work are out of scope.
   ArrowUp/ArrowDown, Escape, visible focus, and phone-width layout.
 - [x] Task 4: Implement the dependency-free unit-switcher JavaScript and
   responsive CSS while retaining the unmodified native link fallback.
-- [ ] Task 5: Verify the generated pages in a real browser with JavaScript
+- [x] Task 5: Verify the generated pages in a real browser with JavaScript
   enabled and disabled at desktop and phone widths.
 
 ### Checkpoint: Interaction
 
-- [ ] Keyboard users can open, search, traverse, dismiss, and follow unit
+- [x] Keyboard users can open, search, traverse, dismiss, and follow unit
   links with visible focus.
-- [ ] The switcher and category navigator fit without horizontal overflow at
+- [x] The switcher and category navigator fit without horizontal overflow at
   the repository's phone breakpoint.
-- [ ] No external runtime dependency is introduced.
+- [x] No external runtime dependency is introduced.
 
 ### Phase 3: Examples and deployed-showcase gate
 
 - [x] Task 6: Regenerate and verify the documented API sample output.
-- [ ] Task 7: Regenerate and verify the scientific API sample output and add
+- [x] Task 7: Regenerate and verify the scientific API sample output and add
   Pages workflow assertions for the switcher and category navigator.
-- [ ] Task 8: Validate the latest `mathlib-fp` corpus and record unit-count,
+- [x] Task 8: Validate the latest `mathlib-fp` corpus and record unit-count,
   navigation, responsive, keyboard, and determinism evidence.
 
 ### Checkpoint: Validation corpora
 
-- [ ] Examples and `mathlib-fp` satisfy the v0.5.1 navigation contract.
-- [ ] Unrelated generated output remains deterministic.
-- [ ] The Pages workflow is ready to validate the deployed showcase after
+- [x] Examples and `mathlib-fp` satisfy the v0.5.1 navigation contract.
+- [x] Unrelated generated output remains deterministic.
+- [x] The Pages workflow is ready to validate the deployed showcase after
   merge.
 
 ### Phase 4: Release contract
 
-- [ ] Task 9: Update README and detailed renderer/navigation documentation,
+- [x] Task 9: Update README and detailed renderer/navigation documentation,
   including no-JavaScript behavior and limitations.
-- [ ] Task 10: Update changelog, roadmap status, release note, version
+- [x] Task 10: Update changelog, roadmap status, release note, version
   metadata, portable-build default, and version regression test to `0.5.1`.
 - [ ] Task 11: Run the complete suite, production and portable builds where
   available, deterministic sample checks, and final five-axis review.
@@ -100,8 +100,8 @@ all `v0.6.0+` work are out of scope.
 
 - [ ] Every `v0.5.1` exit criterion has code, focused tests, documentation, or
   explicit post-merge deployed-site evidence.
-- [ ] No `v0.6.0+` capability or preparatory contract is introduced.
-- [ ] Existing unit URLs, symbol anchors, API-index role, and diagram scope are
+- [x] No `v0.6.0+` capability or preparatory contract is introduced.
+- [x] Existing unit URLs, symbol anchors, API-index role, and diagram scope are
   unchanged.
 - [ ] Full tests and production build pass; direct-file and default-`///`
   workflows still work end to end.

@@ -4,6 +4,57 @@ PasWeave's first substantial external test is
 [`ikelaiah/mathlib-fp`](https://github.com/ikelaiah/mathlib-fp), as planned in
 the project brief.
 
+## `v0.5.1` navigation-polish revalidation
+
+The latest `mathlib-fp` `main` revision available on 2026-08-15 was
+`b5aea1c2d841fd82f9e98cb770c00fc04c2d9b17` (committed 2026-08-12). It has
+grown to 50 Pascal units. The source directory was built twice with brace
+documentation, explicit `win64`/`x86_64` compiler settings, and source links
+pinned to that exact revision:
+
+```text
+pasweave build mathlib-fp/src --output build/mathlib-v051-a \
+  --project-name mathlib-fp --doc-comments=brace \
+  --unit-path mathlib-fp/src --target-os win64 --target-cpu x86_64 \
+  --repository-url=https://github.com/ikelaiah/mathlib-fp \
+  '--source-link-template=blob/b5aea1c2d841fd82f9e98cb770c00fc04c2d9b17/src/{path}#L{line}'
+```
+
+| Check | Result |
+|---|---:|
+| Source units parsed | 50 of 50 |
+| Model symbols | 2,978 |
+| Renderable search entries | 2,707 |
+| Unit pages | 50 |
+| Direct unit links on every unit page | 50 |
+| Generated files | 174 |
+| Authoring warnings | 2,846 |
+| Errors | 0 |
+| Navigation audit failures | 0 |
+| Differing files between runs | 0 |
+
+Every unit page contained the native searchable switcher, exactly one
+`aria-current="page"` link, and valid targets for every rendered on-page
+category link. The API index retained both its unit-dependency and type-
+relationship diagrams. The two complete output trees had the same audit
+digest, calculated as SHA-256 over sorted relative-path and file-SHA-256 rows:
+
+```text
+EE702B7A8727050A786AA4DF329F6B34EC8DFF7E7ECAFA508ED014C123C75952
+```
+
+An isolated Chrome run opened `AlgebraLib.Determinants.html` from the first
+output tree. At 1280 CSS pixels, the 50-unit list was height-bounded and
+scrollable; filtering to `TimeSeriesLib.TimeSeries` announced one result;
+ArrowDown focused that direct link; and Escape closed the switcher and restored
+summary focus. At 390 CSS pixels, the navigation stacked, the panel stayed
+inside the viewport, the long list remained bounded, and the document had no
+horizontal overflow. The final run reported no console warnings or errors.
+
+The warning count comes from applying the existing authoring rules to upstream
+brace comments. It is non-fatal under the default local policy and is not a
+navigation failure.
+
 ## `v0.5.0` navigation and source-traceability revalidation
 
 Commit `6f3480b7e9494fcd4f72abb0f5c21dd30fde3e42` was built twice with brace

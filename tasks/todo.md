@@ -6,11 +6,11 @@
 - [x] Any unit reachable from another in two actions
 - [x] Present-only on-page symbol-category navigator
 - [x] Stable unit URL and symbol-anchor regression coverage
-- [ ] Responsive desktop and phone-width browser validation
+- [x] Responsive desktop and phone-width browser validation
 - [x] Documented API and scientific sample regeneration
-- [ ] Latest `mathlib-fp` navigation and determinism audit
-- [ ] Pages workflow deployed-showcase assertions
-- [ ] README, detailed docs, changelog, roadmap, and release note
-- [ ] Version metadata and portable-build default updated to `0.5.1`
+- [x] Latest `mathlib-fp` navigation and determinism audit
+- [x] Pages workflow deployed-showcase assertions
+- [x] README, detailed docs, changelog, roadmap, and release note
+- [x] Version metadata and portable-build default updated to `0.5.1`
 - [ ] Full suite, builds, deterministic checks, and five-axis review
-- [ ] No `v0.6.0+` work included
+- [x] No `v0.6.0+` work included

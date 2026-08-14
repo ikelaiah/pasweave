@@ -9,7 +9,8 @@ without first installing Free Pascal or compiling the project.
 
 The snapshot reports 10 of 10 public API symbols documented and includes both
 unit pages. The HTML preview retains PasWeave's generated styling, offline
-search, mathematical rendering, relationship diagrams, and diagram controls.
+search, direct unit and category navigation, mathematical rendering,
+relationship diagrams, and diagram controls.
 
 The source snapshot was generated from the repository root with:
 

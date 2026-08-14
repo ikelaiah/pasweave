@@ -27,6 +27,7 @@ The example deliberately exercises:
 - fully documented public API coverage;
 - deterministic Markdown, HTML, search, and diagram output.
 - line-aware repository links and filtered, keyboard-accessible offline search.
+- direct searchable unit switching and present-only on-page category links.
 
 A compact generated snapshot is checked in so the result can be inspected
 without compiling PasWeave:
