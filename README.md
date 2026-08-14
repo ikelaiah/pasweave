@@ -1,471 +1,271 @@
 ![PasWeave — Documentation, woven from Pascal source](assets/pasweave-banner.svg)
 
-[![Version](https://img.shields.io/badge/version-0.5.0-635bff)](CHANGELOG.md)
-[![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
-[![Portable release](https://img.shields.io/badge/portable-Windows%20x86--64-2563eb)](docs/releasing.md)
-[![Model schema](https://img.shields.io/badge/model%20schema-v1-64748b)](src/model/PasWeave.Model.JSON.pas)
+# 🧶 PasWeave
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
+[![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
+[![Lazarus](https://img.shields.io/badge/Lazarus-.lpi%20%7C%20.lpk-7c3aed)](docs/lazarus-projects.md)
+[![Windows](https://img.shields.io/badge/platform-Windows%20x86--64-2563eb)](docs/releasing.md)
+[![Version](https://img.shields.io/badge/version-0.5.0-635bff)](CHANGELOG.md)
+[![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-10b981)](https://github.com/ikelaiah/pasweave/releases)
+[![Tests](https://img.shields.io/github/actions/workflow/status/ikelaiah/pasweave/pages.yml?branch=main&label=tests)](https://github.com/ikelaiah/pasweave/actions/workflows/pages.yml)
+[![Documentation](https://img.shields.io/badge/docs-live-0ea5e9)](https://ikelaiah.github.io/pasweave/)
+[![Status: pre-release](https://img.shields.io/badge/status-pre--release-f59e0b)](ROADMAP.md)
 
-PasWeave is an early-stage documentation generator designed primarily for
-Free Pascal projects. It is written in Free Pascal and builds its source model
-with FPC's reusable `fcl-passrc` parser libraries.
+Modern API documentation for Free Pascal and Lazarus projects.
 
-> **Documentation syntax:** `///` is PasWeave's own explicit documentation
-> marker, not a special Free Pascal or `fcl-passrc` feature. FPC reads it as an
-> ordinary `//` comment; PasWeave gives the third slash its documentation
-> meaning. Accordingly, `--doc-comments=slash` means consecutive `///` lines
-> only. Ordinary `//` comments are never treated as API documentation.
+PasWeave turns Pascal source into searchable, offline HTML documentation,
+linked Markdown, and structured JSON. Add `///` comments, run one command,
+and publish the generated files anywhere.
 
-## ✅ Current features
+**Zero runtime dependencies:** the portable Windows release is a single
+executable with everything PasWeave needs to generate documentation, including
+the assets for offline browsing—no installer, Free Pascal runtime, Lazarus,
+network connection, or registry changes.
 
-The working parser-to-site pipeline includes:
+[View the live showcase](https://ikelaiah.github.io/pasweave/) ·
+[Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
+[Read the v0.5.0 release notes](RELEASE_NOTE_v0.5.0.md)
 
-- a `pasweave build` command for one Pascal unit or a directory of `.pas` and
-  `.pp` units, with opt-in recursive discovery and include/exclude filters;
-- interface parsing through `fcl-passrc`;
-- compiler-aware parsing with repeatable unit paths, include paths, and
-  conditional defines plus explicit normalized target OS and CPU settings;
-- Lazarus `.lpi` project and `.lpk` package inputs with build-mode selection,
-  imported compiler settings, and deterministic local-package discovery;
-- parser-independent project, unit, symbol, directive, and diagnostic models;
-- source-backed association of enabled PasWeave `///`, Pascal `{ ... }`, and
-  Pascal `(* ... *)` documentation groups, with `///` as the safe default;
-- structural extraction of `@param`, `@returns`, `@raises`, `@deprecated`,
-  `@see`, and `@since`;
-- model-level authoring feedback with stable diagnostic codes for directive,
-  project-local reference, route, and coverage defects;
-- deterministic, human-readable UTF-8 JSON;
-- a deterministic Markdown project index and one page per parsed unit;
-- stable overload-aware anchors, internal dependency links, parent links,
-  fenced Pascal declarations, directive sections, and visible undocumented
-  API warnings;
-- validated repository-relative source templates that link unit and symbol
-  locations to their exact declaration lines in HTML and Markdown;
-- a responsive static HTML project index and one page per parsed unit;
-- dependency-free, offline client-side search across every renderable API
-  symbol, with composable unit, kind, visibility, and documentation filters;
-- shared styling with light and dark colour schemes, safe Markdown-to-HTML
-  conversion, and offline KaTeX rendering for marked inline and display
-  mathematics;
-- deterministic, linked Mermaid diagrams of project-local interface
-  dependencies and semantically resolved class/interface relationships, each
-  with independent accessible zoom, pan, reset, and linked text fallback;
-- per-file error isolation, concise summaries, and meaningful exit codes.
+> **Project status:** PasWeave is pre-release software. It targets Free Pascal
+> and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
+> before adopting it for production documentation.
 
-The Markdown renderer consumes only PasWeave's model. FPC parser classes remain
-contained behind the adapter.
+<a id="quick-start"></a>
 
-## Scope
+## 🚀 Quick start
 
-PasWeave targets Free Pascal and `{$mode objfpc}` first. Delphi-compatible
-syntax is accepted only where it works naturally through FPC's parser.
-PasWeave does not contain a Pascal parser of its own.
+Download the portable `pasweave.exe` from the
+[GitHub Releases page](https://github.com/ikelaiah/pasweave/releases), place it
+anywhere, and run:
 
-PasWeave is not a fork of PasDoc or FPDoc. It explores a Free Pascal-first
-workflow centred on Markdown, structured output and modern static
-documentation. We appreciate the substantial work those projects have
-contributed to the Pascal ecosystem.
-
-## Download
-
-Windows users can download the portable `pasweave.exe` from the
-[GitHub Releases page](https://github.com/ikelaiah/pasweave/releases). It does
-not use an installer, modify the registry, or require Free Pascal at runtime.
-The executable contains the offline KaTeX and Mermaid assets needed by the
-HTML renderer.
-
-Place it anywhere and run:
-
-```powershell
-.\pasweave.exe --version
+~~~powershell
 .\pasweave.exe build path\to\project --output docs
-```
+~~~
 
-Each release also provides `pasweave.exe.sha256` for integrity verification:
+Open `docs/html/index.html`. No installer, web server, internet connection,
+or Free Pascal runtime is required.
 
-```powershell
-Get-FileHash .\pasweave.exe -Algorithm SHA256
-```
+PasWeave accepts a Pascal unit, a directory of `.pas` and `.pp` units, a
+Lazarus project (`.lpi`), or a Lazarus package (`.lpk`).
 
-Early pre-release executables are not code-signed, so Windows may display a
-SmartScreen warning. Download only from the PasWeave release page and compare
-the SHA-256 value before running the executable.
+Building on another platform? See [building from source](docs/building-from-source.md).
 
-Read the [v0.5.0 release notes](RELEASE_NOTE_v0.5.0.md) for the highlights,
-compatibility details, validation results, and known limitations. The
-complete project history is maintained in the
-[changelog](CHANGELOG.md).
+## See what it produces
 
-## Requirements
+The [live PasWeave showcase](https://ikelaiah.github.io/pasweave/) is generated
+from the checked-in scientific example. It documents 30 public API symbols and
+renders its equations without a network connection.
 
-These requirements apply only when compiling PasWeave from source:
+For smaller examples, browse:
 
-- Free Pascal 3.2.2 or newer
-- the FPC `fcl-passrc` and `fcl-json` packages
+- the [documented API example](examples/documented-api/README.md), with 10 of
+  10 public symbols documented;
+- its checked-in [Markdown output](examples/documented-api/sample-output/markdown/index.md);
+- the [scientific API example](examples/scientific-api/README.md), including
+  dependency and type-relationship diagrams.
 
-The current adapter was inspected and tested specifically against FPC 3.2.2.
-See [the parser integration notes](docs/parser-integration.md) for the exact
-APIs used and known uncertainties.
+Each build can produce:
 
-The first real-world run against all 45 source units in
-[`mathlib-fp`](https://github.com/ikelaiah/mathlib-fp) produced 2,338 symbols
-with no parse errors, missing source positions, or duplicate stable IDs. See
-[the validation report](docs/mathlib-fp-validation.md) for the tested revision,
-determinism result, and its important comment-syntax finding.
+- a responsive, searchable static HTML site;
+- linked Markdown pages for repositories and other documentation systems;
+- a deterministic JSON source model;
+- machine-readable diagnostics for CI.
 
-## Compile
+See [generated output](docs/generated-output.md) for the directory layout,
+format details, schema notes, and exit codes.
 
-With a POSIX-compatible `make`:
+<a id="why-pasweave"></a>
 
-```text
-make
-make test
-```
+## ✨ Why PasWeave?
 
-Directly with FPC from the repository root:
+- 🧩 **Free Pascal and Lazarus aware.** Read units directly or import project,
+  package, build-mode, path, define, and target settings from `.lpi` and
+  `.lpk` files.
+- 📦 **Zero runtime dependencies.** The portable Windows executable bundles
+  search, diagrams, KaTeX, styles, and fonts for completely offline use.
+- 🔎 **Easy to navigate.** Stable overload-aware anchors, source links,
+  dependency diagrams, and class/interface relationships connect the API.
+- ✅ **Useful while authoring.** Find undocumented symbols, broken references,
+  malformed directives, and coverage regressions before publishing.
+- ⚙️ **Automation friendly.** Deterministic Markdown and JSON make diffs and CI
+  checks predictable.
 
-```text
-mkdir -p build/bin build/tests build/units
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/bin src/pasweave.lpr
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/tests tests/test_pasweave.pas
-```
+## Document an API
 
-On PowerShell, create the directories with:
+Place consecutive `///` lines immediately before an interface declaration:
 
-```powershell
-New-Item -ItemType Directory -Force build/bin, build/tests, build/units
-```
+~~~pascal
+/// Returns the standard normal probability density.
+///
+/// @param X Point at which the density is evaluated.
+/// @returns The probability density at `X`.
+function NormalPDF(const X: Double): Double;
+~~~
 
-Run the test executable from the repository root so it can find its fixture:
+Then build the source directory:
 
-```text
-build/tests/test_pasweave
-```
+~~~text
+pasweave build src --output docs
+~~~
 
-To build the standalone Windows release executable and perform its isolated
-smoke test:
+PasWeave recognizes `@param`, `@returns`, `@raises`, `@deprecated`,
+`@see`, and `@since`. It can also read deliberately selected Pascal block
+comments. Ordinary `//` comments are never treated as API documentation.
 
-```powershell
-.\scripts\build-portable-windows.ps1
-```
+See [documentation comments](docs/documentation-comments.md) for supported
+forms, association rules, structured directives, and the block-comment
+trade-offs.
 
-This writes only `dist\pasweave.exe` and its checksum as release artifacts;
-there is no installer or ZIP package. See the
-[release procedure](docs/releasing.md) for the isolated smoke test, version-tag
-rules, and public-release license gate.
+## Common workflows
 
-## Use
+### Discover a nested source tree
 
-```text
-build/bin/pasweave build tests/fixtures --output build/docs
-```
+Enable recursive discovery explicitly and exclude trees outside the public API:
 
-For a small project whose public API is deliberately documented with
-PasWeave `///` comments, generate the
-[documented API example](examples/documented-api/README.md):
-
-```text
-build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example"
-```
-
-Its HTML index reports `10 of 10 API symbols documented`, providing an
-immediate example of a fully populated `DOCUMENTED` column.
-
-You can also browse the checked-in
-[Markdown sample](examples/documented-api/sample-output/markdown/index.md) or
-clone the repository and open the
-[HTML sample](examples/documented-api/sample-output/html/index.html) directly.
-The snapshot shows the actual project index and both generated unit pages.
-
-For a more substantial equation-rich demonstration, see the runnable
-[scientific API example](examples/scientific-api/README.md). Its checked-in
-[Markdown output](examples/scientific-api/sample-output/markdown/index.md) and
-[HTML output](examples/scientific-api/sample-output/html/index.html) document
-30 of 30 public API symbols with 16 display equations and 65 inline
-mathematical expressions. The same committed sources publish the
-[PasWeave Pages showcase](https://ikelaiah.github.io/pasweave/) after the
-deployment workflow succeeds.
-
-To add declaration-line links back to a repository, provide the repository
-base and a relative template together:
-
-```text
-pasweave build src \
-  --repository-url=https://github.com/example/project \
-  '--source-link-template=blob/main/{path}#L{line}'
-```
-
-The template must contain exactly one `{path}` and `{line}` placeholder and
-cannot be absolute, traverse upward, or change the configured origin. See
-[navigation and source traceability](docs/navigation-and-source-traceability.md)
-for the complete validation and normalization contract.
-
-For a nested source tree, enable recursive discovery explicitly and exclude
-trees that are not part of the public API:
-
-```text
+~~~text
 pasweave build src --recursive --exclude=generated/** --exclude=tests --exclude=vendor/**
-```
+~~~
 
-`--include` and `--exclude` are repeatable, case-insensitive globs relative to
-the supplied source directory. `*` and `?` match within one path segment;
-`**` as a complete segment spans directories. Exclusions take precedence.
-Without `--recursive`, directory input retains the original top-level-only
-behavior. See [source discovery](docs/source-discovery.md) for the complete
-matching and safety contract.
+`--include` and `--exclude` are repeatable, case-insensitive globs relative
+to the source directory. Exclusions take precedence. See
+[source discovery](docs/source-discovery.md) for matching and safety rules.
 
-To reproduce the interface selected by a configured FPC build, supply its
-source paths, defines, and target explicitly:
+### Match a configured compiler target
 
-```text
+Pass the source paths, defines, and target selected by the project build:
+
+~~~text
 pasweave build src --recursive \
   --unit-path=packages/core/src \
   --include-path=include \
   --define=USE_FAST_MATH \
   --target-os=linux \
   --target-cpu=aarch64
-```
+~~~
 
-`--unit-path`, `--include-path`, and `--define` are repeatable. Paths are
-searched in command-line order; the first match wins. Explicit targets replace
-the host defaults and are normalized before `fcl-passrc` sees them. See
-[compiler-aware parsing](docs/compiler-aware-parsing.md) for supported values,
-precise precedence, diagnostics, and limitations.
+Paths and defines are repeatable. Explicit target settings replace host
+defaults. See [compiler-aware parsing](docs/compiler-aware-parsing.md) for
+precedence, supported values, diagnostics, and limitations.
 
-Lazarus projects and packages can provide those settings directly. Point the
-build command at an `.lpi` or `.lpk`; no Lazarus process is started:
+### Read a Lazarus project or package
 
-```text
+Point PasWeave at an `.lpi` or `.lpk`; Lazarus itself is not started:
+
+~~~text
 pasweave build path/to/Application.lpi --build-mode=Release \
-  --package-path=path/to/local-packages --output build/docs
-```
+  --package-path=path/to/local-packages --output docs
+~~~
 
-PasWeave imports project/package units, source and include paths, defines, and
-target settings. Explicit command-line compiler options override imported
-values; imported project/package settings override PasWeave defaults. The
-default package scan is deterministic and prunes generated, vendor, example,
-and test trees. Use repeatable `--package-path` values when a local package
-intentionally lives in one of those trees. See the
-[Lazarus project and package guide](docs/lazarus-projects.md) for supported
-XML elements and diagnostics.
+Command-line compiler options override imported values. See the
+[Lazarus project and package guide](docs/lazarus-projects.md) for supported XML
+elements, package discovery, and diagnostics.
 
-To use authoring feedback as a CI gate, require a coverage percentage and
-promote warnings to failures explicitly:
+### Link documentation back to source
 
-```text
+Configure the repository origin and a repository-relative line template:
+
+~~~text
+pasweave build src \
+  --repository-url=https://github.com/example/project \
+  '--source-link-template=blob/main/{path}#L{line}'
+~~~
+
+See [navigation and source traceability](docs/navigation-and-source-traceability.md)
+for template validation and normalization.
+
+### Enforce documentation coverage in CI
+
+Require a coverage percentage and promote warnings to failures:
+
+~~~text
 pasweave build src --min-documentation-coverage=90 --fail-on=warning
-```
+~~~
 
-The default is `--fail-on=error`, so new documentation warnings remain useful
-without blocking local rendering. See [authoring feedback and reference
-integrity](docs/authoring-feedback.md) for stable codes and precise rules.
+The default is `--fail-on=error`, so authoring warnings do not block local
+rendering. See [authoring feedback and reference integrity](docs/authoring-feedback.md)
+for diagnostic codes and coverage rules.
 
-The command writes:
+## Documentation
 
-```text
-build/docs/
-├── api-model.json
-├── diagnostics.json
-├── html/
-│   ├── index.html
-│   ├── assets/
-│   │   ├── app.js
-│   │   ├── diagram.js
-│   │   ├── katex/
-│   │   │   ├── fonts/
-│   │   │   ├── katex.min.css
-│   │   │   ├── katex.min.js
-│   │   │   └── LICENSE
-│   │   ├── math.js
-│   │   ├── mermaid/
-│   │   │   ├── mermaid.tiny.js
-│   │   │   └── LICENSE
-│   │   ├── search-index.js
-│   │   └── site.css
-│   └── units/
-│       └── SimpleUnit.html
-└── markdown/
-    ├── index.md
-    └── units/
-        └── SimpleUnit.md
-```
-
-The command exits with `0` when no diagnostic meets the configured
-`--fail-on` severity, `1` after usable output with a failing diagnostic,
-`2` for command-line or input errors, and `3` for an unexpected internal
-failure. `--fail-on=error` is the default; `--fail-on=warning` also fails on
-authoring feedback. `--verbose` adds diagnostic details without printing a
-stack trace.
-
-In `api-model.json`, class and interface symbols expose a
-`typeRelationships` array. Each entry records `kind` (`inherits` or
-`implements`), the typed-AST `targetName`, its source-like `displayName`, and a
-stable `targetSymbolId` when the target resolves inside the documented
-project. An empty target ID is an explicit unresolved result.
-
-Routine symbols additionally expose parser-derived `parameterNames` and
-`hasReturnValue`. Directive objects contain `targetSymbolId` for a resolved
-project-local `@see`; an empty value is deliberately unresolved.
-When source links are configured, the top-level model also records the
-normalized `repositoryUrl` and `sourceLinkTemplate`; this is an additive
-schema-v1 change.
-
-## Documentation comments
-
-PasWeave deliberately defines `///` as its explicit documentation marker.
-`fcl-passrc` does not classify triple-slash comments as documentation: it
-parses the declaration structure and supplies source positions, then PasWeave
-reads the original source and associates enabled comments itself. In the CLI,
-the style name `slash` therefore means exactly `///`; it does not mean ordinary
-`//` comments.
-
-By default, place consecutive PasWeave `///` lines immediately before an
-interface declaration:
-
-```pascal
-/// Returns the standard normal probability density.
-///
-/// $$
-/// \phi(x) = \frac{1}{\sqrt{2\pi}}e^{-x^2/2}
-/// $$
-///
-/// @param X Point at which the density is evaluated.
-/// @returns The probability density at `X`.
-function NormalPDF(const X: Double): Double;
-```
-
-Ordinary Markdown and mathematical delimiters are retained in
-`markdownDocumentation`. The original `///` form is retained in
-`rawDocumentation`, while recognised directives are also emitted as structured
-objects.
-
-Projects that deliberately use ordinary Pascal comments for API documentation
-can opt into one or both block forms:
-
-| `--doc-comments` value | Source form treated as documentation |
+| Guide | What it covers |
 |---|---|
-| `slash` | Consecutive `///` lines only; plain `//` is ignored |
-| `brace` | Standalone `{ ... }` comments |
-| `paren` | Standalone `(* ... *)` comments |
-| `all` | `slash`, `brace`, and `paren` together |
+| [Documentation comments](docs/documentation-comments.md) | Comment forms, association, and directives |
+| [Generated output](docs/generated-output.md) | HTML, Markdown, JSON, diagnostics, and exit codes |
+| [Source discovery](docs/source-discovery.md) | Recursion, include/exclude globs, and safety |
+| [Compiler-aware parsing](docs/compiler-aware-parsing.md) | Paths, defines, targets, and precedence |
+| [Lazarus projects and packages](docs/lazarus-projects.md) | `.lpi`, `.lpk`, build modes, and packages |
+| [Authoring feedback](docs/authoring-feedback.md) | References, coverage, diagnostics, and CI |
+| [Navigation and source links](docs/navigation-and-source-traceability.md) | Anchors, routes, and repository links |
+| [HTML renderer](docs/html-renderer.md) | Offline rendering, search, safety, and diagrams |
+| [Building from source](docs/building-from-source.md) | Requirements, compilation, tests, and release builds |
+| [Parser integration](docs/parser-integration.md) | `fcl-passrc` adapter details |
 
-```text
-pasweave build src --doc-comments=slash
-pasweave build src --doc-comments=brace
-pasweave build src --doc-comments=paren
-pasweave build src --doc-comments=slash,brace,paren
-pasweave build src --doc-comments=all
-```
+## Scope and limitations
 
-The space-separated form, such as `--doc-comments brace`, is also accepted.
-Enabled forms may be mixed in one standalone group and are merged in source
-order:
+PasWeave targets Free Pascal and `{$mode objfpc}` first. Delphi-compatible
+syntax is accepted where it works naturally through FPC's `fcl-passrc`
+parser; PasWeave does not maintain a separate Pascal parser.
 
-```pascal
-/// Computes a scaled value.
-{ @param X Input value. }
-(* @returns The scaled result. *)
-function Scale(const X: Double): Double;
-```
+Current limitations include:
 
-A group must directly precede its interface declaration. A blank line,
-compiler directive, disabled comment form, or other source token ends the
-association. Block groups must start on an otherwise blank source line, so a
-trailing comment such as `X: Double; { describes X }` cannot drift onto the
-next declaration. Compiler directives in `{$...}` and `(*$...*)` are never
-documentation.
+- KaTeX supports a focused TeX subset, and Markdown conversion intentionally
+  supports a focused Markdown subset;
+- Lazarus package discovery requires local `.lpk` files;
+- type relationships resolve only within the current unit and its interface
+  dependencies, and implementation bodies are not analysed;
+- brace and parenthesis comment modes cannot reliably distinguish API prose
+  from section labels or commented-out code;
+- unit paths resolve source `.pas` and `.pp` files, not compiled `.ppu`
+  files, and do not recurse;
+- explicit OS and CPU values are validated independently, but every possible
+  pair is not necessarily a real FPC code-generation target;
+- source-link configuration currently requires both command-line options;
+- unusual FPC syntax and every possible symbol kind are not yet covered by
+  fixtures.
 
-Opting into `brace` or `paren` is intentionally broad: section labels and
-commented-out declarations can look exactly like ordinary documentation. Use
-those modes only where the project's comment conventions make that trade-off
-acceptable. The original delimiters are retained in `rawDocumentation`; the
-combined bodies and supported structured directives are normalized into the
-other model fields.
+The parser-to-site pipeline has also been tested against all 45 source units in
+[`mathlib-fp`](https://github.com/ikelaiah/mathlib-fp): 2,338 symbols were
+produced without parse errors, missing source positions, or duplicate stable
+IDs. Read the [validation report](docs/mathlib-fp-validation.md) for the tested
+revision, determinism result, and comment-syntax findings.
 
-## Markdown output
+PasWeave is not a fork of PasDoc or FPDoc. It explores a Free Pascal-first
+workflow centred on Markdown, structured output, and modern static
+documentation, while recognizing those projects' substantial contributions to
+the Pascal ecosystem.
 
-`markdown/index.md` contains project totals, documentation coverage, links to
-every successfully parsed unit, and any build diagnostics. Each unit page
-contains:
+## Build and contribute
 
-- source and interface-dependency information;
-- linked public and protected types, routines, members, constants, and
-  variables;
-- stable explicit anchors that distinguish overloads;
-- fenced `pascal` declarations;
-- preserved Markdown and mathematical delimiters;
-- parameter, return, raised-exception, deprecation, version, and see-also
-  sections;
-- a visible warning for every undocumented API symbol.
+PasWeave requires Free Pascal 3.2.2 or newer plus the `fcl-passrc` and
+`fcl-json` packages when compiling from source:
 
-Private and strict-private symbols remain in `api-model.json` but are omitted
-from the generated API pages.
+~~~text
+make
+make test
+~~~
 
-## Static HTML output
+See [building from source](docs/building-from-source.md) for direct FPC and
+portable Windows build commands. Bug reports, focused pull requests, and
+real-world parser fixtures are welcome.
 
-Open `html/index.html` directly in a browser. The generated site requires no
-web server or network connection; its KaTeX and Mermaid runtimes, styles,
-fonts, and licenses are copied into the output. It contains:
+The project history is in the [changelog](CHANGELOG.md); planned work and
+acceptance evidence are in the [roadmap](ROADMAP.md).
 
-- a responsive project overview and linked unit pages;
-- the same stable symbol anchors and visibility filtering as Markdown;
-- escaped Pascal declarations and safely rendered documentation prose;
-- offline rendering of marked display and inline mathematics, with the
-  original delimited source left readable when an expression is invalid;
-- a linked Mermaid graph of project-local interface dependencies on the index,
-  backed by an initially expanded textual list when diagrams are unavailable;
-- a linked class/interface relationship graph generated from resolved model
-  data, with generic and unresolved targets preserved in its text fallback;
-- per-diagram controls for bounded zoom, directional pan, and reset, with
-  keyboard shortcuts, mouse dragging, reduced-motion support, and independent
-  view state;
-- an offline search index covering names, qualified names, kinds, units, and
-  documentation summaries, plus unit, kind, visibility, and documentation
-  status facets;
-- keyboard search focus with `/`, Arrow-key result navigation, explicit empty
-  states, visible focus, and dismissal with Escape;
-- build diagnostics and visible documentation-coverage totals.
+## Download integrity
 
-Both generated indexes show the stable diagnostic code. The separate
-`diagnostics.json` artifact carries the same model diagnostics for CI systems.
+Each Windows release includes `pasweave.exe.sha256`:
 
-The HTML, stylesheet, JavaScript, and search index are deterministic UTF-8
-files with LF line endings. See [the HTML renderer notes](docs/html-renderer.md)
-for its offline-search, safety, and Markdown-subset contracts.
+~~~powershell
+Get-FileHash .\pasweave.exe -Algorithm SHA256
+~~~
 
-## ⚠️ Current limitations
-
-- mathematical rendering supports KaTeX's TeX subset rather than arbitrary
-  LaTeX; invalid or unsupported expressions remain visible as source;
-- the dependency-free Markdown-to-HTML conversion intentionally supports a
-  focused subset rather than every Markdown extension;
-- Lazarus package discovery requires local `.lpk` files; external Lazarus/FPC
-  packages must be made available through an explicit package path;
-- type relationship resolution is limited to the current unit and its
-  interface dependencies; ancestors outside the documented source set remain
-  explicitly unresolved, and implementation bodies are not analysed;
-- ordinary block-comment modes cannot semantically distinguish API prose from
-  section labels or commented-out code; they therefore remain explicit
-  project opt-ins;
-- configured unit paths resolve source `.pas` and `.pp` files, not compiled
-  `.ppu` files, and do not recurse;
-- explicit OS and CPU values are validated independently, but PasWeave does
-  not claim every possible pair is a real FPC code-generation target;
-- source links require both CLI options, an HTTP(S) repository base, and a
-  relative path-and-fragment template; project-file configuration is planned
-  for v0.7.0;
-- no fixture coverage yet for every requested symbol kind or unusual FPC
-  syntax.
+Pre-release executables are not code-signed, so Windows may show a SmartScreen
+warning. Download only from the PasWeave release page and compare the SHA-256
+value before running the executable.
 
 ## License
 
 PasWeave is released under the [MIT License](LICENSE). Bundled third-party
 components retain their own licenses; see
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
-## 🧭 Roadmap
-
-The navigation and source-traceability implementation is complete on the
-`v0.5.0` release branch; publishing the Pages showcase is the remaining
-external release gate. See [ROADMAP.md](ROADMAP.md) for its acceptance evidence
-and the longer-term sequence.
+[third-party notices](THIRD_PARTY_NOTICES.md).
