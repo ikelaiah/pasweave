@@ -162,7 +162,7 @@ begin
     'border: 1px solid var(--line); border-radius: 11px; background: ' +
     'var(--surface); color: var(--muted); font-size: .84rem; font-weight: 700; ' +
     'cursor: pointer; }');
-  AppendLine(Result, '.unit-switcher summary::before { content: "▸"; ' +
+  AppendLine(Result, '.unit-switcher summary::before { content: "\25B8"; ' +
     'flex: 0 0 auto; color: var(--accent); }');
   AppendLine(Result, '.unit-switcher[open] summary::before { ' +
     'transform: rotate(90deg); }');

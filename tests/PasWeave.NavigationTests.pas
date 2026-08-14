@@ -408,7 +408,7 @@ begin
     'phone-width statistics should not force horizontal overflow');
   Check(Pos('.unit-switcher-panel {', string(Stylesheet)) > 0,
     'the unit switcher should have a distinct, usable panel');
-  Check(Pos('.unit-switcher summary::before { content: "▸";',
+  Check(Pos('.unit-switcher summary::before { content: "\25B8";',
     string(Stylesheet)) > 0,
     'the styled switcher should retain a visible disclosure indicator');
   Check(Pos('.unit-switcher[open] summary::before { ' +
