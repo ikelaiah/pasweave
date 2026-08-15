@@ -31,3 +31,19 @@
 - [x] Full suite and production build pass
 - [x] No `v0.6.0+` work included
 
+# v0.5.4 task checklist
+
+- [x] Rename "Parsed symbols" card to "Parsed declarations"
+- [x] "Public API symbols" equals the A–Z index population (units excluded)
+- [x] Coverage and per-unit rows use the indexed population in HTML and Markdown
+- [x] Markdown "Generated from N units and M declarations" wording
+- [x] Keep the CI coverage metric (PW411) unchanged
+- [x] Regenerate both examples' HTML and Markdown goldens
+- [x] Focused stats assertions in the symbol-index tests
+- [x] Version metadata, portable-build default, and workflow/portable-smoke
+      assertions updated to `0.5.4`
+- [x] Changelog, roadmap status, release note, PR note, and README updated
+- [x] Full suite and production build pass
+- [x] No `v0.6.0+` work included
+
+

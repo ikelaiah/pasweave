@@ -7,6 +7,41 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.4] - 2026-08-15
+
+### Changed
+
+- Renamed the project-index **Parsed symbols** card to **Parsed declarations**;
+  it still counts every model declaration, including unit declarations and
+  private symbols.
+- **Public API symbols** now counts exactly the renderable non-unit API
+  population that the A–Z symbol index lists (unit declarations excluded),
+  so the units count stays separate and the totals no longer disagree.
+- Documentation coverage on the project index and in the Markdown index now
+  uses that same indexed population for both numerator and denominator, and
+  the per-unit **API symbols / Documented** rows exclude the unit declaration
+  itself.
+- The Markdown index "Generated from N units and M symbols" line now says
+  "declarations" to match the HTML card.
+- Version metadata and portable-build defaults now report v0.5.4.
+
+### Compatibility
+
+- The `symbols.html` route, stable symbol anchors, category filters, deep
+  links, reader themes, and branding tokens are unchanged.
+- The model-level CI coverage metric behind `--min-documentation-coverage`
+  (`PW411`) still counts every renderable symbol, so CI thresholds keep their
+  documented meaning; only the rendered index totals changed.
+- Example counts in the documented (8 of 8) and scientific (28 of 28)
+  showcases and their goldens were updated.
+
+### Validation
+
+- The complete FPC 3.2.2 suite, CLI build, deterministic example goldens, and
+  direct-file/default-`///` workflows pass.
+- Focused tests pin the new card labels and confirm the public total and
+  coverage population match the A–Z index.
+
 ## [0.5.3] - 2026-08-15
 
 ### Changed
@@ -320,7 +355,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.3...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.4...HEAD
+[0.5.4]: https://github.com/ikelaiah/pasweave/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/ikelaiah/pasweave/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/ikelaiah/pasweave/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/ikelaiah/pasweave/compare/v0.5.0...v0.5.1

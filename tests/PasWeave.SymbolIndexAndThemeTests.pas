@@ -102,6 +102,14 @@ begin
       'repeated symbol-index rendering should be deterministic');
 
     IndexHTML := RenderHTMLIndex(Project);
+    Check(Pos('<strong>9</strong><span>Parsed declarations</span>',
+      string(IndexHTML)) > 0,
+      'the project index should count every parsed declaration');
+    Check(Pos('<strong>7</strong><span>Public API symbols</span>',
+      string(IndexHTML)) > 0,
+      'the public API symbol total should match the A–Z index population');
+    Check(Pos('3 of 7 API symbols documented', string(IndexHTML)) > 0,
+      'coverage should use the indexed API population');
     Check(Pos('<h2>Browse API</h2>', string(IndexHTML)) > 0,
       'the project index should lead readers toward the A–Z symbol index');
     Check(Pos('href="symbols.html"', string(IndexHTML)) > 0,

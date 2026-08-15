@@ -40,7 +40,7 @@ without compiling PasWeave:
   and open this file locally for the filterable symbol browser
 - [GitHub Pages deployment target](https://ikelaiah.github.io/pasweave/)
 
-The snapshot reports 30 of 30 public API symbols documented and contains 16
+The snapshot reports 28 of 28 public API symbols documented and contains 16
 display equations plus 65 inline mathematical expressions. See the
 [sample-output notes](sample-output/README.md) for how its assets are kept
 compact.

@@ -115,3 +115,14 @@ and Browse API card. "A–Z" remains only in descriptive copy. Routes, anchors,
 filters, deep links, themes, and branding tokens are unchanged; both examples'
 HTML goldens and the version metadata are regenerated to v0.5.3.
 
+## `v0.5.4` index-total alignment
+
+A follow-up release aligns the project index totals with the A–Z symbol index
+population. **Parsed symbols** becomes **Parsed declarations** (still counts
+every model declaration), **Public API symbols** equals the index population
+(units excluded), and coverage plus the per-unit API-symbol rows use the same
+indexed population in both HTML and Markdown. The CI coverage metric behind
+`--min-documentation-coverage` (`PW411`) is intentionally unchanged. Routes,
+anchors, filters, themes, and branding are unchanged; example goldens and
+version metadata are regenerated to v0.5.4.
+

@@ -3,7 +3,7 @@ param(
   [string]$Fpc = 'fpc',
   [string]$FpcRes = 'fpcres',
   [string]$Windres = 'windres',
-  [string]$ExpectedVersion = '0.5.3'
+  [string]$ExpectedVersion = '0.5.4'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -138,7 +138,7 @@ try {
     (Join-Path $smokeOutput 'html\index.html'))
   $smokeCoreUnit = [IO.File]::ReadAllText(
     (Join-Path $smokeOutput 'html\units\Scientific.Core.html'))
-  if (-not $smokeIndex.Contains('30 of 30 API symbols documented')) {
+  if (-not $smokeIndex.Contains('28 of 28 API symbols documented')) {
     throw 'standalone smoke test lost documented-symbol coverage'
   }
   if (-not $smokeIndex.Contains('data-diagram-container')) {

@@ -238,9 +238,10 @@ smoke check succeeded after merge. Evidence is recorded in [navigation and sourc
 traceability](docs/navigation-and-source-traceability.md), the
 [HTML renderer guide](docs/html-renderer.md), the
 [real-project audit](docs/mathlib-fp-validation.md), the
-[changelog](CHANGELOG.md), and the v0.5.2 release note. A follow-up v0.5.3
-release renamed the visible symbol-index label to **Symbols Index** without
-changing routes, anchors, or filters.
+[changelog](CHANGELOG.md), and the v0.5.2 release note. Follow-up v0.5.3 and
+v0.5.4 releases renamed the visible symbol-index label to **Symbols Index**
+and aligned the project index's "Public API symbols" and coverage totals with
+the A–Z index population, without changing routes, anchors, or filters.
 
 Exit criteria:
 

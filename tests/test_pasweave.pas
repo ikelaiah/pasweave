@@ -219,7 +219,7 @@ var
   LazarusErrorMessage: string;
   StyleProject: TDocProject;
 begin
-  Check(PasWeaveVersion = '0.5.3',
+  Check(PasWeaveVersion = '0.5.4',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -1486,7 +1486,7 @@ begin
       (ExampleProject.Units.Count = 2),
       'the documented example should parse both units without errors');
     ExampleIndexHTML := RenderHTMLIndex(ExampleProject);
-    Check(Pos('10 of 10 API symbols documented',
+    Check(Pos('8 of 8 API symbols documented',
       string(ExampleIndexHTML)) > 0,
       'the documented example should showcase complete /// coverage');
     ExampleCoreUnit := FindUnitModel(ExampleProject, 'Demo.Core');
@@ -1567,7 +1567,7 @@ begin
       ScientificCoreUnit);
     ScientificAnalysisHTML := RenderHTMLUnit(ScientificProject,
       ScientificAnalysisUnit);
-    Check(Pos('30 of 30 API symbols documented',
+    Check(Pos('28 of 28 API symbols documented',
       string(ScientificIndexHTML)) > 0,
       'the scientific example should have complete public API coverage');
     Check(CountOccurrences(string(ScientificCoreHTML),
