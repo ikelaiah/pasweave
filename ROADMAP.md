@@ -225,6 +225,45 @@ Exit criteria:
 - Validate keyboard navigation and responsive layout against the examples,
   the latest `mathlib-fp` corpus, and the deployed showcase.
 
+## `v0.5.2` — API discovery and reader themes
+
+**Outcome:** readers can discover an unfamiliar API by browsing as well as by
+searching, and can choose a comfortable color scheme without weakening the
+offline, accessible generated-site contract.
+
+Exit criteria:
+
+- Reorder the project index around documentation discovery: project summary,
+  Browse API, units, architecture diagrams, then diagnostics and coverage.
+  Architectural views remain available without delaying the primary route
+  into the reference.
+- Add a generated A–Z symbol index with stable links and filters for types,
+  routines, members, constants, and variables. It must be derived entirely
+  from the documentation model and require no manually maintained index data.
+- Make the symbol index an obvious persistent destination from generated HTML
+  while retaining the project index as the canonical unit and architecture
+  overview and global search as the fastest known-name lookup.
+- Add a keyboard-accessible reader theme control with `System`, `Light`, and
+  `Dark` choices. `System` remains the default and follows
+  `prefers-color-scheme`.
+- Remember an explicit reader choice where browser storage is available, but
+  fall back safely to `System` when storage is unavailable or rejected,
+  including when documentation is opened directly through `file://`.
+- Apply the selected scheme before visible page rendering where practical,
+  and keep native controls, KaTeX content, Mermaid diagrams, focus states, and
+  contrast synchronized with it without introducing a remote dependency.
+- Provide restrained build-time project branding through a small validated
+  set of theme tokens for colors, typography, and a local project mark. Keep
+  reader-facing named-theme galleries, arbitrary script injection, and remote
+  theme assets out of scope.
+- Preserve useful no-JavaScript browsing: unit and A–Z symbol indexes remain
+  ordinary HTML, while the site follows the system color scheme when the
+  interactive preference control is unavailable.
+- Validate index usability, theme persistence and fallback, responsive layout,
+  keyboard operation, contrast, diagrams, and direct-from-disk behavior
+  against both examples, the latest `mathlib-fp` corpus, and the deployed
+  showcase.
+
 ## `v0.6.0` — Safe incremental builds
 
 **Outcome:** repeated builds of large projects are faster without weakening
@@ -246,10 +285,10 @@ Exit criteria:
 - Document cache invalidation and make corrupted cache state a recoverable
   diagnostic rather than a fatal mystery.
 
-## `v0.7.0` — Reproducible project configuration and theming
+## `v0.7.0` — Reproducible project configuration
 
 **Outcome:** a project can commit one reviewable PasWeave configuration and
-apply a restrained visual identity without forking generated assets.
+reproduce a build without restating stable options on every command line.
 
 Exit criteria:
 
@@ -260,8 +299,6 @@ Exit criteria:
   traversal where it would escape that base.
 - Support project title, repository/source-link settings, output selection,
   visibility policy, and coverage thresholds.
-- Expose a small set of validated theme tokens for colors, typography, and a
-  local project mark while retaining accessible defaults.
 - Keep arbitrary script injection, remote runtime dependencies, and executable
   renderer plugins out of the `v1.0.0` scope.
 - Include the effective normalized configuration in diagnostics or model
