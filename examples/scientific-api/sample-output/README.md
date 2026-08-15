@@ -7,10 +7,10 @@ expressions.
 
 - [Browse the Markdown project index](markdown/index.md)
 - [Open the HTML project index](html/index.html) after cloning the repository
-- [Browse the A–Z symbol index](html/symbols.html) after cloning the repository
+- [Browse the symbol index](html/symbols.html) after cloning the repository
 
-The HTML preview retains PasWeave's generated styling, offline search, A–Z
-symbol index, reader theme control, KaTeX rendering, direct unit and category
+The HTML preview retains PasWeave's generated styling, offline search, symbol
+index, reader theme control, KaTeX rendering, direct unit and category
 navigation, linked dependency and relationship diagrams, and accessible diagram
 controls.
 

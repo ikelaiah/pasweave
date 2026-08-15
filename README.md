@@ -6,7 +6,7 @@
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Lazarus](https://img.shields.io/badge/Lazarus-.lpi%20%7C%20.lpk-7c3aed)](docs/lazarus-projects.md)
 [![Windows](https://img.shields.io/badge/platform-Windows%20x86--64-2563eb)](docs/releasing.md)
-[![Version](https://img.shields.io/badge/version-0.5.5-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.5.6-635bff)](CHANGELOG.md)
 [![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-10b981)](https://github.com/ikelaiah/pasweave/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/ikelaiah/pasweave/pages.yml?branch=main&label=tests)](https://github.com/ikelaiah/pasweave/actions/workflows/pages.yml)
 [![Documentation](https://img.shields.io/badge/docs-live-0ea5e9)](https://ikelaiah.github.io/pasweave/)
@@ -25,7 +25,7 @@ network connection, or registry changes.
 
 [View the live showcase](https://ikelaiah.github.io/pasweave/) ·
 [Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
-[Read the v0.5.5 release notes](RELEASE_NOTE_v0.5.5.md)
+[Read the v0.5.6 release notes](RELEASE_NOTE_v0.5.6.md)
 
 > **Project status:** PasWeave is pre-release software. It targets Free Pascal
 > and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
@@ -67,7 +67,7 @@ For smaller examples, browse:
 
 Each build can produce:
 
-- a responsive, searchable static HTML site with a generated A–Z symbol index
+- a responsive, searchable static HTML site with a generated symbol index
   and a System / Light / Dark reader theme control;
 - linked Markdown pages for repositories and other documentation systems;
 - a deterministic JSON source model;
@@ -85,7 +85,7 @@ format details, schema notes, and exit codes.
   `.lpk` files.
 - 📦 **Zero runtime dependencies.** The portable Windows executable bundles
   search, diagrams, KaTeX, styles, and fonts for completely offline use.
-- 🔎 **Easy to discover and navigate.** An A–Z symbol index, searchable unit
+- 🔎 **Easy to discover and navigate.** A symbol index, searchable unit
   switching, on-page category links, stable overload-aware anchors, source
   links, dependency diagrams, and class/interface relationships connect the
   API.
@@ -218,7 +218,7 @@ for diagnostic codes and coverage rules.
 | [Compiler-aware parsing](docs/compiler-aware-parsing.md) | Paths, defines, targets, and precedence |
 | [Lazarus projects and packages](docs/lazarus-projects.md) | `.lpi`, `.lpk`, build modes, and packages |
 | [Authoring feedback](docs/authoring-feedback.md) | References, coverage, diagnostics, and CI |
-| [Navigation and source links](docs/navigation-and-source-traceability.md) | Anchors, routes, A–Z index, themes, and repository links |
+| [Navigation and source links](docs/navigation-and-source-traceability.md) | Anchors, routes, symbol index, themes, and repository links |
 | [HTML renderer](docs/html-renderer.md) | Offline rendering, search, themes, branding, safety, and diagrams |
 | [Building from source](docs/building-from-source.md) | Requirements, compilation, tests, and release builds |
 | [Parser integration](docs/parser-integration.md) | `fcl-passrc` adapter details |
@@ -251,7 +251,7 @@ Current limitations include:
 The parser-to-site pipeline has also been tested against all 50 source units in
 the latest [`mathlib-fp`](https://github.com/ikelaiah/mathlib-fp): 2,978 symbols
 were produced with zero errors, every generated unit page passed the v0.5.1
-navigation audit, and the A–Z symbol index and reader themes passed the v0.5.2
+navigation audit, and the symbol index and reader themes passed the v0.5.2
 discovery audit. Read the
 [validation report](docs/mathlib-fp-validation.md) for the tested revision,
 determinism result, responsive browser evidence, and comment-syntax findings.

@@ -10,19 +10,20 @@ PasWeave v0.5.2 makes an unfamiliar API discoverable by browsing and lets
 readers choose a comfortable color scheme without weakening the offline
 contract.
 
-Every build now writes `symbols.html`: a model-derived A–Z index of every
-renderable non-unit symbol, grouped into letter sections with stable links and
-category filters for types, routines, members, constants, and variables. The
-complete list is ordinary HTML, so browsing works without JavaScript; the local
-script adds category checkboxes, live counts, and category deep links. See the
-[HTML renderer guide](html-renderer.md) for the markup and interaction details.
+Every build now writes `symbols.html`: a model-derived symbol index of every
+renderable non-unit symbol, grouped into A–Z and `#` sections with stable links
+and category filters for types, routines, members, constants, and variables.
+The complete list is ordinary HTML, so browsing works without JavaScript; the
+local script adds category checkboxes, live counts, and category deep links. See
+the [HTML renderer guide](html-renderer.md) for the markup and interaction
+details.
 
 The project index now follows a discovery-first order: project summary,
 **Browse API**, the units table, architecture diagrams, then diagnostics. The
-**Browse API** section leads with an A–Z card and per-category cards, and every
-page header persists a **Symbols Index** destination. Unit URLs, overload-aware
-anchors, the search-index schema, source links, and both project diagrams
-retain their v0.5.0 and v0.5.1 contracts.
+**Browse API** section leads with a symbol-index card and per-category cards,
+and every page header persists a **Symbols Index** destination. Unit URLs,
+overload-aware anchors, the search-index schema, source links, and both project
+diagrams retain their v0.5.0 and v0.5.1 contracts.
 
 Every page embeds a dependency-free theme bootstrap that publishes
 `data-theme` before rendering, and a keyboard-accessible **System / Light /

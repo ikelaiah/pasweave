@@ -7,6 +7,28 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.6] - 2026-08-15
+
+### Changed
+
+- Corrected symbol-index terminology so the generated copy no longer implies
+  that symbol names can only begin with A–Z. The hero, Browse API description,
+  and Symbols Index card now say "symbol index"; the symbols page introduction
+  describes symbols "indexed by name and grouped into navigable sections"; and
+  the section-navigation accessible label reads "Symbol index sections".
+  Symbols beginning with `_`, digits, or other non-letter characters remain
+  valid and are grouped under the `#` section. No routes, anchors, filters,
+  sorting, or grouping behavior changed.
+- Version metadata and portable-build defaults now report v0.5.6.
+
+### Validation
+
+- The complete FPC 3.2.2 suite, CLI build, deterministic example goldens, and
+  direct-file/default-`///` workflows pass.
+- Focused tests pin the revised copy and prove that a symbol beginning with an
+  underscore appears in the index, is grouped under the `#` section, and keeps
+  a working stable link.
+
 ## [0.5.5] - 2026-08-15
 
 ### Changed
@@ -376,7 +398,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.5...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.6...HEAD
+[0.5.6]: https://github.com/ikelaiah/pasweave/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/ikelaiah/pasweave/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/ikelaiah/pasweave/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/ikelaiah/pasweave/compare/v0.5.2...v0.5.3

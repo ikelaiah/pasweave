@@ -28,7 +28,7 @@ The example deliberately exercises:
 - deterministic Markdown, HTML, search, and diagram output;
 - line-aware repository links and filtered, keyboard-accessible offline search;
 - direct searchable unit switching and present-only on-page category links;
-- a generated A–Z symbol index and a System/Light/Dark reader theme control.
+- a generated symbol index and a System/Light/Dark reader theme control.
 
 A compact generated snapshot is checked in so the result can be inspected
 without compiling PasWeave:
@@ -36,7 +36,7 @@ without compiling PasWeave:
 - [Markdown project index](sample-output/markdown/index.md)
 - [HTML project index](sample-output/html/index.html) — clone the repository
   and open this file locally for styling, search, KaTeX, and Mermaid diagrams
-- [A–Z symbol index](sample-output/html/symbols.html) — clone the repository
+- [Symbol index](sample-output/html/symbols.html) — clone the repository
   and open this file locally for the filterable symbol browser
 - [GitHub Pages deployment target](https://ikelaiah.github.io/pasweave/)
 

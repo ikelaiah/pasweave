@@ -34,7 +34,7 @@ and licenses are included in the output.
 The HTML site provides:
 
 - a responsive project overview and linked unit pages;
-- a model-derived A–Z symbol index page with category filters;
+- a model-derived symbol index page with category filters;
 - searchable API symbols with unit, kind, visibility, and documentation-status
   filters;
 - stable symbol anchors and repository source links when configured;

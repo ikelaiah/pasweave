@@ -219,7 +219,7 @@ var
   LazarusErrorMessage: string;
   StyleProject: TDocProject;
 begin
-  Check(PasWeaveVersion = '0.5.5',
+  Check(PasWeaveVersion = '0.5.6',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -839,7 +839,7 @@ begin
     Check(FileExists('build/test-docs/html/index.html'),
       'HTML renderer should write the project index');
     Check(FileExists('build/test-docs/html/symbols.html'),
-      'HTML renderer should write the A–Z symbol index');
+      'HTML renderer should write the symbol index');
     Check(FileExists('build/test-docs/html/units/SimpleUnit.html'),
       'HTML renderer should write the unit page');
     Check(FileExists('build/test-docs/html/assets/site.css'),

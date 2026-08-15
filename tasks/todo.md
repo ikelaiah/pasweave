@@ -57,5 +57,24 @@
 - [x] Full suite and production build pass
 - [x] No `v0.6.0+` work included
 
+# v0.5.6 task checklist
+
+- [x] Correct symbol-index terminology (no A–Z-only implication)
+- [x] Use the six canonical UI strings in the renderer
+- [x] Keep the "Symbols Index" heading and nav label
+- [x] Do not change symbols.html, anchors, filters, sorting, or `#` grouping
+- [x] No unit count or pluralization in the card/introduction
+- [x] Focused assertions for all changed user-facing and accessibility text
+- [x] Non-letter-symbol coverage (appears, `#` group, stable link)
+- [x] Update misleading "A–Z symbol index" phrasing in living docs
+- [x] Keep "alphabetical" only for unit sorting / A–Z letter ordering
+- [x] Preserve released history, old notes, and completed task records
+- [x] Regenerate both examples' HTML goldens
+- [x] CHANGELOG Unreleased entry moved into the v0.5.6 section
+- [x] Version metadata and portable-build default updated to `0.5.6`
+- [x] Full suite and production build pass
+- [x] No `v0.6.0+` work included
+
+
 
 

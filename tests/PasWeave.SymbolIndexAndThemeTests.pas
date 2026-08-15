@@ -38,7 +38,7 @@ var
   SymbolHTML: UTF8String;
 begin
   Check(HTMLSymbolIndexFilename = 'symbols.html',
-    'the A–Z symbol index should use a stable route');
+    'the symbol index should use a stable route');
   Project := BuildProject('tests/fixtures/SimpleUnit.pas',
     'Symbol index', AttemptedCount);
   try
@@ -69,7 +69,7 @@ begin
     Check(Pos('data-symbol-kind="unit"', string(SymbolHTML)) = 0,
       'the symbol index should omit unit symbols');
     Check(Pos('class="letter-bar"', string(SymbolHTML)) > 0,
-      'the symbol index should provide alphabetical section links');
+      'the symbol index should provide A–Z and # section links');
     Check(Pos('data-symbol-letter', string(SymbolHTML)) > 0,
       'the symbol index should group symbols into letter sections');
     Check(Pos('data-symbol-status', string(SymbolHTML)) > 0,
@@ -85,6 +85,13 @@ begin
       'the header should mark the symbol index as current');
     Check(Pos('<h1>Symbols Index</h1>', string(SymbolHTML)) > 0,
       'the symbol index should use the professional visible label');
+    Check(Pos('Public API symbols indexed by name and grouped into ' +
+      'navigable sections.', string(SymbolHTML)) > 0,
+      'the symbol index introduction should not claim A–Z-only names');
+    Check(Pos('content="Symbol index for ', string(SymbolHTML)) > 0,
+      'the symbol index meta description should be concise');
+    Check(Pos('aria-label="Symbol index sections"', string(SymbolHTML)) > 0,
+      'the section navigation should carry an accurate accessible label');
     Check(Pos('href="index.html">Units</a>', string(SymbolHTML)) > 0,
       'the symbol index header should retain the units destination');
     LetterPositions[1] := Pos('id="symbol-a"', string(SymbolHTML));
@@ -102,22 +109,28 @@ begin
       'repeated symbol-index rendering should be deterministic');
 
     IndexHTML := RenderHTMLIndex(Project);
-    Check(Pos('Browse the API using the A&#8211;Z symbol index, ' +
-      'explore individual units, or search the complete public API ' +
-      'reference.', string(IndexHTML)) > 0,
-      'the hero copy should describe the A–Z index, units, and search');
+    Check(Pos('Browse the API using the symbol index, explore individual ' +
+      'units, or search the complete public API reference.',
+      string(IndexHTML)) > 0,
+      'the hero copy should describe the symbol index, units, and search');
+    Check(Pos('<p>Browse symbols by name or filter by kind.</p>',
+      string(IndexHTML)) > 0,
+      'the Browse API description should not claim A–Z-only names');
+    Check(Pos('Every public API symbol, indexed by name and filterable by ' +
+      'kind.', string(IndexHTML)) > 0,
+      'the Symbols Index card should not claim A–Z-only names');
     Check(Pos('<strong>9</strong><span>Parsed declarations</span>',
       string(IndexHTML)) > 0,
       'the project index should count every parsed declaration');
     Check(Pos('<strong>7</strong><span>Public API symbols</span>',
       string(IndexHTML)) > 0,
-      'the public API symbol total should match the A–Z index population');
+      'the public API symbol total should match the symbol index population');
     Check(Pos('3 of 7 API symbols documented', string(IndexHTML)) > 0,
       'coverage should use the indexed API population');
     Check(Pos('<h2>Browse API</h2>', string(IndexHTML)) > 0,
-      'the project index should lead readers toward the A–Z symbol index');
+      'the project index should lead readers toward the symbol index');
     Check(Pos('href="symbols.html"', string(IndexHTML)) > 0,
-      'the project index should link the A–Z symbol index');
+      'the project index should link the symbol index');
     Check(Pos('class="browse-count">7</span>', string(IndexHTML)) > 0,
       'the Browse API card should report the indexed symbol total');
     Check(Pos('href="symbols.html#types"', string(IndexHTML)) > 0,
@@ -373,9 +386,52 @@ begin
   Check(not IsValidThemeFont('Inter}/style'), 'symbols should be rejected');
 end;
 
+procedure CheckNonLetterSymbols;
+var
+  EdgeSymbol: TDocSymbol;
+  EdgeUnit: TDocUnit;
+  HTML: UTF8String;
+  Project: TDocProject;
+  SectionPosition: Integer;
+  SectionText: string;
+begin
+  Project := TDocProject.Create;
+  try
+    EdgeUnit := TDocUnit.Create;
+    EdgeUnit.Name := 'SymbolIndexEdge';
+    EdgeSymbol := TDocSymbol.Create;
+    EdgeSymbol.ID := 'routine:symbolindexedge._underscorehelper';
+    EdgeSymbol.Name := '_UnderscoreHelper';
+    EdgeSymbol.QualifiedName := 'SymbolIndexEdge._UnderscoreHelper';
+    EdgeSymbol.Kind := skRoutine;
+    EdgeSymbol.Visibility := svPublic;
+    EdgeUnit.Symbols.Add(EdgeSymbol);
+    Project.Units.Add(EdgeUnit);
+
+    HTML := RenderHTMLSymbolIndex(Project);
+    Check(Pos('_UnderscoreHelper', string(HTML)) > 0,
+      'a symbol beginning with an underscore should appear in the index');
+    SectionPosition := Pos('id="symbol-other"', string(HTML));
+    Check(SectionPosition > 0,
+      'non-letter symbols should be grouped under the # section');
+    SectionText := string(Copy(HTML, SectionPosition,
+      Length(HTML) - SectionPosition + 1));
+    Check(Pos('_UnderscoreHelper', SectionText) > 0,
+      'the # section should contain the non-letter symbol');
+    Check(Pos('href="#symbol-other">#</a>', string(HTML)) > 0,
+      'the section navigation should expose the # section link');
+    Check(Pos('units/SymbolIndexEdge.html#' +
+      HTMLSymbolAnchor(EdgeSymbol), string(HTML)) > 0,
+      'non-letter symbols should keep a working stable link');
+  finally
+    Project.Free;
+  end;
+end;
+
 procedure RunSymbolIndexAndThemeTests;
 begin
   CheckSymbolIndexContracts;
+  CheckNonLetterSymbols;
   CheckThemeContracts;
   CheckBrandingValidation;
 end;
