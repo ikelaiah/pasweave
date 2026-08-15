@@ -126,3 +126,11 @@ indexed population in both HTML and Markdown. The CI coverage metric behind
 anchors, filters, themes, and branding are unchanged; example goldens and
 version metadata are regenerated to v0.5.4.
 
+## `v0.5.5` hero-copy polish
+
+A follow-up release rephrases the project-index hero paragraph to "Browse the
+API using the A–Z symbol index, explore individual units, or search the
+complete public API reference.", preserving the `&#8211;` en-dash entity.
+A focused test pins the new copy and both examples' HTML goldens are
+regenerated to v0.5.5. No routes, anchors, schema, themes, or branding change.
+

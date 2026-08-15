@@ -1514,9 +1514,9 @@ begin
   AppendLine(Result, '<section class="hero">');
   AppendLine(Result, '<p class="eyebrow">Free Pascal API reference</p>');
   AppendLine(Result, '<h1>' + EscapeHTML(AProject.Name) + '</h1>');
-  AppendLine(Result, '<p class="hero-copy">Browse the API from the A&#8211;Z ' +
-    'symbol index, jump to a unit, or search the complete public ' +
-    'reference.</p>');
+  AppendLine(Result, '<p class="hero-copy">Browse the API using the ' +
+    'A&#8211;Z symbol index, explore individual units, or search the ' +
+    'complete public API reference.</p>');
   AppendLine(Result, '<p class="source-root">Source root <code>' +
     EscapeHTML(AProject.SourceRoot) + '</code></p>');
   AppendLine(Result, '</section>');

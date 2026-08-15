@@ -7,6 +7,27 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.5] - 2026-08-15
+
+### Changed
+
+- Rephrased the project-index hero copy to "Browse the API using the A–Z
+  symbol index, explore individual units, or search the complete public API
+  reference." The en dash is preserved as `&#8211;` in generated HTML.
+- Version metadata and portable-build defaults now report v0.5.5.
+
+### Compatibility
+
+- No routes, anchors, schema, themes, or branding tokens changed; only the
+  hero paragraph text on the project index.
+
+### Validation
+
+- The complete FPC 3.2.2 suite, CLI build, deterministic example goldens, and
+  direct-file/default-`///` workflows pass.
+- A focused test pins the new hero copy, and both examples' golden index
+  pages were regenerated.
+
 ## [0.5.4] - 2026-08-15
 
 ### Changed
@@ -355,7 +376,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.4...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.5...HEAD
+[0.5.5]: https://github.com/ikelaiah/pasweave/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/ikelaiah/pasweave/compare/v0.5.3...v0.5.4
 [0.5.3]: https://github.com/ikelaiah/pasweave/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/ikelaiah/pasweave/compare/v0.5.1...v0.5.2

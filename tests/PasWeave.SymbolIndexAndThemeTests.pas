@@ -102,6 +102,10 @@ begin
       'repeated symbol-index rendering should be deterministic');
 
     IndexHTML := RenderHTMLIndex(Project);
+    Check(Pos('Browse the API using the A&#8211;Z symbol index, ' +
+      'explore individual units, or search the complete public API ' +
+      'reference.', string(IndexHTML)) > 0,
+      'the hero copy should describe the A–Z index, units, and search');
     Check(Pos('<strong>9</strong><span>Parsed declarations</span>',
       string(IndexHTML)) > 0,
       'the project index should count every parsed declaration');
