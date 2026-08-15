@@ -4,6 +4,49 @@ PasWeave v0.5.0 adds repository source links, complete model-backed
 relationship navigation, and filtered offline search without changing the
 existing unit-page or stable-symbol-anchor formats.
 
+## v0.5.2 API discovery and reader themes
+
+PasWeave v0.5.2 makes an unfamiliar API discoverable by browsing and lets
+readers choose a comfortable color scheme without weakening the offline
+contract.
+
+Every build now writes `symbols.html`: a model-derived A–Z index of every
+renderable non-unit symbol, grouped into letter sections with stable links and
+category filters for types, routines, members, constants, and variables. The
+complete list is ordinary HTML, so browsing works without JavaScript; the local
+script adds category checkboxes, live counts, and category deep links. See the
+[HTML renderer guide](html-renderer.md) for the markup and interaction details.
+
+The project index now follows a discovery-first order: project summary,
+**Browse API**, the units table, architecture diagrams, then diagnostics. The
+**Browse API** section leads with an A–Z card and per-category cards, and every
+page header persists a **Symbols A–Z** destination. Unit URLs, overload-aware
+anchors, the search-index schema, source links, and both project diagrams
+retain their v0.5.0 and v0.5.1 contracts.
+
+Every page embeds a dependency-free theme bootstrap that publishes
+`data-theme` before rendering, and a keyboard-accessible **System / Light /
+Dark** control. An explicit choice is remembered through local storage when
+available and falls back to the system scheme when storage is rejected,
+including direct `file://` use. The stylesheet tokenizes all colors and
+typography; KaTeX follows the active text color and Mermaid diagrams re-render
+on theme change. Build-time branding adds validated `--project-mark`,
+`--theme-accent`, `--theme-accent-2`, and `--theme-font` options whose
+effective values are recorded additively in `api-model.json`.
+
+The documented and scientific examples are golden-output fixtures for the new
+markup and assets. An isolated headless Chrome run over the generated index,
+unit page, and a 2,657-entry `mathlib-fp` symbol index reported clean consoles,
+an applied `data-theme` attribute, and a revealed theme control. The latest
+`mathlib-fp` commit `b5aea1c2d841fd82f9e98cb770c00fc04c2d9b17` produced 175
+identical files across two runs, and all 50 unit pages carry the theme control.
+See the [full audit](mathlib-fp-validation.md).
+
+The Pages workflow applies the same symbol-index, header-navigation, and theme
+assertions before upload and after deployment. The public showcase check is the
+one post-merge release gate because the deployed site cannot contain this
+branch before it reaches `main`.
+
 ## v0.5.1 unit and section navigation
 
 PasWeave v0.5.1 adds direct navigation within and between generated unit

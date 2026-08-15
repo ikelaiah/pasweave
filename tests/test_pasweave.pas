@@ -9,7 +9,8 @@ uses
   PasWeave.SourceLinks,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
-  PasWeave.NavigationTests, PasWeave.ValidationTests,
+  PasWeave.NavigationTests, PasWeave.SymbolIndexAndThemeTests,
+  PasWeave.ValidationTests,
   PasWeave.Version;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -216,8 +217,9 @@ var
   LazarusProject: TDocProject;
   LazarusProjectSecond: TDocProject;
   LazarusErrorMessage: string;
+  StyleProject: TDocProject;
 begin
-  Check(PasWeaveVersion = '0.5.1',
+  Check(PasWeaveVersion = '0.5.2',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -836,6 +838,8 @@ begin
     WriteHTMLDocumentation(Project, 'build/test-docs/html');
     Check(FileExists('build/test-docs/html/index.html'),
       'HTML renderer should write the project index');
+    Check(FileExists('build/test-docs/html/symbols.html'),
+      'HTML renderer should write the A–Z symbol index');
     Check(FileExists('build/test-docs/html/units/SimpleUnit.html'),
       'HTML renderer should write the unit page');
     Check(FileExists('build/test-docs/html/assets/site.css'),
@@ -897,9 +901,14 @@ begin
   Check(Pos('prefers-reduced-motion: reduce',
     string(HTMLDiagramScript)) > 0,
     'diagram interaction should respect reduced-motion preferences');
-  Check(Pos('overscroll-behavior: contain; scroll-behavior: smooth',
-    string(HTMLStylesheet)) = 0,
-    'pointer dragging should not inherit delayed smooth scrolling');
+  StyleProject := TDocProject.Create;
+  try
+    Check(Pos('overscroll-behavior: contain; scroll-behavior: smooth',
+      string(HTMLStylesheet(StyleProject))) = 0,
+      'pointer dragging should not inherit delayed smooth scrolling');
+  finally
+    StyleProject.Free;
+  end;
 
   DependencyProject := BuildProject('tests/fixtures/dependencies',
     'DependencyFixture', AttemptedCount);
@@ -1507,6 +1516,10 @@ begin
     Check(SampleOutputMatches(RetargetSampleIndexAssets(ExampleIndexHTML),
       'examples/documented-api/sample-output/html/index.html'),
       'the HTML sample index should match current renderer output');
+    Check(SampleOutputMatches(RetargetSampleIndexAssets(
+      RenderHTMLSymbolIndex(ExampleProject)),
+      'examples/documented-api/sample-output/html/symbols.html'),
+      'the HTML sample symbol index should match current renderer output');
     Check(SampleOutputMatches(RetargetSampleUnitAssets(RenderHTMLUnit(
       ExampleProject, ExampleCoreUnit)),
       'examples/documented-api/sample-output/html/units/Demo.Core.html'),
@@ -1515,7 +1528,7 @@ begin
       ExampleProject, ExampleServicesUnit)),
       'examples/documented-api/sample-output/html/units/Demo.Services.html'),
       'the Demo.Services HTML sample should match current renderer output');
-    Check(SampleOutputMatches(HTMLStylesheet,
+    Check(SampleOutputMatches(HTMLStylesheet(ExampleProject),
       'examples/documented-api/sample-output/html/assets/site.css') and
       SampleOutputMatches(HTMLApplicationScript,
       'examples/documented-api/sample-output/html/assets/app.js') and
@@ -1598,6 +1611,10 @@ begin
     Check(SampleOutputMatches(RetargetSampleIndexAssets(ScientificIndexHTML),
       'examples/scientific-api/sample-output/html/index.html'),
       'the scientific HTML index should match current renderer output');
+    Check(SampleOutputMatches(RetargetSampleIndexAssets(
+      RenderHTMLSymbolIndex(ScientificProject)),
+      'examples/scientific-api/sample-output/html/symbols.html'),
+      'the scientific HTML symbol index should match current renderer output');
     Check(SampleOutputMatches(RetargetSampleUnitAssets(ScientificCoreHTML),
       'examples/scientific-api/sample-output/html/units/Scientific.Core.html'),
       'the Scientific.Core HTML sample should remain synchronized');
@@ -1605,7 +1622,7 @@ begin
       ScientificAnalysisHTML),
       'examples/scientific-api/sample-output/html/units/Scientific.Analysis.html'),
       'the Scientific.Analysis HTML sample should remain synchronized');
-    Check(SampleOutputMatches(HTMLStylesheet,
+    Check(SampleOutputMatches(HTMLStylesheet(ScientificProject),
       'examples/scientific-api/sample-output/html/assets/site.css') and
       SampleOutputMatches(HTMLApplicationScript,
       'examples/scientific-api/sample-output/html/assets/app.js') and
@@ -1646,6 +1663,7 @@ end;
 begin
   try
     RunNavigationTests;
+    RunSymbolIndexAndThemeTests;
     RunTests;
     RunValidationTests;
     WriteLn('All PasWeave tests passed.');

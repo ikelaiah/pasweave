@@ -1,16 +1,21 @@
-# v0.5.1 task checklist
+# v0.5.2 task checklist
 
-- [x] Complete no-JavaScript unit list on every HTML unit page
-- [x] Searchable unit filtering with live result count
-- [x] Arrow-key and Escape behavior with visible focus
-- [x] Any unit reachable from another in two actions
-- [x] Present-only on-page symbol-category navigator
-- [x] Stable unit URL and symbol-anchor regression coverage
-- [x] Responsive desktop and phone-width browser validation
-- [x] Documented API and scientific sample regeneration
-- [x] Latest `mathlib-fp` navigation and determinism audit
+- [x] A–Z symbol index page derived entirely from the documentation model
+- [x] Five category filters (types, routines, members, constants, variables)
+- [x] Stable links, letter sections, and no-JavaScript browsing
+- [x] Project index reordered to summary, Browse API, units, diagrams, diagnostics
+- [x] Persistent Symbols A–Z header destination on every page
+- [x] Keyboard-accessible System/Light/Dark reader theme control
+- [x] Inline data-theme bootstrap applied before visible rendering
+- [x] Safe persistence fallback when storage is unavailable or rejected
+- [x] KaTeX, Mermaid diagrams, native controls, and contrast synchronized
+- [x] Validated --project-mark, --theme-accent, --theme-accent-2, --theme-font
+- [x] Effective branding tokens recorded additively in api-model.json
+- [x] Documented API and scientific sample regeneration including symbols.html
+- [x] Latest `mathlib-fp` discovery and determinism audit (175 files, 0 diffs)
+- [x] Headless browser checks with clean consoles
 - [x] Pages workflow deployed-showcase assertions
 - [x] README, detailed docs, changelog, roadmap, and release note
-- [x] Version metadata and portable-build default updated to `0.5.1`
+- [x] Version metadata and portable-build default updated to `0.5.2`
 - [x] Full suite, builds, deterministic checks, and five-axis review
 - [x] No `v0.6.0+` work included

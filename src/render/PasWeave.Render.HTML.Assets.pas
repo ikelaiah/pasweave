@@ -5,11 +5,15 @@ unit PasWeave.Render.HTML.Assets;
 
 interface
 
+uses
+  PasWeave.Model;
+
 const
   KaTeXVersion = '0.18.1';
   MermaidVersion = '11.16.0';
 
-function HTMLStylesheet: UTF8String;
+function HTMLStylesheet(AProject: TDocProject): UTF8String;
+function HTMLThemeBootstrap: UTF8String;
 function HTMLApplicationScript: UTF8String;
 function HTMLMathScript: UTF8String;
 function HTMLDiagramScript: UTF8String;
@@ -20,7 +24,7 @@ procedure WriteMermaidAssets(const AAssetsDirectory: string);
 implementation
 
 uses
-  Classes, SysUtils, StrUtils
+  Classes, SysUtils, StrUtils, PasWeave.Render.Support
   {$IFDEF PASWEAVE_PORTABLE_ASSETS}
   {$IFDEF MSWINDOWS}
   , Zipper
@@ -34,22 +38,72 @@ begin
   AOutput := AOutput + ALine + #10;
 end;
 
-function HTMLStylesheet: UTF8String;
+function HTMLStylesheet(AProject: TDocProject): UTF8String;
+var
+  AccentDark: string;
+  AccentAltDark: string;
 begin
   Result := '';
-  AppendLine(Result, ':root {');
-  AppendLine(Result, '  color-scheme: light dark;');
+  if AProject.ThemeAccent = DefaultThemeAccent then
+    AccentDark := '#a99eff'
+  else
+    AccentDark := LightenThemeColor(AProject.ThemeAccent, 40);
+  if AProject.ThemeAccentAlt = DefaultThemeAccentAlt then
+    AccentAltDark := '#63d7ca'
+  else
+    AccentAltDark := LightenThemeColor(AProject.ThemeAccentAlt, 40);
+  AppendLine(Result, ':root, :root[data-theme="system"] {');
+  AppendLine(Result, '  color-scheme: light;');
+  AppendLine(Result, '  --scheme: light;');
   AppendLine(Result, '  --bg: #f7f8fc; --surface: #ffffff; --surface-2: #eef1f8;');
   AppendLine(Result, '  --text: #172033; --muted: #667085; --line: #dbe1ec;');
-  AppendLine(Result, '  --accent: #5b4ee6; --accent-2: #0e8f81; --code: #182034;');
-  AppendLine(Result, '  --warning-bg: #fff8e6; --warning-line: #e5a923;');
+  AppendLine(Result, '  --accent: ' + AProject.ThemeAccent + '; --accent-2: ' +
+    AProject.ThemeAccentAlt + '; --code: #182034;');
+  AppendLine(Result, '  --font-family: "' + AProject.ThemeFont + '";');
+  AppendLine(Result, '  --warning-bg: #fff8e6; --warning-line: #e5a923; ' +
+    '--warning-text: #5e460e;');
+  AppendLine(Result, '  --danger-bg: #fff0f3; --danger-line: #d13f61; ' +
+    '--danger-text: #751b31;');
+  AppendLine(Result, '  --error-text: #b42318;');
   AppendLine(Result, '  --shadow: 0 18px 48px rgba(31, 42, 68, .09);');
+  AppendLine(Result, '}');
+  AppendLine(Result, ':root[data-theme="dark"] {');
+  AppendLine(Result, '  color-scheme: dark;');
+  AppendLine(Result, '  --scheme: dark;');
+  AppendLine(Result, '  --bg: #10131c; --surface: #171c28; --surface-2: #202637;');
+  AppendLine(Result, '  --text: #e8ebf4; --muted: #9ba5ba; --line: #30384c;');
+  AppendLine(Result, '  --accent: ' + AccentDark + '; --accent-2: ' +
+    AccentAltDark + '; --code: #0b0e15;');
+  AppendLine(Result, '  --warning-bg: #332a13; --warning-line: #e5b94f; ' +
+    '--warning-text: #ffe5a6;');
+  AppendLine(Result, '  --danger-bg: #361922; --danger-line: #d13f61; ' +
+    '--danger-text: #ffb7c6;');
+  AppendLine(Result, '  --error-text: #fda29b;');
+  AppendLine(Result, '  --shadow: 0 18px 48px rgba(0,0,0,.28);');
+  AppendLine(Result, '}');
+  AppendLine(Result, '@media (prefers-color-scheme: dark) {');
+  AppendLine(Result, '  :root:not([data-theme="light"]) {');
+  AppendLine(Result, '    color-scheme: dark;');
+  AppendLine(Result, '    --scheme: dark;');
+  AppendLine(Result, '    --bg: #10131c; --surface: #171c28; ' +
+    '--surface-2: #202637;');
+  AppendLine(Result, '    --text: #e8ebf4; --muted: #9ba5ba; ' +
+    '--line: #30384c;');
+  AppendLine(Result, '    --accent: ' + AccentDark + '; --accent-2: ' +
+    AccentAltDark + '; --code: #0b0e15;');
+  AppendLine(Result, '    --warning-bg: #332a13; --warning-line: #e5b94f; ' +
+    '--warning-text: #ffe5a6;');
+  AppendLine(Result, '    --danger-bg: #361922; --danger-line: #d13f61; ' +
+    '--danger-text: #ffb7c6;');
+  AppendLine(Result, '    --error-text: #fda29b;');
+  AppendLine(Result, '    --shadow: 0 18px 48px rgba(0,0,0,.28);');
+  AppendLine(Result, '  }');
   AppendLine(Result, '}');
   AppendLine(Result, '* { box-sizing: border-box; }');
   AppendLine(Result, 'html { scroll-behavior: smooth; }');
   AppendLine(Result, 'body { margin: 0; background: var(--bg); color: var(--text); ' +
-    'font: 16px/1.65 Inter, ui-sans-serif, system-ui, -apple-system, ' +
-    'BlinkMacSystemFont, "Segoe UI", sans-serif; }');
+    'font: 16px/1.65 var(--font-family, "Inter"), ui-sans-serif, system-ui, ' +
+    '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }');
   AppendLine(Result, 'a { color: var(--accent); text-decoration-thickness: .08em; ' +
     'text-underline-offset: .18em; }');
   AppendLine(Result, 'a:hover { color: var(--accent-2); }');
@@ -287,9 +341,9 @@ begin
   AppendLine(Result, 'pre code { font-size: .84rem; }');
   AppendLine(Result, '.notice { margin: 18px 0; padding: 12px 15px; ' +
     'border-left: 4px solid var(--warning-line); border-radius: 8px; ' +
-    'background: var(--warning-bg); color: #5e460e; }');
-  AppendLine(Result, '.deprecated { border-left-color: #d13f61; background: #fff0f3; ' +
-    'color: #751b31; }');
+    'background: var(--warning-bg); color: var(--warning-text); }');
+  AppendLine(Result, '.deprecated { border-left-color: var(--danger-line); ' +
+    'background: var(--danger-bg); color: var(--danger-text); }');
   AppendLine(Result, '.prose { max-width: 78ch; }');
   AppendLine(Result, '.prose blockquote { margin-left: 0; padding-left: 18px; ' +
     'border-left: 3px solid var(--line); color: var(--muted); }');
@@ -299,8 +353,8 @@ begin
   AppendLine(Result, '.math-inline { font-family: "Cambria Math", serif; }');
   AppendLine(Result, '.math-display[data-math-rendered="true"] { white-space: normal; }');
   AppendLine(Result, '.math-inline[data-math-rendered="true"] { font-family: inherit; }');
-  AppendLine(Result, '.math-error { color: #b42318; text-decoration: underline dotted; ' +
-    'text-underline-offset: .18em; }');
+  AppendLine(Result, '.math-error { color: var(--error-text); ' +
+    'text-decoration: underline dotted; text-underline-offset: .18em; }');
   AppendLine(Result, '.math-display.math-error { text-align: left; }');
   AppendLine(Result, '.directive-section { margin-top: 22px; }');
   AppendLine(Result, '.directive-section h4 { margin-bottom: 9px; }');
@@ -314,6 +368,7 @@ begin
   AppendLine(Result, '@media (max-width: 760px) {');
   AppendLine(Result, '  .shell { width: min(100% - 24px, 1180px); }');
   AppendLine(Result, '  .header-inner { min-height: 64px; gap: 12px; }');
+  AppendLine(Result, '  .header-tools { gap: 12px; }');
   AppendLine(Result, '  .brand small { display: none; }');
   AppendLine(Result, '  .site-search { width: 52vw; }');
   AppendLine(Result, '  .search-panel { right: -4px; width: min(94vw, 620px); }');
@@ -322,6 +377,8 @@ begin
   AppendLine(Result, '  .unit-navigation { grid-template-columns: 1fr; }');
   AppendLine(Result, '  .hero { padding: 32px 24px; border-radius: 20px; }');
   AppendLine(Result, '  .stats { grid-template-columns: repeat(2, 1fr); }');
+  AppendLine(Result, '  .browse-section { grid-template-columns: ' +
+    'repeat(2, minmax(0, 1fr)); }');
   AppendLine(Result, '  .section-heading { align-items: start; flex-direction: column; }');
   AppendLine(Result, '  .symbol { padding: 20px; }');
   AppendLine(Result, '  .symbol-meta { display: grid; }');
@@ -331,24 +388,119 @@ begin
   AppendLine(Result, '}');
   AppendLine(Result, '@media (max-width: 480px) {');
   AppendLine(Result, '  .header-inner { flex-wrap: wrap; padding: 10px 0; }');
+  AppendLine(Result, '  .header-tools { flex-wrap: wrap; width: 100%; ' +
+    'gap: 10px 14px; }');
   AppendLine(Result, '  .site-search { width: 100%; }');
   AppendLine(Result, '  .search-panel { right: 0; width: 100%; }');
   AppendLine(Result, '  .unit-switcher-panel { position: static; width: 100%; ' +
     'min-width: 0; margin-top: 8px; box-shadow: none; }');
   AppendLine(Result, '  .page-navigator { align-items: flex-start; ' +
     'flex-direction: column; }');
+  AppendLine(Result, '  .browse-section { grid-template-columns: 1fr; }');
+  AppendLine(Result, '  .symbol-index-list { grid-template-columns: 1fr; }');
+  AppendLine(Result, '  .symbol-index-entry { grid-template-columns: ' +
+    'auto minmax(0, 1fr) auto; }');
   AppendLine(Result, '  .stats { grid-template-columns: 1fr; }');
   AppendLine(Result, '  .hero { padding: 28px 24px; }');
   AppendLine(Result, '}');
-  AppendLine(Result, '@media (prefers-color-scheme: dark) {');
-  AppendLine(Result, '  :root { --bg: #10131c; --surface: #171c28; ' +
-    '--surface-2: #202637; --text: #e8ebf4; --muted: #9ba5ba; ' +
-    '--line: #30384c; --accent: #a99eff; --accent-2: #63d7ca; ' +
-    '--code: #0b0e15; --warning-bg: #332a13; --warning-line: #e5b94f; ' +
-    '--shadow: 0 18px 48px rgba(0,0,0,.28); }');
-  AppendLine(Result, '  .notice { color: #ffe5a6; }');
-  AppendLine(Result, '  .deprecated { background: #361922; color: #ffb7c6; }');
-  AppendLine(Result, '}');
+  AppendLine(Result, '.header-tools { display: flex; align-items: center; ' +
+    'justify-content: flex-end; gap: 18px; min-width: 0; }');
+  AppendLine(Result, '.site-nav { display: flex; align-items: center; ' +
+    'gap: 2px; }');
+  AppendLine(Result, '.site-nav a { padding: 7px 10px; border-radius: 9px; ' +
+    'color: var(--muted); font-size: .86rem; font-weight: 700; ' +
+    'text-decoration: none; white-space: nowrap; }');
+  AppendLine(Result, '.site-nav a:hover { color: var(--text); ' +
+    'background: var(--surface-2); }');
+  AppendLine(Result, '.site-nav a[aria-current="page"] { color: var(--accent); }');
+  AppendLine(Result, '.theme-control { display: flex; align-items: center; ' +
+    'gap: 8px; color: var(--muted); font-size: .72rem; font-weight: 750; ' +
+    'letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; }');
+  AppendLine(Result, '.theme-control[hidden] { display: none; }');
+  AppendLine(Result, '.theme-control select { height: 34px; padding: 0 8px; ' +
+    'border: 1px solid var(--line); border-radius: 8px; background: ' +
+    'var(--surface); color: var(--text); font: inherit; font-size: .84rem; ' +
+    'font-weight: 600; letter-spacing: normal; text-transform: none; }');
+  AppendLine(Result, '.browse-section { display: grid; grid-template-columns: ' +
+    'repeat(3, minmax(0, 1fr)); gap: 12px; }');
+  AppendLine(Result, '.browse-section .section-heading { grid-column: 1 / -1; ' +
+    'margin-bottom: 2px; }');
+  AppendLine(Result, '.browse-card { display: block; padding: 22px; border: ' +
+    '1px solid var(--line); border-radius: 16px; background: var(--surface); ' +
+    'color: var(--text); text-decoration: none; box-shadow: 0 6px 18px ' +
+    'rgba(31,42,68,.035); }');
+  AppendLine(Result, '.browse-card:hover { border-color: var(--accent); }');
+  AppendLine(Result, '.browse-card strong { display: block; font-size: 1.15rem; }');
+  AppendLine(Result, '.browse-card span { display: block; margin-top: 6px; ' +
+    'color: var(--muted); font-size: .86rem; }');
+  AppendLine(Result, '.browse-card .browse-count { font-size: 1.6rem; ' +
+    'line-height: 1; color: var(--accent); }');
+  AppendLine(Result, '.symbol-index { margin-top: 8px; }');
+  AppendLine(Result, '.symbol-index-heading { margin: 34px 0 24px; }');
+  AppendLine(Result, '.symbol-index-heading h1 { margin: 0; ' +
+    'font-size: clamp(2rem, 6vw, 4rem); }');
+  AppendLine(Result, '.symbol-index-heading > p { color: var(--muted); }');
+  AppendLine(Result, '.letter-bar { display: flex; flex-wrap: wrap; gap: 4px; ' +
+    'margin: 18px 0 20px; }');
+  AppendLine(Result, '.letter-bar a { display: inline-grid; place-items: ' +
+    'center; min-width: 30px; height: 30px; padding: 0 6px; border: 1px solid ' +
+    'var(--line); border-radius: 8px; color: var(--muted); font-size: .8rem; ' +
+    'font-weight: 700; text-decoration: none; }');
+  AppendLine(Result, '.letter-bar a:hover { color: var(--accent); ' +
+    'border-color: var(--accent); }');
+  AppendLine(Result, '.symbol-filters { display: flex; flex-wrap: wrap; gap: ' +
+    '8px 18px; margin: 0 0 18px; padding: 0; border: 0; }');
+  AppendLine(Result, '.symbol-filters legend { color: var(--muted); ' +
+    'font-size: .76rem; font-weight: 800; letter-spacing: .05em; ' +
+    'text-transform: uppercase; }');
+  AppendLine(Result, '.symbol-filters label { display: inline-flex; ' +
+    'align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid ' +
+    'var(--line); border-radius: 999px; background: var(--surface); ' +
+    'color: var(--text); font-size: .84rem; font-weight: 650; cursor: pointer; }');
+  AppendLine(Result, '.symbol-filters label:has(input:checked) { ' +
+    'border-color: var(--accent); background: color-mix(in srgb, ' +
+    'var(--accent) 10%, var(--surface)); }');
+  AppendLine(Result, '.symbol-filters input { accent-color: var(--accent); }');
+  AppendLine(Result, '.symbol-status { margin: 0 0 20px; color: var(--muted); ' +
+    'font-size: .86rem; }');
+  AppendLine(Result, '.symbol-letter { margin: 0 0 34px; scroll-margin-top: 94px; }');
+  AppendLine(Result, '.symbol-letter h2 { display: flex; align-items: center; ' +
+    'gap: 14px; margin: 0 0 14px; font-size: 1.5rem; }');
+  AppendLine(Result, '.symbol-letter h2::after { content: ""; flex: 1; ' +
+    'height: 1px; background: var(--line); }');
+  AppendLine(Result, '.symbol-index-list { display: grid; grid-template-columns: ' +
+    'repeat(2, minmax(0, 1fr)); gap: 8px 22px; list-style: none; margin: 0; ' +
+    'padding: 0; }');
+  AppendLine(Result, '.symbol-index-entry { display: grid; grid-template-columns: ' +
+    'auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; ' +
+    'border-radius: 9px; }');
+  AppendLine(Result, '.symbol-index-entry:hover { background: var(--surface-2); }');
+  AppendLine(Result, '.symbol-index-entry[hidden] { display: none; }');
+  AppendLine(Result, '.symbol-index-entry code { overflow-wrap: anywhere; ' +
+    'font-weight: 700; }');
+  AppendLine(Result, '.symbol-index-unit { min-width: 0; color: var(--muted); ' +
+    'font-size: .78rem; overflow-wrap: anywhere; text-align: right; }');
+  AppendLine(Result, '.symbol-index-entry .kind-badge { font-size: .64rem; }');
+end;
+
+function HTMLThemeBootstrap: UTF8String;
+begin
+  Result := '';
+  AppendLine(Result, '(function () {');
+  AppendLine(Result, '  "use strict";');
+  AppendLine(Result, '  var stored = null;');
+  AppendLine(Result, '  try {');
+  AppendLine(Result, '    stored = window.localStorage.getItem("pasweave-theme");');
+  AppendLine(Result, '  } catch (error) {');
+  AppendLine(Result, '    stored = null;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  var theme = "system";');
+  AppendLine(Result, '  if (stored === "system" || stored === "light" || ' +
+    'stored === "dark") {');
+  AppendLine(Result, '    theme = stored;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  document.documentElement.setAttribute("data-theme", theme);');
+  AppendLine(Result, '}());');
 end;
 
 function HTMLApplicationScript: UTF8String;
@@ -484,7 +636,86 @@ begin
   AppendLine(Result, '  document.addEventListener("click", function (event) {');
   AppendLine(Result, '    if (!event.target.closest("[data-search-container]")) closeSearch();');
   AppendLine(Result, '  });');
-  AppendLine(Result, '  var unitSwitcher = document.querySelector("[data-unit-switcher]");');
+  AppendLine(Result, '  var themeControl = document.querySelector(' +
+    '"[data-theme-control]");');
+  AppendLine(Result, '  if (themeControl) {');
+  AppendLine(Result, '    var themeSelect = themeControl.querySelector(' +
+    '"[data-theme-select]");');
+  AppendLine(Result, '    var currentTheme = ' +
+    'document.documentElement.getAttribute("data-theme") || "system";');
+  AppendLine(Result, '    if (["system", "light", "dark"].indexOf(' +
+    'currentTheme) < 0) currentTheme = "system";');
+  AppendLine(Result, '    if (themeSelect) {');
+  AppendLine(Result, '      themeSelect.value = currentTheme;');
+  AppendLine(Result, '      themeSelect.addEventListener("change", function () {');
+  AppendLine(Result, '        var next = themeSelect.value;');
+  AppendLine(Result, '        document.documentElement.setAttribute(' +
+    '"data-theme", next);');
+  AppendLine(Result, '        try {');
+  AppendLine(Result, '          window.localStorage.setItem(' +
+    '"pasweave-theme", next);');
+  AppendLine(Result, '        } catch (error) {');
+  AppendLine(Result, '          /* storage unavailable; keep the choice for ' +
+    'this page */');
+  AppendLine(Result, '        }');
+  AppendLine(Result, '        document.dispatchEvent(new window.CustomEvent(' +
+    '"pasweave:themechange", { detail: { theme: next } }));');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    themeControl.hidden = false;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  var symbolIndex = document.querySelector(' +
+    '"[data-symbol-index]");');
+  AppendLine(Result, '  if (symbolIndex) {');
+  AppendLine(Result, '    var symbolFilters = Array.prototype.slice.call(' +
+    'symbolIndex.querySelectorAll("[data-symbol-filter]"));');
+  AppendLine(Result, '    var symbolEntries = Array.prototype.slice.call(' +
+    'symbolIndex.querySelectorAll("[data-symbol-entry]"));');
+  AppendLine(Result, '    var symbolSections = Array.prototype.slice.call(' +
+    'symbolIndex.querySelectorAll("[data-symbol-letter]"));');
+  AppendLine(Result, '    var symbolStatus = symbolIndex.querySelector(' +
+    '"[data-symbol-status]");');
+  AppendLine(Result, '    function symbolGroups() {');
+  AppendLine(Result, '      return symbolFilters.filter(function (filter) ' +
+    '{ return filter.checked; })');
+  AppendLine(Result, '        .map(function (filter) { return filter.value; });');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    function updateSymbolIndex() {');
+  AppendLine(Result, '      var groups = symbolGroups();');
+  AppendLine(Result, '      var visible = 0;');
+  AppendLine(Result, '      symbolEntries.forEach(function (entry) {');
+  AppendLine(Result, '        var shown = groups.indexOf(entry.getAttribute(' +
+    '"data-symbol-kind")) >= 0;');
+  AppendLine(Result, '        entry.hidden = !shown;');
+  AppendLine(Result, '        if (shown) visible += 1;');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '      symbolSections.forEach(function (section) {');
+  AppendLine(Result, '        var any = section.querySelector(' +
+    '"[data-symbol-entry]:not([hidden])");');
+  AppendLine(Result, '        section.hidden = !any;');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '      if (symbolStatus) {');
+  AppendLine(Result, '        symbolStatus.textContent = visible + ' +
+    '(visible === 1 ? " symbol" : " symbols");');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    symbolFilters.forEach(function (filter) {');
+  AppendLine(Result, '      filter.addEventListener("change", updateSymbolIndex);');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    function applySymbolHash() {');
+  AppendLine(Result, '      var hash = window.location.hash.replace(/^#/, "");');
+  AppendLine(Result, '      var known = ["types", "routines", "members", ' +
+    '"constants", "variables"];');
+  AppendLine(Result, '      if (known.indexOf(hash) < 0) return;');
+  AppendLine(Result, '      symbolFilters.forEach(function (filter) {');
+  AppendLine(Result, '        filter.checked = filter.value === hash;');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '      updateSymbolIndex();');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '    applySymbolHash();');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  var unitSwitcher = document.querySelector(' +
+    '"[data-unit-switcher]");');
   AppendLine(Result, '  if (!unitSwitcher) return;');
   AppendLine(Result, '  var unitInput = unitSwitcher.querySelector("[data-unit-switcher-filter]");');
   AppendLine(Result, '  var unitList = unitSwitcher.querySelector("[data-unit-switcher-list]");');
@@ -599,6 +830,20 @@ begin
   AppendLine(Result, '  if (!diagrams.length) return;');
   AppendLine(Result, '  var reducedMotion = window.matchMedia && ' +
     'window.matchMedia("(prefers-reduced-motion: reduce)").matches;');
+  AppendLine(Result, '  diagrams.forEach(function (diagram) {');
+  AppendLine(Result, '    if (diagram.getAttribute("data-mermaid-source") == null) {');
+  AppendLine(Result, '      diagram.setAttribute("data-mermaid-source", ' +
+    'diagram.textContent);');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '  });');
+  AppendLine(Result, '  function activeScheme() {');
+  AppendLine(Result, '    var attr = document.documentElement.getAttribute(' +
+    '"data-theme");');
+  AppendLine(Result, '    if (attr === "dark") return "dark";');
+  AppendLine(Result, '    if (attr === "light") return "light";');
+  AppendLine(Result, '    return window.matchMedia && window.matchMedia(' +
+    '"(prefers-color-scheme: dark)").matches ? "dark" : "light";');
+  AppendLine(Result, '  }');
   AppendLine(Result, '  function interactionElements(diagram) {');
   AppendLine(Result, '    var section = diagram.closest(' +
     '"[data-diagram-section]");');
@@ -626,170 +871,206 @@ begin
   AppendLine(Result, '    if (control) control.disabled = disabled;');
   AppendLine(Result, '  }');
   AppendLine(Result, '  function setupInteraction(diagram, container, section) {');
-  AppendLine(Result, '    var svg = diagram.querySelector("svg");');
   AppendLine(Result, '    var toolbar = section && section.querySelector(' +
     '"[data-diagram-toolbar]");');
   AppendLine(Result, '    var help = section && section.querySelector(' +
     '"[data-diagram-help]");');
-  AppendLine(Result, '    if (!svg || !container || !toolbar) return;');
-  AppendLine(Result, '    var zoomOut = toolbar.querySelector(' +
+  AppendLine(Result, '    if (!container || !toolbar) return;');
+  AppendLine(Result, '    var state = container._pasweaveDiagramState;');
+  AppendLine(Result, '    if (!state) {');
+  AppendLine(Result, '      state = container._pasweaveDiagramState = {');
+  AppendLine(Result, '        scale: 1, drag: null, suppressClick: false');
+  AppendLine(Result, '      };');
+  AppendLine(Result, '      var zoomOut = toolbar.querySelector(' +
     '"[data-diagram-zoom-out]");');
-  AppendLine(Result, '    var zoomIn = toolbar.querySelector(' +
+  AppendLine(Result, '      var zoomIn = toolbar.querySelector(' +
     '"[data-diagram-zoom-in]");');
-  AppendLine(Result, '    var scaleOutput = toolbar.querySelector(' +
+  AppendLine(Result, '      var scaleOutput = toolbar.querySelector(' +
     '"[data-diagram-scale]");');
-  AppendLine(Result, '    var panLeft = toolbar.querySelector(' +
+  AppendLine(Result, '      var panLeft = toolbar.querySelector(' +
     '"[data-diagram-pan-left]");');
-  AppendLine(Result, '    var panUp = toolbar.querySelector(' +
+  AppendLine(Result, '      var panUp = toolbar.querySelector(' +
     '"[data-diagram-pan-up]");');
-  AppendLine(Result, '    var panDown = toolbar.querySelector(' +
+  AppendLine(Result, '      var panDown = toolbar.querySelector(' +
     '"[data-diagram-pan-down]");');
-  AppendLine(Result, '    var panRight = toolbar.querySelector(' +
+  AppendLine(Result, '      var panRight = toolbar.querySelector(' +
     '"[data-diagram-pan-right]");');
-  AppendLine(Result, '    var reset = toolbar.querySelector(' +
+  AppendLine(Result, '      var reset = toolbar.querySelector(' +
     '"[data-diagram-reset]");');
-  AppendLine(Result, '    var panControls = [panLeft, panUp, panDown, panRight];');
-  AppendLine(Result, '    var scale = 1;');
-  AppendLine(Result, '    var drag = null;');
-  AppendLine(Result, '    var suppressClick = false;');
-  AppendLine(Result, '    function updateControls() {');
-  AppendLine(Result, '      var maxLeft = Math.max(0, container.scrollWidth - ' +
+  AppendLine(Result, '      var panControls = [panLeft, panUp, panDown, panRight];');
+  AppendLine(Result, '      function currentSvg() {');
+  AppendLine(Result, '        return diagram.querySelector("svg");');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '      function updateControls() {');
+  AppendLine(Result, '        var maxLeft = Math.max(0, container.scrollWidth - ' +
     'container.clientWidth);');
-  AppendLine(Result, '      var maxTop = Math.max(0, container.scrollHeight - ' +
+  AppendLine(Result, '        var maxTop = Math.max(0, container.scrollHeight - ' +
     'container.clientHeight);');
-  AppendLine(Result, '      var left = Math.max(0, Math.min(maxLeft, ' +
+  AppendLine(Result, '        var left = Math.max(0, Math.min(maxLeft, ' +
     'container.scrollLeft));');
-  AppendLine(Result, '      var top = Math.max(0, Math.min(maxTop, ' +
+  AppendLine(Result, '        var top = Math.max(0, Math.min(maxTop, ' +
     'container.scrollTop));');
-  AppendLine(Result, '      if (scaleOutput) scaleOutput.textContent = ' +
-    'Math.round(scale * 100) + "%";');
-  AppendLine(Result, '      container.setAttribute("data-diagram-scale", ' +
-    'String(Math.round(scale * 100)));');
-  AppendLine(Result, '      container.setAttribute("data-diagram-pan-x", ' +
+  AppendLine(Result, '        if (scaleOutput) scaleOutput.textContent = ' +
+    'Math.round(state.scale * 100) + "%";');
+  AppendLine(Result, '        container.setAttribute("data-diagram-scale", ' +
+    'String(Math.round(state.scale * 100)));');
+  AppendLine(Result, '        container.setAttribute("data-diagram-pan-x", ' +
     'String(Math.round(left)));');
-  AppendLine(Result, '      container.setAttribute("data-diagram-pan-y", ' +
+  AppendLine(Result, '        container.setAttribute("data-diagram-pan-y", ' +
     'String(Math.round(top)));');
-  AppendLine(Result, '      setDisabled(zoomOut, scale <= MIN_SCALE);');
-  AppendLine(Result, '      setDisabled(zoomIn, scale >= MAX_SCALE);');
-  AppendLine(Result, '      setDisabled(panLeft, left <= 1);');
-  AppendLine(Result, '      setDisabled(panUp, top <= 1);');
-  AppendLine(Result, '      setDisabled(panRight, left >= maxLeft - 1);');
-  AppendLine(Result, '      setDisabled(panDown, top >= maxTop - 1);');
-  AppendLine(Result, '      setDisabled(reset, scale === 1 && left <= 1 && top <= 1);');
-  AppendLine(Result, '    }');
-  AppendLine(Result, '    function applyScale(nextScale) {');
-  AppendLine(Result, '      nextScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, ' +
-    'Math.round(nextScale * 100) / 100));');
-  AppendLine(Result, '      if (nextScale === scale) return;');
-  AppendLine(Result, '      var oldWidth = Math.max(1, container.scrollWidth);');
-  AppendLine(Result, '      var oldHeight = Math.max(1, container.scrollHeight);');
-  AppendLine(Result, '      var centerX = (container.scrollLeft + ' +
+  AppendLine(Result, '        setDisabled(zoomOut, state.scale <= MIN_SCALE);');
+  AppendLine(Result, '        setDisabled(zoomIn, state.scale >= MAX_SCALE);');
+  AppendLine(Result, '        setDisabled(panLeft, left <= 1);');
+  AppendLine(Result, '        setDisabled(panUp, top <= 1);');
+  AppendLine(Result, '        setDisabled(panRight, left >= maxLeft - 1);');
+  AppendLine(Result, '        setDisabled(panDown, top >= maxTop - 1);');
+  AppendLine(Result, '        setDisabled(reset, state.scale === 1 && ' +
+    'left <= 1 && top <= 1);');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '      function applyScale(nextScale) {');
+  AppendLine(Result, '        var svg = currentSvg();');
+  AppendLine(Result, '        if (!svg) return;');
+  AppendLine(Result, '        nextScale = Math.max(MIN_SCALE, ' +
+    'Math.min(MAX_SCALE, Math.round(nextScale * 100) / 100));');
+  AppendLine(Result, '        if (nextScale === state.scale) return;');
+  AppendLine(Result, '        var oldWidth = Math.max(1, ' +
+    'container.scrollWidth);');
+  AppendLine(Result, '        var oldHeight = Math.max(1, ' +
+    'container.scrollHeight);');
+  AppendLine(Result, '        var centerX = (container.scrollLeft + ' +
     'container.clientWidth / 2) / oldWidth;');
-  AppendLine(Result, '      var centerY = (container.scrollTop + ' +
+  AppendLine(Result, '        var centerY = (container.scrollTop + ' +
     'container.clientHeight / 2) / oldHeight;');
-  AppendLine(Result, '      scale = nextScale;');
-  AppendLine(Result, '      svg.style.maxWidth = "none";');
-  AppendLine(Result, '      svg.style.width = Math.round(scale * 100) + "%";');
-  AppendLine(Result, '      container.scrollLeft = Math.max(0, centerX * ' +
+  AppendLine(Result, '        state.scale = nextScale;');
+  AppendLine(Result, '        svg.style.maxWidth = "none";');
+  AppendLine(Result, '        svg.style.width = Math.round(state.scale * 100) + ' +
+    '"%";');
+  AppendLine(Result, '        container.scrollLeft = Math.max(0, centerX * ' +
     'container.scrollWidth - container.clientWidth / 2);');
-  AppendLine(Result, '      container.scrollTop = Math.max(0, centerY * ' +
+  AppendLine(Result, '        container.scrollTop = Math.max(0, centerY * ' +
     'container.scrollHeight - container.clientHeight / 2);');
-  AppendLine(Result, '      updateControls();');
-  AppendLine(Result, '    }');
-  AppendLine(Result, '    function pan(left, top) {');
-  AppendLine(Result, '      container.scrollBy({');
-  AppendLine(Result, '        left: left, top: top,');
-  AppendLine(Result, '        behavior: reducedMotion ? "auto" : "smooth"');
+  AppendLine(Result, '        updateControls();');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '      function pan(left, top) {');
+  AppendLine(Result, '        container.scrollBy({');
+  AppendLine(Result, '          left: left, top: top,');
+  AppendLine(Result, '          behavior: reducedMotion ? "auto" : "smooth"');
+  AppendLine(Result, '        });');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '      function resetView() {');
+  AppendLine(Result, '        var svg = currentSvg();');
+  AppendLine(Result, '        state.scale = 1;');
+  AppendLine(Result, '        if (svg) {');
+  AppendLine(Result, '          svg.style.maxWidth = "none";');
+  AppendLine(Result, '          svg.style.width = "100%";');
+  AppendLine(Result, '        }');
+  AppendLine(Result, '        container.scrollLeft = 0;');
+  AppendLine(Result, '        container.scrollTop = 0;');
+  AppendLine(Result, '        updateControls();');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '      if (zoomOut) zoomOut.addEventListener("click", ' +
+    'function () { applyScale(state.scale - SCALE_STEP); });');
+  AppendLine(Result, '      if (zoomIn) zoomIn.addEventListener("click", ' +
+    'function () { applyScale(state.scale + SCALE_STEP); });');
+  AppendLine(Result, '      if (panLeft) panLeft.addEventListener("click", ' +
+    'function () { pan(-PAN_STEP, 0); });');
+  AppendLine(Result, '      if (panUp) panUp.addEventListener("click", ' +
+    'function () { pan(0, -PAN_STEP); });');
+  AppendLine(Result, '      if (panDown) panDown.addEventListener("click", ' +
+    'function () { pan(0, PAN_STEP); });');
+  AppendLine(Result, '      if (panRight) panRight.addEventListener("click", ' +
+    'function () { pan(PAN_STEP, 0); });');
+  AppendLine(Result, '      if (reset) reset.addEventListener("click", ' +
+    'resetView);');
+  AppendLine(Result, '      container.addEventListener("keydown", ' +
+    'function (event) {');
+  AppendLine(Result, '        if (event.target !== container) return;');
+  AppendLine(Result, '        if (event.altKey || event.ctrlKey || ' +
+    'event.metaKey) return;');
+  AppendLine(Result, '        var handled = true;');
+  AppendLine(Result, '        if (event.key === "ArrowLeft") pan(-PAN_STEP, 0);');
+  AppendLine(Result, '        else if (event.key === "ArrowRight") ' +
+    'pan(PAN_STEP, 0);');
+  AppendLine(Result, '        else if (event.key === "ArrowUp") pan(0, -PAN_STEP);');
+  AppendLine(Result, '        else if (event.key === "ArrowDown") pan(0, PAN_STEP);');
+  AppendLine(Result, '        else if (event.key === "+" || event.key === "=") ' +
+    'applyScale(state.scale + SCALE_STEP);');
+  AppendLine(Result, '        else if (event.key === "-" || event.key === "_") ' +
+    'applyScale(state.scale - SCALE_STEP);');
+  AppendLine(Result, '        else if (event.key === "0") resetView();');
+  AppendLine(Result, '        else handled = false;');
+  AppendLine(Result, '        if (handled) event.preventDefault();');
   AppendLine(Result, '      });');
+  AppendLine(Result, '      container.addEventListener("scroll", updateControls, ' +
+    '{ passive: true });');
+  AppendLine(Result, '      container.addEventListener("pointerdown", ' +
+    'function (event) {');
+  AppendLine(Result, '        if (event.button !== 0 || ' +
+    'event.pointerType === "touch" || event.target.closest("a, button")) ' +
+    'return;');
+  AppendLine(Result, '        state.drag = { id: event.pointerId, ' +
+    'x: event.clientX, y: event.clientY, left: container.scrollLeft, ' +
+    'top: container.scrollTop };');
+  AppendLine(Result, '        state.suppressClick = false;');
+  AppendLine(Result, '        container.setPointerCapture(event.pointerId);');
+  AppendLine(Result, '        container.setAttribute("data-diagram-dragging", "");');
+  AppendLine(Result, '        event.preventDefault();');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '      container.addEventListener("pointermove", ' +
+    'function (event) {');
+  AppendLine(Result, '        if (!state.drag || state.drag.id !== ' +
+    'event.pointerId) return;');
+  AppendLine(Result, '        var deltaX = event.clientX - state.drag.x;');
+  AppendLine(Result, '        var deltaY = event.clientY - state.drag.y;');
+  AppendLine(Result, '        if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) ' +
+    'state.suppressClick = true;');
+  AppendLine(Result, '        container.scrollLeft = state.drag.left - deltaX;');
+  AppendLine(Result, '        container.scrollTop = state.drag.top - deltaY;');
+  AppendLine(Result, '        event.preventDefault();');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '      function endDrag(event) {');
+  AppendLine(Result, '        if (!state.drag || state.drag.id !== ' +
+    'event.pointerId) return;');
+  AppendLine(Result, '        state.drag = null;');
+  AppendLine(Result, '        container.removeAttribute("data-diagram-dragging");');
+  AppendLine(Result, '        if (container.hasPointerCapture(event.pointerId)) ' +
+    'container.releasePointerCapture(event.pointerId);');
+  AppendLine(Result, '        window.setTimeout(function () { ' +
+    'state.suppressClick = false; }, 0);');
+  AppendLine(Result, '      }');
+  AppendLine(Result, '      container.addEventListener("pointerup", endDrag);');
+  AppendLine(Result, '      container.addEventListener("pointercancel", endDrag);');
+  AppendLine(Result, '      container.addEventListener("click", ' +
+    'function (event) {');
+  AppendLine(Result, '        if (!state.suppressClick) return;');
+  AppendLine(Result, '        event.preventDefault();');
+  AppendLine(Result, '        event.stopPropagation();');
+  AppendLine(Result, '      }, true);');
+  AppendLine(Result, '      if (window.ResizeObserver) ' +
+    'new window.ResizeObserver(updateControls).observe(container);');
+  AppendLine(Result, '      state.updateControls = updateControls;');
+  AppendLine(Result, '      state.panControls = panControls;');
   AppendLine(Result, '    }');
-  AppendLine(Result, '    function resetView() {');
-  AppendLine(Result, '      scale = 1;');
+  AppendLine(Result, '    var svg = diagram.querySelector("svg");');
+  AppendLine(Result, '    state.scale = 1;');
+  AppendLine(Result, '    state.drag = null;');
+  AppendLine(Result, '    state.suppressClick = false;');
+  AppendLine(Result, '    if (svg) {');
   AppendLine(Result, '      svg.style.maxWidth = "none";');
   AppendLine(Result, '      svg.style.width = "100%";');
-  AppendLine(Result, '      container.scrollLeft = 0;');
-  AppendLine(Result, '      container.scrollTop = 0;');
-  AppendLine(Result, '      updateControls();');
   AppendLine(Result, '    }');
-  AppendLine(Result, '    if (zoomOut) zoomOut.addEventListener("click", ' +
-    'function () { applyScale(scale - SCALE_STEP); });');
-  AppendLine(Result, '    if (zoomIn) zoomIn.addEventListener("click", ' +
-    'function () { applyScale(scale + SCALE_STEP); });');
-  AppendLine(Result, '    if (panLeft) panLeft.addEventListener("click", ' +
-    'function () { pan(-PAN_STEP, 0); });');
-  AppendLine(Result, '    if (panUp) panUp.addEventListener("click", ' +
-    'function () { pan(0, -PAN_STEP); });');
-  AppendLine(Result, '    if (panDown) panDown.addEventListener("click", ' +
-    'function () { pan(0, PAN_STEP); });');
-  AppendLine(Result, '    if (panRight) panRight.addEventListener("click", ' +
-    'function () { pan(PAN_STEP, 0); });');
-  AppendLine(Result, '    if (reset) reset.addEventListener("click", resetView);');
-  AppendLine(Result, '    container.addEventListener("keydown", function (event) {');
-  AppendLine(Result, '      if (event.target !== container) return;');
-  AppendLine(Result, '      if (event.altKey || event.ctrlKey || event.metaKey) return;');
-  AppendLine(Result, '      var handled = true;');
-  AppendLine(Result, '      if (event.key === "ArrowLeft") pan(-PAN_STEP, 0);');
-  AppendLine(Result, '      else if (event.key === "ArrowRight") pan(PAN_STEP, 0);');
-  AppendLine(Result, '      else if (event.key === "ArrowUp") pan(0, -PAN_STEP);');
-  AppendLine(Result, '      else if (event.key === "ArrowDown") pan(0, PAN_STEP);');
-  AppendLine(Result, '      else if (event.key === "+" || event.key === "=") ' +
-    'applyScale(scale + SCALE_STEP);');
-  AppendLine(Result, '      else if (event.key === "-" || event.key === "_") ' +
-    'applyScale(scale - SCALE_STEP);');
-  AppendLine(Result, '      else if (event.key === "0") resetView();');
-  AppendLine(Result, '      else handled = false;');
-  AppendLine(Result, '      if (handled) event.preventDefault();');
-  AppendLine(Result, '    });');
-  AppendLine(Result, '    container.addEventListener("scroll", updateControls, ' +
-    '{ passive: true });');
-  AppendLine(Result, '    container.addEventListener("pointerdown", function (event) {');
-  AppendLine(Result, '      if (event.button !== 0 || event.pointerType === "touch" || ' +
-    'event.target.closest("a, button")) return;');
-  AppendLine(Result, '      drag = { id: event.pointerId, x: event.clientX, ' +
-    'y: event.clientY, left: container.scrollLeft, ' +
-    'top: container.scrollTop };');
-  AppendLine(Result, '      suppressClick = false;');
-  AppendLine(Result, '      container.setPointerCapture(event.pointerId);');
-  AppendLine(Result, '      container.setAttribute("data-diagram-dragging", "");');
-  AppendLine(Result, '      event.preventDefault();');
-  AppendLine(Result, '    });');
-  AppendLine(Result, '    container.addEventListener("pointermove", function (event) {');
-  AppendLine(Result, '      if (!drag || drag.id !== event.pointerId) return;');
-  AppendLine(Result, '      var deltaX = event.clientX - drag.x;');
-  AppendLine(Result, '      var deltaY = event.clientY - drag.y;');
-  AppendLine(Result, '      if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) ' +
-    'suppressClick = true;');
-  AppendLine(Result, '      container.scrollLeft = drag.left - deltaX;');
-  AppendLine(Result, '      container.scrollTop = drag.top - deltaY;');
-  AppendLine(Result, '      event.preventDefault();');
-  AppendLine(Result, '    });');
-  AppendLine(Result, '    function endDrag(event) {');
-  AppendLine(Result, '      if (!drag || drag.id !== event.pointerId) return;');
-  AppendLine(Result, '      drag = null;');
-  AppendLine(Result, '      container.removeAttribute("data-diagram-dragging");');
-  AppendLine(Result, '      if (container.hasPointerCapture(event.pointerId)) ' +
-    'container.releasePointerCapture(event.pointerId);');
-  AppendLine(Result, '      window.setTimeout(function () { suppressClick = false; }, 0);');
-  AppendLine(Result, '    }');
-  AppendLine(Result, '    container.addEventListener("pointerup", endDrag);');
-  AppendLine(Result, '    container.addEventListener("pointercancel", endDrag);');
-  AppendLine(Result, '    container.addEventListener("click", function (event) {');
-  AppendLine(Result, '      if (!suppressClick) return;');
-  AppendLine(Result, '      event.preventDefault();');
-  AppendLine(Result, '      event.stopPropagation();');
-  AppendLine(Result, '    }, true);');
-  AppendLine(Result, '    svg.style.maxWidth = "none";');
-  AppendLine(Result, '    svg.style.width = "100%";');
+  AppendLine(Result, '    container.scrollLeft = 0;');
+  AppendLine(Result, '    container.scrollTop = 0;');
   AppendLine(Result, '    container.setAttribute("data-diagram-interactive", "");');
   AppendLine(Result, '    container.setAttribute("aria-keyshortcuts", ' +
     '"ArrowLeft ArrowRight ArrowUp ArrowDown + - 0");');
-  AppendLine(Result, '    panControls.forEach(function (control) {');
+  AppendLine(Result, '    if (state.panControls) state.panControls.forEach(' +
+    'function (control) {');
   AppendLine(Result, '      if (control) control.removeAttribute("aria-hidden");');
   AppendLine(Result, '    });');
   AppendLine(Result, '    toolbar.hidden = false;');
   AppendLine(Result, '    if (help) help.hidden = false;');
-  AppendLine(Result, '    if (window.ResizeObserver) ' +
-    'new window.ResizeObserver(updateControls).observe(container);');
-  AppendLine(Result, '    updateControls();');
+  AppendLine(Result, '    if (state.updateControls) state.updateControls();');
   AppendLine(Result, '  }');
   AppendLine(Result, '  function unavailable(error) {');
   AppendLine(Result, '    document.documentElement.classList.add(' +
@@ -798,55 +1079,73 @@ begin
   AppendLine(Result, '    console.warn("PasWeave could not render the architecture ' +
     'diagrams.", error || "local Mermaid runtime unavailable");');
   AppendLine(Result, '  }');
-  AppendLine(Result, '  if (!window.mermaid || typeof window.mermaid.run !== "function") {');
-  AppendLine(Result, '    unavailable();');
-  AppendLine(Result, '    return;');
-  AppendLine(Result, '  }');
-  AppendLine(Result, '  var dark = window.matchMedia && ' +
-    'window.matchMedia("(prefers-color-scheme: dark)").matches;');
-  AppendLine(Result, '  try {');
-  AppendLine(Result, '    window.mermaid.initialize({');
-  AppendLine(Result, '      startOnLoad: false,');
-  AppendLine(Result, '      securityLevel: "loose",');
-  AppendLine(Result, '      deterministicIds: true,');
-  AppendLine(Result, '      deterministicIDSeed: "pasweave-architecture-diagrams",');
-  AppendLine(Result, '      theme: dark ? "dark" : "neutral",');
-  AppendLine(Result, '      flowchart: { htmlLabels: false, useMaxWidth: true }');
-  AppendLine(Result, '    });');
+  AppendLine(Result, '  function prepareDiagrams() {');
   AppendLine(Result, '    diagrams.forEach(function (diagram) {');
   AppendLine(Result, '      var container = diagram.closest(' +
     '"[data-diagram-container]");');
+  AppendLine(Result, '      var source = diagram.getAttribute(' +
+    '"data-mermaid-source");');
+  AppendLine(Result, '      if (source != null) diagram.textContent = source;');
+  AppendLine(Result, '      diagram.removeAttribute("data-diagram-rendered");');
   AppendLine(Result, '      if (container) {');
   AppendLine(Result, '        container.hidden = false;');
   AppendLine(Result, '        container.setAttribute("data-diagram-rendering", "");');
+  AppendLine(Result, '        container.setAttribute("aria-hidden", "true");');
+  AppendLine(Result, '        container.removeAttribute("data-diagram-interactive");');
   AppendLine(Result, '      }');
   AppendLine(Result, '    });');
-  AppendLine(Result, '    Promise.resolve(window.mermaid.run({');
-  AppendLine(Result, '      nodes: diagrams, suppressErrors: true');
-  AppendLine(Result, '    })).then(function () {');
-  AppendLine(Result, '      diagrams.forEach(function (diagram) {');
-  AppendLine(Result, '        var section = diagram.closest(' +
-    '"[data-diagram-section]");');
-  AppendLine(Result, '        var container = diagram.closest(' +
-    '"[data-diagram-container]");');
-  AppendLine(Result, '        var fallback = section && section.querySelector(' +
-    '"[data-diagram-fallback]");');
-  AppendLine(Result, '        if (!diagram.querySelector("svg")) {');
-  AppendLine(Result, '          hideDiagram(diagram);');
-  AppendLine(Result, '          return;');
-  AppendLine(Result, '        }');
-  AppendLine(Result, '        diagram.setAttribute("data-diagram-rendered", "true");');
-  AppendLine(Result, '        if (container) {');
-  AppendLine(Result, '          container.removeAttribute("data-diagram-rendering");');
-  AppendLine(Result, '          container.removeAttribute("aria-hidden");');
-  AppendLine(Result, '        }');
-  AppendLine(Result, '        setupInteraction(diagram, container, section);');
-  AppendLine(Result, '        if (fallback) fallback.removeAttribute("open");');
-  AppendLine(Result, '      });');
-  AppendLine(Result, '    }).catch(unavailable);');
-  AppendLine(Result, '  } catch (error) {');
-  AppendLine(Result, '    unavailable(error);');
   AppendLine(Result, '  }');
+  AppendLine(Result, '  function renderDiagrams() {');
+  AppendLine(Result, '    prepareDiagrams();');
+  AppendLine(Result, '    var theme = activeScheme();');
+  AppendLine(Result, '    try {');
+  AppendLine(Result, '      window.mermaid.initialize({');
+  AppendLine(Result, '        startOnLoad: false,');
+  AppendLine(Result, '        securityLevel: "loose",');
+  AppendLine(Result, '        deterministicIds: true,');
+  AppendLine(Result, '        deterministicIDSeed: ' +
+    '"pasweave-architecture-diagrams",');
+  AppendLine(Result, '        theme: theme === "dark" ? "dark" : "neutral",');
+  AppendLine(Result, '        flowchart: { htmlLabels: false, ' +
+    'useMaxWidth: true }');
+  AppendLine(Result, '      });');
+  AppendLine(Result, '      Promise.resolve(window.mermaid.run({');
+  AppendLine(Result, '        nodes: diagrams, suppressErrors: true');
+  AppendLine(Result, '      })).then(function () {');
+  AppendLine(Result, '        diagrams.forEach(function (diagram) {');
+  AppendLine(Result, '          var section = diagram.closest(' +
+    '"[data-diagram-section]");');
+  AppendLine(Result, '          var container = diagram.closest(' +
+    '"[data-diagram-container]");');
+  AppendLine(Result, '          var fallback = section && section.querySelector(' +
+    '"[data-diagram-fallback]");');
+  AppendLine(Result, '          if (!diagram.querySelector("svg")) {');
+  AppendLine(Result, '            hideDiagram(diagram);');
+  AppendLine(Result, '            return;');
+  AppendLine(Result, '          }');
+  AppendLine(Result, '          diagram.setAttribute("data-diagram-rendered", ' +
+    '"true");');
+  AppendLine(Result, '          if (container) {');
+  AppendLine(Result, '            container.removeAttribute(' +
+    '"data-diagram-rendering");');
+  AppendLine(Result, '            container.removeAttribute("aria-hidden");');
+  AppendLine(Result, '          }');
+  AppendLine(Result, '          setupInteraction(diagram, container, section);');
+  AppendLine(Result, '          if (fallback) fallback.removeAttribute("open");');
+  AppendLine(Result, '        });');
+  AppendLine(Result, '      }).catch(unavailable);');
+  AppendLine(Result, '    } catch (error) {');
+  AppendLine(Result, '      unavailable(error);');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  if (!window.mermaid || ' +
+    'typeof window.mermaid.run !== "function") {');
+  AppendLine(Result, '    unavailable();');
+  AppendLine(Result, '    return;');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  renderDiagrams();');
+  AppendLine(Result, '  document.addEventListener("pasweave:themechange", ' +
+    'function () { renderDiagrams(); });');
   AppendLine(Result, '}());');
 end;
 

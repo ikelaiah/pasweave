@@ -9,11 +9,13 @@ uses
   PasWeave.Model;
 
 function HTMLUnitFilename(AUnit: TDocUnit): string;
+function HTMLSymbolIndexFilename: string;
 function HTMLSymbolAnchor(ASymbol: TDocSymbol): string;
 function RenderMermaidDependencyGraph(AProject: TDocProject): UTF8String;
 function RenderMermaidTypeRelationshipGraph(
   AProject: TDocProject): UTF8String;
 function RenderHTMLIndex(AProject: TDocProject): UTF8String;
+function RenderHTMLSymbolIndex(AProject: TDocProject): UTF8String;
 function RenderHTMLUnit(AProject: TDocProject; AUnit: TDocUnit): UTF8String;
 function RenderHTMLSearchIndex(AProject: TDocProject): UTF8String;
 procedure WriteHTMLDocumentation(AProject: TDocProject;
@@ -39,6 +41,13 @@ type
     UnresolvedIndex: Integer;
   end;
 
+  TIndexedSymbolEntry = class
+  public
+    Symbol: TDocSymbol;
+    UnitModel: TDocUnit;
+    constructor Create(ASymbol: TDocSymbol; AUnitModel: TDocUnit);
+  end;
+
 const
   TypeKinds: TSymbolKinds = [
     skClass, skInterface, skRecord, skEnumeration, skTypeAlias
@@ -53,6 +62,23 @@ const
     skRoutine, skMethod, skConstructor, skDestructor, skProperty, skField,
     skConstant, skVariable
   ];
+  SymbolIndexTypeKinds: TSymbolKinds = [
+    skClass, skInterface, skRecord, skEnumeration, skTypeAlias
+  ];
+  SymbolIndexRoutineKinds: TSymbolKinds = [skRoutine];
+  SymbolIndexMemberKinds: TSymbolKinds = [
+    skMethod, skConstructor, skDestructor, skProperty, skField
+  ];
+  SymbolIndexConstantKinds: TSymbolKinds = [skConstant];
+  SymbolIndexVariableKinds: TSymbolKinds = [skVariable];
+
+constructor TIndexedSymbolEntry.Create(ASymbol: TDocSymbol;
+  AUnitModel: TDocUnit);
+begin
+  inherited Create;
+  Symbol := ASymbol;
+  UnitModel := AUnitModel;
+end;
 
 procedure AppendLine(var AOutput: UTF8String; const ALine: UTF8String = '');
 begin
@@ -62,6 +88,11 @@ end;
 function HTMLUnitFilename(AUnit: TDocUnit): string;
 begin
   Result := AUnit.Name + '.html';
+end;
+
+function HTMLSymbolIndexFilename: string;
+begin
+  Result := 'symbols.html';
 end;
 
 function HTMLSymbolAnchor(ASymbol: TDocSymbol): string;
@@ -784,7 +815,8 @@ begin
 end;
 
 function PageStart(AProject: TDocProject; const ATitle, ARoot,
-  ADescription: string; AIncludeDiagram: Boolean): UTF8String;
+  ADescription: string; AIncludeDiagram: Boolean;
+  const ACurrentSection: string = ''): UTF8String;
 begin
   Result := '';
   AppendLine(Result, '<!doctype html>');
@@ -797,6 +829,9 @@ begin
     EscapeHTML(ADescription) + '">');
   AppendLine(Result, '<meta name="color-scheme" content="light dark">');
   AppendLine(Result, '<title>' + EscapeHTML(ATitle) + '</title>');
+  AppendLine(Result, '<script>');
+  Result := Result + HTMLThemeBootstrap;
+  AppendLine(Result, '</script>');
   AppendLine(Result, '<link rel="stylesheet" href="' + EscapeHTML(ARoot) +
     'assets/katex/katex.min.css">');
   AppendLine(Result, '<link rel="stylesheet" href="' + EscapeHTML(ARoot) +
@@ -823,9 +858,25 @@ begin
   AppendLine(Result, '<header class="site-header">');
   AppendLine(Result, '<div class="shell header-inner">');
   AppendLine(Result, '<a class="brand" href="' + EscapeHTML(ARoot) +
-    'index.html"><span class="brand-mark" aria-hidden="true">PW</span>' +
+    'index.html"><span class="brand-mark" aria-hidden="true">' +
+    EscapeHTML(AProject.ProjectMark) + '</span>' +
     '<span><strong>' + EscapeHTML(AProject.Name) +
     '</strong><small>API documentation</small></span></a>');
+  AppendLine(Result, '<div class="header-tools">');
+  AppendLine(Result, '<nav class="site-nav" aria-label="Site">');
+  if ACurrentSection = 'index' then
+    AppendLine(Result, '<a href="' + EscapeHTML(ARoot) +
+      'index.html" aria-current="page">Units</a>')
+  else
+    AppendLine(Result, '<a href="' + EscapeHTML(ARoot) +
+      'index.html">Units</a>');
+  if ACurrentSection = 'symbols' then
+    AppendLine(Result, '<a href="' + EscapeHTML(ARoot) +
+      'symbols.html" aria-current="page">Symbols A&#8211;Z</a>')
+  else
+    AppendLine(Result, '<a href="' + EscapeHTML(ARoot) +
+      'symbols.html">Symbols A&#8211;Z</a>');
+  AppendLine(Result, '</nav>');
   AppendLine(Result, '<div class="site-search" data-search-container>');
   AppendLine(Result, '<label class="sr-only" for="site-search">Search API' +
     '</label>');
@@ -838,6 +889,16 @@ begin
   RenderSearchFilters(Result, AProject);
   AppendLine(Result, '<p class="search-status" data-search-status ' +
     'role="status" aria-live="polite"></p><ul data-search-results></ul>');
+  AppendLine(Result, '</div>');
+  AppendLine(Result, '</div>');
+  AppendLine(Result, '<div class="theme-control" hidden data-theme-control>');
+  AppendLine(Result, '<label for="pasweave-theme-select">Theme</label>');
+  AppendLine(Result, '<select id="pasweave-theme-select" ' +
+    'data-theme-select>');
+  AppendLine(Result, '<option value="system">System</option>');
+  AppendLine(Result, '<option value="light">Light</option>');
+  AppendLine(Result, '<option value="dark">Dark</option>');
+  AppendLine(Result, '</select>');
   AppendLine(Result, '</div>');
   AppendLine(Result, '</div>');
   AppendLine(Result, '</div>');
@@ -1168,6 +1229,253 @@ begin
   end;
 end;
 
+function SymbolIndexGroupName(AKind: TSymbolKind): string;
+begin
+  if AKind in SymbolIndexTypeKinds then
+    Exit('types');
+  if AKind in SymbolIndexRoutineKinds then
+    Exit('routines');
+  if AKind in SymbolIndexMemberKinds then
+    Exit('members');
+  if AKind in SymbolIndexConstantKinds then
+    Exit('constants');
+  if AKind in SymbolIndexVariableKinds then
+    Exit('variables');
+  Result := '';
+end;
+
+function SymbolIndexSortKey(ASymbol: TDocSymbol): string;
+begin
+  Result := LowerCase(ASymbol.Name) + DocumentationSortSeparator +
+    ASymbol.QualifiedName + DocumentationSortSeparator + ASymbol.ID;
+end;
+
+function CountIndexedSymbols(AProject: TDocProject;
+  AKinds: TSymbolKinds): Integer;
+var
+  I: Integer;
+  J: Integer;
+  Symbol: TDocSymbol;
+  UnitModel: TDocUnit;
+begin
+  Result := 0;
+  for I := 0 to AProject.Units.Count - 1 do
+  begin
+    UnitModel := TDocUnit(AProject.Units[I]);
+    for J := 0 to UnitModel.Symbols.Count - 1 do
+    begin
+      Symbol := TDocSymbol(UnitModel.Symbols[J]);
+      if (Symbol.Kind in AKinds) and
+        IsEffectivelyRenderable(UnitModel, Symbol) then
+        Inc(Result);
+    end;
+  end;
+end;
+
+function TotalIndexedSymbolCount(AProject: TDocProject): Integer;
+begin
+  Result := CountIndexedSymbols(AProject, SymbolIndexTypeKinds) +
+    CountIndexedSymbols(AProject, SymbolIndexRoutineKinds) +
+    CountIndexedSymbols(AProject, SymbolIndexMemberKinds) +
+    CountIndexedSymbols(AProject, SymbolIndexConstantKinds) +
+    CountIndexedSymbols(AProject, SymbolIndexVariableKinds);
+end;
+
+procedure RenderBrowseAPISection(var AOutput: UTF8String;
+  AProject: TDocProject);
+begin
+  AppendLine(AOutput, '<section class="index-section browse-section">');
+  AppendLine(AOutput, '<div class="section-heading"><div><p ' +
+    'class="eyebrow">Reference</p><h2>Browse API</h2></div><p>Explore ' +
+    'symbols alphabetically or jump to a kind.</p></div>');
+  AppendLine(AOutput, '<a class="browse-card" href="' +
+    HTMLSymbolIndexFilename + '">');
+  AppendLine(AOutput, '<span class="browse-count">' +
+    UTF8String(IntToStr(TotalIndexedSymbolCount(AProject))) + '</span>');
+  AppendLine(AOutput, '<strong>Symbols A&#8211;Z</strong><span>Every public API ' +
+    'symbol across ' + UTF8String(IntToStr(AProject.Units.Count)) +
+    ' units, filterable by kind.</span></a>');
+  AppendLine(AOutput, '<a class="browse-card" href="' +
+    HTMLSymbolIndexFilename + '#types"><strong>Types</strong><span>' +
+    UTF8String(IntToStr(CountIndexedSymbols(AProject,
+    SymbolIndexTypeKinds))) + ' symbols</span></a>');
+  AppendLine(AOutput, '<a class="browse-card" href="' +
+    HTMLSymbolIndexFilename + '#routines"><strong>Routines</strong><span>' +
+    UTF8String(IntToStr(CountIndexedSymbols(AProject,
+    SymbolIndexRoutineKinds))) + ' symbols</span></a>');
+  AppendLine(AOutput, '<a class="browse-card" href="' +
+    HTMLSymbolIndexFilename + '#members"><strong>Members</strong><span>' +
+    UTF8String(IntToStr(CountIndexedSymbols(AProject,
+    SymbolIndexMemberKinds))) + ' symbols</span></a>');
+  AppendLine(AOutput, '<a class="browse-card" href="' +
+    HTMLSymbolIndexFilename + '#constants"><strong>Constants</strong><span>' +
+    UTF8String(IntToStr(CountIndexedSymbols(AProject,
+    SymbolIndexConstantKinds))) + ' symbols</span></a>');
+  AppendLine(AOutput, '<a class="browse-card" href="' +
+    HTMLSymbolIndexFilename + '#variables"><strong>Variables</strong><span>' +
+    UTF8String(IntToStr(CountIndexedSymbols(AProject,
+    SymbolIndexVariableKinds))) + ' symbols</span></a>');
+  AppendLine(AOutput, '</section>');
+end;
+
+function SymbolIndexLetter(ASymbol: TDocSymbol): Char;
+var
+  C: Char;
+begin
+  if Length(ASymbol.Name) = 0 then
+    Exit('#');
+  C := UpCase(ASymbol.Name[1]);
+  if (C >= 'A') and (C <= 'Z') then
+    Result := C
+  else
+    Result := '#';
+end;
+
+function SymbolLetterSectionID(ALetter: Char): string;
+begin
+  if ALetter = '#' then
+    Result := 'symbol-other'
+  else
+    Result := 'symbol-' + LowerCase(ALetter);
+end;
+
+function RenderHTMLSymbolIndex(AProject: TDocProject): UTF8String;
+var
+  Entries: TStringList;
+  Entry: TIndexedSymbolEntry;
+  GroupName: string;
+  I: Integer;
+  J: Integer;
+  Letter: Char;
+  PresentLetters: TStringList;
+  Symbol: TDocSymbol;
+  UnitModel: TDocUnit;
+begin
+  Result := PageStart(AProject, AProject.Name + ' symbols', '',
+    'A&#8211;Z symbol index for ' + AProject.Name, False, 'symbols');
+  AppendLine(Result, '<nav class="breadcrumb" aria-label="Breadcrumb">' +
+    '<a href="index.html">API index</a><span aria-hidden="true">/' +
+    '</span><span>Symbols A&#8211;Z</span></nav>');
+  AppendLine(Result, '<section class="symbol-index-heading">');
+  AppendLine(Result, '<p class="eyebrow">Reference</p><h1>Symbols A&#8211;Z</h1>');
+  AppendLine(Result, '<p>Every public API symbol across ' +
+    UTF8String(IntToStr(AProject.Units.Count)) +
+    ' units, ordered alphabetically.</p>');
+  AppendLine(Result, '</section>');
+  AppendLine(Result, '<section class="symbol-index" data-symbol-index>');
+
+  Entries := TOrdinalStringList.Create;
+  PresentLetters := TStringList.Create;
+  try
+    Entries.Sorted := True;
+    Entries.CaseSensitive := True;
+    Entries.Duplicates := dupAccept;
+    PresentLetters.Duplicates := dupIgnore;
+    for I := 0 to AProject.Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(AProject.Units[I]);
+      for J := 0 to UnitModel.Symbols.Count - 1 do
+      begin
+        Symbol := TDocSymbol(UnitModel.Symbols[J]);
+        if not IsEffectivelyRenderable(UnitModel, Symbol) then
+          Continue;
+        if SymbolIndexGroupName(Symbol.Kind) = '' then
+          Continue;
+        Entry := TIndexedSymbolEntry.Create(Symbol, UnitModel);
+        Entries.AddObject(SymbolIndexSortKey(Symbol), Entry);
+        Letter := SymbolIndexLetter(Symbol);
+        PresentLetters.Add(Letter);
+      end;
+    end;
+
+    AppendLine(Result, '<nav class="letter-bar" aria-label="Alphabetical ' +
+      'symbol sections">');
+    for Letter := 'A' to 'Z' do
+      if PresentLetters.IndexOf(Letter) >= 0 then
+        AppendLine(Result, '<a href="#' + SymbolLetterSectionID(Letter) +
+          '">' + Letter + '</a>');
+    if PresentLetters.IndexOf('#') >= 0 then
+      AppendLine(Result, '<a href="#' + SymbolLetterSectionID('#') + '">#</a>');
+    AppendLine(Result, '</nav>');
+
+    AppendLine(Result, '<fieldset class="symbol-filters">');
+    AppendLine(Result, '<legend>Filter categories</legend>');
+    AppendLine(Result, '<label><input type="checkbox" value="types" ' +
+      'data-symbol-filter checked> Types</label>');
+    AppendLine(Result, '<label><input type="checkbox" value="routines" ' +
+      'data-symbol-filter checked> Routines</label>');
+    AppendLine(Result, '<label><input type="checkbox" value="members" ' +
+      'data-symbol-filter checked> Members</label>');
+    AppendLine(Result, '<label><input type="checkbox" value="constants" ' +
+      'data-symbol-filter checked> Constants</label>');
+    AppendLine(Result, '<label><input type="checkbox" value="variables" ' +
+      'data-symbol-filter checked> Variables</label>');
+    AppendLine(Result, '</fieldset>');
+    AppendLine(Result, '<p class="symbol-status" data-symbol-status ' +
+      'role="status" aria-live="polite">' +
+      UTF8String(IntToStr(Entries.Count)) + ' symbols</p>');
+
+    for Letter := 'A' to 'Z' do
+    begin
+      if PresentLetters.IndexOf(Letter) < 0 then
+        Continue;
+      AppendLine(Result, '<section id="' + SymbolLetterSectionID(Letter) +
+        '" class="symbol-letter" data-symbol-letter>');
+      AppendLine(Result, '<h2>' + Letter + '</h2>');
+      AppendLine(Result, '<ul class="symbol-index-list">');
+      for I := 0 to Entries.Count - 1 do
+      begin
+        Entry := TIndexedSymbolEntry(Entries.Objects[I]);
+        if SymbolIndexLetter(Entry.Symbol) <> Letter then
+          Continue;
+        GroupName := SymbolIndexGroupName(Entry.Symbol.Kind);
+        AppendLine(Result, '<li class="symbol-index-entry" ' +
+          'data-symbol-entry data-symbol-kind="' + GroupName + '"><span ' +
+          'class="kind-badge">' +
+          EscapeHTML(SymbolKindName(Entry.Symbol.Kind)) + '</span><a href="' +
+          'units/' + EscapeHTML(HTMLUnitFilename(Entry.UnitModel)) + '#' +
+          EscapeHTML(HTMLSymbolAnchor(Entry.Symbol)) + '"><code>' +
+          EscapeHTML(Entry.Symbol.Name) + '</code></a><span ' +
+          'class="symbol-index-unit">' + EscapeHTML(Entry.UnitModel.Name) +
+          '</span></li>');
+      end;
+      AppendLine(Result, '</ul></section>');
+    end;
+
+    if PresentLetters.IndexOf('#') >= 0 then
+    begin
+      AppendLine(Result, '<section id="' + SymbolLetterSectionID('#') +
+        '" class="symbol-letter" data-symbol-letter>');
+      AppendLine(Result, '<h2>#</h2>');
+      AppendLine(Result, '<ul class="symbol-index-list">');
+      for I := 0 to Entries.Count - 1 do
+      begin
+        Entry := TIndexedSymbolEntry(Entries.Objects[I]);
+        if SymbolIndexLetter(Entry.Symbol) <> '#' then
+          Continue;
+        GroupName := SymbolIndexGroupName(Entry.Symbol.Kind);
+        AppendLine(Result, '<li class="symbol-index-entry" ' +
+          'data-symbol-entry data-symbol-kind="' + GroupName + '"><span ' +
+          'class="kind-badge">' +
+          EscapeHTML(SymbolKindName(Entry.Symbol.Kind)) + '</span><a href="' +
+          'units/' + EscapeHTML(HTMLUnitFilename(Entry.UnitModel)) + '#' +
+          EscapeHTML(HTMLSymbolAnchor(Entry.Symbol)) + '"><code>' +
+          EscapeHTML(Entry.Symbol.Name) + '</code></a><span ' +
+          'class="symbol-index-unit">' + EscapeHTML(Entry.UnitModel.Name) +
+          '</span></li>');
+      end;
+      AppendLine(Result, '</ul></section>');
+    end;
+  finally
+    PresentLetters.Free;
+    for I := 0 to Entries.Count - 1 do
+      TIndexedSymbolEntry(Entries.Objects[I]).Free;
+    Entries.Free;
+  end;
+  AppendLine(Result, '</section>');
+  AppendPageEnd(Result, AProject);
+end;
+
 function RenderHTMLIndex(AProject: TDocProject): UTF8String;
 var
   Units: TStringList;
@@ -1179,7 +1487,8 @@ var
   Diagnostic: TDiagnostic;
 begin
   Result := PageStart(AProject, AProject.Name + ' API', '',
-    'API documentation for ' + AProject.Name, AProject.Units.Count > 0);
+    'API documentation for ' + AProject.Name, AProject.Units.Count > 0,
+    'index');
   PublicCount := 0;
   DocumentedCount := 0;
   for I := 0 to AProject.Units.Count - 1 do
@@ -1195,8 +1504,9 @@ begin
   AppendLine(Result, '<section class="hero">');
   AppendLine(Result, '<p class="eyebrow">Free Pascal API reference</p>');
   AppendLine(Result, '<h1>' + EscapeHTML(AProject.Name) + '</h1>');
-  AppendLine(Result, '<p class="hero-copy">Browse units and declarations, ' +
-    'or search the complete public API.</p>');
+  AppendLine(Result, '<p class="hero-copy">Browse the API from the A&#8211;Z ' +
+    'symbol index, jump to a unit, or search the complete public ' +
+    'reference.</p>');
   AppendLine(Result, '<p class="source-root">Source root <code>' +
     EscapeHTML(AProject.SourceRoot) + '</code></p>');
   AppendLine(Result, '</section>');
@@ -1215,8 +1525,7 @@ begin
     '%</strong><span>Documented</span></div>');
   AppendLine(Result, '</section>');
 
-  RenderDependencyOverview(Result, AProject);
-  RenderTypeRelationshipOverview(Result, AProject);
+  RenderBrowseAPISection(Result, AProject);
 
   AppendLine(Result, '<section class="index-section">');
   AppendLine(Result, '<div class="section-heading"><div><p class="eyebrow">' +
@@ -1246,6 +1555,9 @@ begin
     Units.Free;
   end;
   AppendLine(Result, '</tbody></table></div></section>');
+
+  RenderDependencyOverview(Result, AProject);
+  RenderTypeRelationshipOverview(Result, AProject);
 
   if (AProject.Warnings.Count > 0) or (AProject.Errors.Count > 0) then
   begin
@@ -1449,8 +1761,10 @@ begin
   WriteThirdPartyAssets(AssetsDirectory);
   WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.html',
     RenderHTMLIndex(AProject));
+  WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) +
+    HTMLSymbolIndexFilename, RenderHTMLSymbolIndex(AProject));
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'site.css',
-    HTMLStylesheet);
+    HTMLStylesheet(AProject));
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'app.js',
     HTMLApplicationScript);
   WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'math.js',

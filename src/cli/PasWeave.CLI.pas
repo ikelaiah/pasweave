@@ -60,6 +60,13 @@ begin
   WriteLn('  the template is repository-relative and requires {path} and {line}');
   WriteLn('  example: blob/main/{path}#L{line}');
   WriteLn;
+  WriteLn('Project branding:');
+  WriteLn('  --project-mark=<1-4 alphanumeric characters> replaces the brand mark');
+  WriteLn('  --theme-accent=<#RGB|#RRGGBB|#RRGGBBAA> and');
+  WriteLn('  --theme-accent-2=<color> set the two project accent colors');
+  WriteLn('  --theme-font=<family name> sets the primary body font family');
+  WriteLn('  defaults reproduce the built-in light and dark reader schemes');
+  WriteLn;
   WriteLn('Documentation comment styles:');
   WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
   WriteLn('  brace = { ... }; paren = (* ... *)');
@@ -128,6 +135,14 @@ var
   RepositoryURL: string;
   SourceLinkTemplate: string;
   SourceLinkError: string;
+  ProjectMark: string;
+  ThemeAccent: string;
+  ThemeAccentAlt: string;
+  ThemeFont: string;
+  HasProjectMark: Boolean;
+  HasThemeAccent: Boolean;
+  HasThemeAccentAlt: Boolean;
+  HasThemeFont: Boolean;
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
@@ -140,6 +155,14 @@ begin
   MinimumCoverage := 0;
   RepositoryURL := '';
   SourceLinkTemplate := '';
+  ProjectMark := '';
+  ThemeAccent := '';
+  ThemeAccentAlt := '';
+  ThemeFont := '';
+  HasProjectMark := False;
+  HasThemeAccent := False;
+  HasThemeAccentAlt := False;
+  HasThemeFont := False;
   CommentStyles := DefaultDocumentationCommentStyles;
   DiscoveryOptions := TSourceDiscoveryOptions.Create;
   CompilerOptions := TCompilerOptions.Create;
@@ -247,6 +270,73 @@ begin
       else if Pos('--source-link-template=', ParamStr(I)) = 1 then
         SourceLinkTemplate := Copy(ParamStr(I),
           Length('--source-link-template=') + 1, MaxInt)
+      else if ParamStr(I) = '--project-mark' then
+      begin
+        ProjectMark := RequireOptionValue(I, '--project-mark');
+        if not IsValidProjectMark(ProjectMark) then
+          raise EPasWeaveInputError.Create(
+            '--project-mark must be 1 to 4 alphanumeric characters');
+        HasProjectMark := True;
+      end
+      else if Pos('--project-mark=', ParamStr(I)) = 1 then
+      begin
+        ProjectMark := Copy(ParamStr(I), Length('--project-mark=') + 1,
+          MaxInt);
+        if not IsValidProjectMark(ProjectMark) then
+          raise EPasWeaveInputError.Create(
+            '--project-mark must be 1 to 4 alphanumeric characters');
+        HasProjectMark := True;
+      end
+      else if ParamStr(I) = '--theme-accent' then
+      begin
+        ThemeAccent := RequireOptionValue(I, '--theme-accent');
+        if not IsValidThemeColor(ThemeAccent) then
+          raise EPasWeaveInputError.Create(
+            '--theme-accent must be a #RGB, #RRGGBB, or #RRGGBBAA color');
+        HasThemeAccent := True;
+      end
+      else if Pos('--theme-accent=', ParamStr(I)) = 1 then
+      begin
+        ThemeAccent := Copy(ParamStr(I), Length('--theme-accent=') + 1,
+          MaxInt);
+        if not IsValidThemeColor(ThemeAccent) then
+          raise EPasWeaveInputError.Create(
+            '--theme-accent must be a #RGB, #RRGGBB, or #RRGGBBAA color');
+        HasThemeAccent := True;
+      end
+      else if ParamStr(I) = '--theme-accent-2' then
+      begin
+        ThemeAccentAlt := RequireOptionValue(I, '--theme-accent-2');
+        if not IsValidThemeColor(ThemeAccentAlt) then
+          raise EPasWeaveInputError.Create(
+            '--theme-accent-2 must be a #RGB, #RRGGBB, or #RRGGBBAA color');
+        HasThemeAccentAlt := True;
+      end
+      else if Pos('--theme-accent-2=', ParamStr(I)) = 1 then
+      begin
+        ThemeAccentAlt := Copy(ParamStr(I), Length('--theme-accent-2=') + 1,
+          MaxInt);
+        if not IsValidThemeColor(ThemeAccentAlt) then
+          raise EPasWeaveInputError.Create(
+            '--theme-accent-2 must be a #RGB, #RRGGBB, or #RRGGBBAA color');
+        HasThemeAccentAlt := True;
+      end
+      else if ParamStr(I) = '--theme-font' then
+      begin
+        ThemeFont := RequireOptionValue(I, '--theme-font');
+        if not IsValidThemeFont(ThemeFont) then
+          raise EPasWeaveInputError.Create(
+            '--theme-font must be a safe font family name');
+        HasThemeFont := True;
+      end
+      else if Pos('--theme-font=', ParamStr(I)) = 1 then
+      begin
+        ThemeFont := Copy(ParamStr(I), Length('--theme-font=') + 1, MaxInt);
+        if not IsValidThemeFont(ThemeFont) then
+          raise EPasWeaveInputError.Create(
+            '--theme-font must be a safe font family name');
+        HasThemeFont := True;
+      end
       else if ParamStr(I) = '--min-documentation-coverage' then
       begin
         ThresholdValue := RequireOptionValue(I, '--min-documentation-coverage');
@@ -340,6 +430,14 @@ begin
     Project.Free;
     raise EPasWeaveInputError.Create(SourceLinkError);
   end;
+  if HasProjectMark then
+    Project.ProjectMark := ProjectMark;
+  if HasThemeAccent then
+    Project.ThemeAccent := ThemeAccent;
+  if HasThemeAccentAlt then
+    Project.ThemeAccentAlt := ThemeAccentAlt;
+  if HasThemeFont then
+    Project.ThemeFont := ThemeFont;
   try
     if HasMinimumCoverage then
       AddDocumentationCoverageDiagnostic(Project, MinimumCoverage);

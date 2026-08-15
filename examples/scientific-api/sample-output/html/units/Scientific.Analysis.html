@@ -6,6 +6,22 @@
 <meta name="description" content="API documentation for unit Scientific.Analysis">
 <meta name="color-scheme" content="light dark">
 <title>Scientific.Analysis - Scientific API showcase</title>
+<script>
+(function () {
+  "use strict";
+  var stored = null;
+  try {
+    stored = window.localStorage.getItem("pasweave-theme");
+  } catch (error) {
+    stored = null;
+  }
+  var theme = "system";
+  if (stored === "system" || stored === "light" || stored === "dark") {
+    theme = stored;
+  }
+  document.documentElement.setAttribute("data-theme", theme);
+}());
+</script>
 <link rel="stylesheet" href="../../../../../assets/katex/katex.min.css">
 <link rel="stylesheet" href="../assets/site.css">
 <script defer src="../../../../../assets/katex/katex.min.js"></script>
@@ -18,6 +34,11 @@
 <header class="site-header">
 <div class="shell header-inner">
 <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Scientific API showcase</strong><small>API documentation</small></span></a>
+<div class="header-tools">
+<nav class="site-nav" aria-label="Site">
+<a href="../index.html">Units</a>
+<a href="../symbols.html">Symbols A&#8211;Z</a>
+</nav>
 <div class="site-search" data-search-container>
 <label class="sr-only" for="site-search">Search API</label>
 <input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
@@ -46,6 +67,15 @@
 <label>Documentation<select data-search-documentation><option value="">Any status</option><option value="documented">Documented</option><option value="undocumented">Undocumented</option></select></label>
 </fieldset>
 <p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
+</div>
+</div>
+<div class="theme-control" hidden data-theme-control>
+<label for="pasweave-theme-select">Theme</label>
+<select id="pasweave-theme-select" data-theme-select>
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
 </div>
 </div>
 </div>

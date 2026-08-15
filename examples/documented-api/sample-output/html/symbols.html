@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A&amp;#8211;Z symbol index for Documented API example">
+<meta name="color-scheme" content="light dark">
+<title>Documented API example symbols</title>
+<script>
+(function () {
+  "use strict";
+  var stored = null;
+  try {
+    stored = window.localStorage.getItem("pasweave-theme");
+  } catch (error) {
+    stored = null;
+  }
+  var theme = "system";
+  if (stored === "system" || stored === "light" || stored === "dark") {
+    theme = stored;
+  }
+  document.documentElement.setAttribute("data-theme", theme);
+}());
+</script>
+<link rel="stylesheet" href="../../../../assets/katex/katex.min.css">
+<link rel="stylesheet" href="assets/site.css">
+<script defer src="../../../../assets/katex/katex.min.js"></script>
+<script defer src="assets/math.js"></script>
+<script defer src="assets/search-index.js"></script>
+<script defer src="assets/app.js"></script>
+</head>
+<body data-site-root="">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<header class="site-header">
+<div class="shell header-inner">
+<a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Documented API example</strong><small>API documentation</small></span></a>
+<div class="header-tools">
+<nav class="site-nav" aria-label="Site">
+<a href="index.html">Units</a>
+<a href="symbols.html" aria-current="page">Symbols A&#8211;Z</a>
+</nav>
+<div class="site-search" data-search-container>
+<label class="sr-only" for="site-search">Search API</label>
+<input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
+<div id="search-results" class="search-panel" data-search-panel hidden>
+<fieldset class="search-filters"><legend class="sr-only">Search filters</legend>
+<label>Unit<select data-search-unit><option value="">All units</option>
+<option value="Demo.Core">Demo.Core</option>
+<option value="Demo.Services">Demo.Services</option>
+</select></label>
+<label>Kind<select data-search-kind><option value="">All kinds</option>
+<option value="class">class</option>
+<option value="constructor">constructor</option>
+<option value="enumeration">enumeration</option>
+<option value="method">method</option>
+<option value="property">property</option>
+<option value="routine">routine</option>
+<option value="unit">unit</option>
+</select></label>
+<label>Visibility<select data-search-visibility><option value="">All visibilities</option>
+<option value="default">default</option>
+<option value="public">public</option>
+</select></label>
+<label>Documentation<select data-search-documentation><option value="">Any status</option><option value="documented">Documented</option><option value="undocumented">Undocumented</option></select></label>
+</fieldset>
+<p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
+</div>
+</div>
+<div class="theme-control" hidden data-theme-control>
+<label for="pasweave-theme-select">Theme</label>
+<select id="pasweave-theme-select" data-theme-select>
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</div>
+</div>
+</div>
+</header>
+<main id="main-content" class="shell main-content">
+<nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">API index</a><span aria-hidden="true">/</span><span>Symbols A&#8211;Z</span></nav>
+<section class="symbol-index-heading">
+<p class="eyebrow">Reference</p><h1>Symbols A&#8211;Z</h1>
+<p>Every public API symbol across 2 units, ordered alphabetically.</p>
+</section>
+<section class="symbol-index" data-symbol-index>
+<nav class="letter-bar" aria-label="Alphabetical symbol sections">
+<a href="#symbol-a">A</a>
+<a href="#symbol-c">C</a>
+<a href="#symbol-g">G</a>
+<a href="#symbol-n">N</a>
+<a href="#symbol-t">T</a>
+<a href="#symbol-w">W</a>
+</nav>
+<fieldset class="symbol-filters">
+<legend>Filter categories</legend>
+<label><input type="checkbox" value="types" data-symbol-filter checked> Types</label>
+<label><input type="checkbox" value="routines" data-symbol-filter checked> Routines</label>
+<label><input type="checkbox" value="members" data-symbol-filter checked> Members</label>
+<label><input type="checkbox" value="constants" data-symbol-filter checked> Constants</label>
+<label><input type="checkbox" value="variables" data-symbol-filter checked> Variables</label>
+</fieldset>
+<p class="symbol-status" data-symbol-status role="status" aria-live="polite">8 symbols</p>
+<section id="symbol-a" class="symbol-letter" data-symbol-letter>
+<h2>A</h2>
+<ul class="symbol-index-list">
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="routines"><span class="kind-badge">routine</span><a href="units/Demo.Core.html#symbol-demo-core-add-ce92e6099fa0d067"><code>Add</code></a><span class="symbol-index-unit">Demo.Core</span></li>
+</ul></section>
+<section id="symbol-c" class="symbol-letter" data-symbol-letter>
+<h2>C</h2>
+<ul class="symbol-index-list">
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="members"><span class="kind-badge">constructor</span><a href="units/Demo.Services.html#symbol-demo-services-tnamedgreeter-create-495e8336f5e7fef9"><code>Create</code></a><span class="symbol-index-unit">Demo.Services</span></li>
+</ul></section>
+<section id="symbol-g" class="symbol-letter" data-symbol-letter>
+<h2>G</h2>
+<ul class="symbol-index-list">
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="members"><span class="kind-badge">method</span><a href="units/Demo.Core.html#symbol-demo-core-tgreeter-greetingfor-26da7ea6d7daae6a"><code>GreetingFor</code></a><span class="symbol-index-unit">Demo.Core</span></li>
+</ul></section>
+<section id="symbol-n" class="symbol-letter" data-symbol-letter>
+<h2>N</h2>
+<ul class="symbol-index-list">
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="members"><span class="kind-badge">property</span><a href="units/Demo.Services.html#symbol-demo-services-tnamedgreeter-name-65470d0c8492e87a"><code>Name</code></a><span class="symbol-index-unit">Demo.Services</span></li>
+</ul></section>
+<section id="symbol-t" class="symbol-letter" data-symbol-letter>
+<h2>T</h2>
+<ul class="symbol-index-list">
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="types"><span class="kind-badge">class</span><a href="units/Demo.Core.html#symbol-demo-core-tgreeter-fb605899cec8779b"><code>TGreeter</code></a><span class="symbol-index-unit">Demo.Core</span></li>
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="types"><span class="kind-badge">enumeration</span><a href="units/Demo.Core.html#symbol-demo-core-tgreetingstyle-10cc0ecc6a6635c8"><code>TGreetingStyle</code></a><span class="symbol-index-unit">Demo.Core</span></li>
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="types"><span class="kind-badge">class</span><a href="units/Demo.Services.html#symbol-demo-services-tnamedgreeter-36c4f0e191f7812d"><code>TNamedGreeter</code></a><span class="symbol-index-unit">Demo.Services</span></li>
+</ul></section>
+<section id="symbol-w" class="symbol-letter" data-symbol-letter>
+<h2>W</h2>
+<ul class="symbol-index-list">
+<li class="symbol-index-entry" data-symbol-entry data-symbol-kind="members"><span class="kind-badge">method</span><a href="units/Demo.Services.html#symbol-demo-services-tnamedgreeter-welcome-39c026d5b69e81c2"><code>Welcome</code></a><span class="symbol-index-unit">Demo.Services</span></li>
+</ul></section>
+</section>
+</main>
+<footer class="site-footer"><div class="shell">Generated by PasWeave from <code>examples/documented-api</code>.</div></footer>
+</body>
+</html>

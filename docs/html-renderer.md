@@ -6,6 +6,7 @@ model. A build writes a self-contained site beneath `html/`:
 ```text
 html/
 ├── index.html
+├── symbols.html
 ├── assets/
 │   ├── app.js
 │   ├── diagram.js
@@ -32,6 +33,14 @@ rules for `file://` URLs do not disable search.
 
 - The project index reports parsed, public, and documented symbol totals and
   links to every successfully parsed unit.
+- The project index is ordered for documentation discovery: project summary,
+  a **Browse API** section linking the A–Z symbol index, the units table,
+  architecture diagrams, and build diagnostics last.
+- A generated `symbols.html` A–Z symbol index lists every renderable non-unit
+  API symbol, ordered alphabetically and grouped into letter sections, with
+  category filters for types, routines, members, constants, and variables.
+- Every page header exposes a persistent **Symbols A–Z** destination alongside
+  the units destination, and a keyboard-accessible reader theme control.
 - Unit pages render public, protected, published, automated, and
   strict-protected API. Private and strict-private symbols, including members
   beneath private parents, remain JSON-only.
@@ -87,6 +96,78 @@ disabled, the complete alphabetical unit list and all category links remain
 usable, while global symbol search is unavailable. The category navigator is
 deliberately group-level; it does not duplicate the global search index with a
 link for every declaration.
+
+## A–Z symbol index
+
+Every build writes `symbols.html` beside the project index. It is derived
+entirely from the documentation model and requires no manually maintained index
+data. The page lists every renderable symbol except units themselves, so the
+five category filters match the roadmap contract exactly: types, routines,
+members, constants, and variables.
+
+Symbols are sorted case-insensitively by name, then grouped into ordinary HTML
+letter sections. A letter bar links each present section, and every entry links
+to its stable unit page and symbol anchor. The complete list is server-rendered,
+so a reader can browse the whole index with JavaScript disabled. The local
+application script adds category checkboxes that hide non-matching native list
+entries, re-hide empty letter sections, and announce the live filtered count
+through a polite status. Category deep links such as `symbols.html#types`
+pre-select that filter when the script is available.
+
+The project index introduces the page through a **Browse API** section placed
+directly beneath the project summary: a primary card linking the A–Z index with
+the total symbol count, plus one card per category that deep-links the matching
+filter. The header also persists a **Symbols A–Z** link on every generated page,
+including unit pages, while global search remains the fastest known-name lookup
+and the project index remains the canonical unit and architecture overview.
+
+## Reader themes
+
+Every page embeds a small dependency-free bootstrap in `<head>` that reads a
+persisted reader choice from local storage and publishes it as `data-theme` on
+the root element before the stylesheet applies. Valid choices are `system`,
+`light`, and `dark`; the default is `system`. Reading is wrapped in a
+`try/catch`, so rejected or unavailable storage, including documentation opened
+directly through `file://`, safely falls back to the system scheme.
+
+The stylesheet tokenizes every color and typography value as CSS custom
+properties. The root default and the `[data-theme="system"]` state use the
+light token set and follow `@media (prefers-color-scheme: dark)`; an explicit
+`[data-theme="dark"]` applies the dark token set, and an explicit
+`[data-theme="light"]` pins the light set regardless of the operating system.
+Native controls follow the same choice through the `color-scheme` property.
+KaTeX output inherits the active text color, and Mermaid diagrams select their
+theme from `data-theme` and re-render when the reader changes scheme, so
+mathematics, diagrams, focus states, and contrast stay synchronized without any
+remote dependency.
+
+A labelled native select offers **System**, **Light**, and **Dark**. It is
+rendered `hidden` and revealed only by the application script, so pages with
+scripting disabled simply follow the system color scheme. Changing the select
+updates the root attribute immediately, persists the choice when storage is
+available, and announces a `pasweave:themechange` event that the diagram
+initializer listens for.
+
+## Project branding
+
+Build-time branding is a restrained, validated set of tokens rather than a
+theme system. The CLI accepts:
+
+```text
+--project-mark=<1-4 alphanumeric characters>
+--theme-accent=<#RGB|#RRGGBB|#RRGGBBAA>
+--theme-accent-2=<color>
+--theme-font=<safe family name>
+```
+
+The mark replaces the default `PW` brand mark in the header. The two colors
+become the primary and secondary accent tokens, and the font name becomes the
+body font family. Dark-mode accent variants are derived deterministically from
+the configured colors; the built-in defaults reproduce the original light and
+dark schemes. Invalid values are rejected before any output is written, and the
+effective tokens are recorded additively in `api-model.json`. Reader-facing
+named-theme galleries, arbitrary script injection, and remote theme assets are
+explicitly out of scope.
 
 ## Unit dependency diagram
 

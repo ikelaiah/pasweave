@@ -68,14 +68,15 @@ changing or recreating a release tag.
 
 The `Publish documentation showcase` workflow builds and tests PasWeave on
 Ubuntu, regenerates the scientific example from committed sources, validates
-its coverage, unit and category navigation, source links, diagrams, and mathematics,
-then uploads only the self-contained HTML tree. Pull requests run the build
-gate without configuring or publishing Pages. A push to `main` enables Pages
-when necessary and deploys automatically; once the workflow exists on the
-default branch, a maintainer may also dispatch it on another reviewed branch.
+its coverage, A–Z symbol index, unit and category navigation, reader themes,
+source links, diagrams, and mathematics, then uploads only the self-contained
+HTML tree. Pull requests run the build gate without configuring or publishing
+Pages. A push to `main` enables Pages when necessary and deploys
+automatically; once the workflow exists on the default branch, a maintainer
+may also dispatch it on another reviewed branch.
 
 The deploy job publishes through the protected `github-pages` environment to
 `https://ikelaiah.github.io/pasweave/`, then requests the deployed index, unit
-page, and search index and checks the milestone contract again. Treat a
-successful deployment and deployed-site smoke test as part of the current
-navigation release gate.
+page, symbol index, and search index and checks the milestone contract again.
+Treat a successful deployment and deployed-site smoke test as part of the
+current discovery and reader-theme release gate.
