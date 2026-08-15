@@ -46,4 +46,16 @@
 - [x] Full suite and production build pass
 - [x] No `v0.6.0+` work included
 
+# v0.5.5 task checklist
+
+- [x] Rephrase the project-index hero copy
+- [x] Preserve the `&#8211;` en-dash entity
+- [x] Focused hero-copy assertion in the symbol-index tests
+- [x] Regenerate both examples' HTML goldens
+- [x] Version metadata and portable-build default updated to `0.5.5`
+- [x] Changelog, release note, PR note, and README updated
+- [x] Full suite and production build pass
+- [x] No `v0.6.0+` work included
+
+
 
