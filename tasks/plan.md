@@ -20,7 +20,7 @@ project configuration, portability expansion, contract freezing, and all
   members, constants, variables) match the roadmap wording exactly.
 - Reorder the project index to summary, Browse API, units, architecture
   diagrams, diagnostics; keep the units table canonical and diagrams unchanged.
-- Persist a header **Symbols A–Z** destination and theme control on every page.
+- Persist a header **Symbols Index** destination and theme control on every page.
 - Apply the reader scheme through a tiny inline `data-theme` bootstrap before
   the stylesheet; drive all colors/typography through CSS custom properties so
   native controls, KaTeX, Mermaid, focus, and contrast stay synchronized.
@@ -38,7 +38,7 @@ project configuration, portability expansion, contract freezing, and all
   filters, letter sections, stable links, and the reordered project index.
 - [x] Task 2: Render `symbols.html` and the **Browse API** section; reorder the
   project index; write the new page from `WriteHTMLDocumentation`.
-- [x] Task 3: Add the header **Symbols A–Z** destination and category filter
+- [x] Task 3: Add the header **Symbols Index** destination and category filter
   JavaScript with a live count and deep links.
 
 ### Checkpoint: Static discovery
@@ -106,3 +106,12 @@ project configuration, portability expansion, contract freezing, and all
   unchanged.
 - [x] Full tests and production build pass; direct-file and default-`///`
   workflows still work end to end.
+
+## `v0.5.3` label polish
+
+A follow-up release renames the visible symbol-browser label from
+**Symbols A–Z** to **Symbols Index** in the header, page heading/breadcrumb,
+and Browse API card. "A–Z" remains only in descriptive copy. Routes, anchors,
+filters, deep links, themes, and branding tokens are unchanged; both examples'
+HTML goldens and the version metadata are regenerated to v0.5.3.
+

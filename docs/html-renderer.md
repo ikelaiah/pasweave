@@ -39,7 +39,7 @@ rules for `file://` URLs do not disable search.
 - A generated `symbols.html` A–Z symbol index lists every renderable non-unit
   API symbol, ordered alphabetically and grouped into letter sections, with
   category filters for types, routines, members, constants, and variables.
-- Every page header exposes a persistent **Symbols A–Z** destination alongside
+- Every page header exposes a persistent **Symbols Index** destination alongside
   the units destination, and a keyboard-accessible reader theme control.
 - Unit pages render public, protected, published, automated, and
   strict-protected API. Private and strict-private symbols, including members
@@ -117,9 +117,10 @@ pre-select that filter when the script is available.
 The project index introduces the page through a **Browse API** section placed
 directly beneath the project summary: a primary card linking the A–Z index with
 the total symbol count, plus one card per category that deep-links the matching
-filter. The header also persists a **Symbols A–Z** link on every generated page,
-including unit pages, while global search remains the fastest known-name lookup
-and the project index remains the canonical unit and architecture overview.
+filter. The header also persists a **Symbols Index** link on every generated
+page, including unit pages, while global search remains the fastest known-name
+lookup and the project index remains the canonical unit and architecture
+overview.
 
 ## Reader themes
 

@@ -7,6 +7,30 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-08-15
+
+### Changed
+
+- Renamed the visible symbol-index label from **Symbols A–Z** to the more
+  professional **Symbols Index** in the page header, the `symbols.html`
+  heading and breadcrumb, and the project-index Browse API card. The "A–Z"
+  phrase remains in descriptive copy such as the Browse API card text and the
+  page description.
+- Version metadata and portable-build defaults now report v0.5.3.
+
+### Compatibility
+
+- The `symbols.html` route, stable symbol anchors, category deep links, and
+  the search-index schema are unchanged; only the visible label text changed.
+- All other v0.5.2 output contracts remain intact.
+
+### Validation
+
+- The complete FPC 3.2.2 suite, CLI build, deterministic example goldens, and
+  direct-file/default-`///` workflows pass.
+- Focused tests pin the new **Symbols Index** label in the header and page
+  heading, and both examples' golden output was regenerated.
+
 ## [0.5.2] - 2026-08-15
 
 ### Added
@@ -296,7 +320,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.3...HEAD
+[0.5.3]: https://github.com/ikelaiah/pasweave/compare/v0.5.2...v0.5.3
 [0.5.2]: https://github.com/ikelaiah/pasweave/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/ikelaiah/pasweave/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/ikelaiah/pasweave/compare/v0.4.0...v0.5.0

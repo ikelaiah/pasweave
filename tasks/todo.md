@@ -4,7 +4,7 @@
 - [x] Five category filters (types, routines, members, constants, variables)
 - [x] Stable links, letter sections, and no-JavaScript browsing
 - [x] Project index reordered to summary, Browse API, units, diagrams, diagnostics
-- [x] Persistent Symbols A–Z header destination on every page
+- [x] Persistent Symbols Index header destination on every page
 - [x] Keyboard-accessible System/Light/Dark reader theme control
 - [x] Inline data-theme bootstrap applied before visible rendering
 - [x] Safe persistence fallback when storage is unavailable or rejected
@@ -19,3 +19,15 @@
 - [x] Version metadata and portable-build default updated to `0.5.2`
 - [x] Full suite, builds, deterministic checks, and five-axis review
 - [x] No `v0.6.0+` work included
+
+# v0.5.3 task checklist
+
+- [x] Rename visible symbol-browser label to "Symbols Index"
+- [x] Keep "A–Z" only in descriptive copy
+- [x] Regenerate both examples' HTML goldens
+- [x] Focused label assertions in the symbol-index tests
+- [x] Version metadata and portable-build default updated to `0.5.3`
+- [x] Changelog, roadmap status, release note, PR note, and README updated
+- [x] Full suite and production build pass
+- [x] No `v0.6.0+` work included
+
