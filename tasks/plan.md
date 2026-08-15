@@ -134,3 +134,15 @@ complete public API reference.", preserving the `&#8211;` en-dash entity.
 A focused test pins the new copy and both examples' HTML goldens are
 regenerated to v0.5.5. No routes, anchors, schema, themes, or branding change.
 
+## `v0.5.6` symbol-index terminology correction
+
+A follow-up release removes the A–Z-only implication from symbol-index copy.
+The hero, Browse API description, and Symbols Index card say "symbol index";
+the symbols page introduction says "Public API symbols indexed by name and
+grouped into navigable sections"; the meta description is "Symbol index for
+{project}"; and the section-navigation label is "Symbol index sections".
+Symbols beginning with `_`, digits, or other non-letter characters remain valid
+and group under the `#` section. Routes, anchors, filters, sorting, and
+grouping are unchanged; living docs are corrected while historical records are
+preserved. Example goldens and version metadata are regenerated to v0.5.6.
+

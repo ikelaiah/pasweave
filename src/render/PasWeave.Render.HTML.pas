@@ -1301,15 +1301,14 @@ procedure RenderBrowseAPISection(var AOutput: UTF8String;
 begin
   AppendLine(AOutput, '<section class="index-section browse-section">');
   AppendLine(AOutput, '<div class="section-heading"><div><p ' +
-    'class="eyebrow">Reference</p><h2>Browse API</h2></div><p>Explore ' +
-    'symbols alphabetically or jump to a kind.</p></div>');
+    'class="eyebrow">Reference</p><h2>Browse API</h2></div><p>Browse ' +
+    'symbols by name or filter by kind.</p></div>');
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '">');
   AppendLine(AOutput, '<span class="browse-count">' +
     UTF8String(IntToStr(TotalIndexedSymbolCount(AProject))) + '</span>');
   AppendLine(AOutput, '<strong>Symbols Index</strong><span>Every public API ' +
-    'symbol A&#8211;Z across ' + UTF8String(IntToStr(AProject.Units.Count)) +
-    ' units, filterable by kind.</span></a>');
+    'symbol, indexed by name and filterable by kind.</span></a>');
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '#types"><strong>Types</strong><span>' +
     UTF8String(IntToStr(CountIndexedSymbols(AProject,
@@ -1367,15 +1366,14 @@ var
   UnitModel: TDocUnit;
 begin
   Result := PageStart(AProject, AProject.Name + ' symbols', '',
-    'A&#8211;Z symbol index for ' + AProject.Name, False, 'symbols');
+    'Symbol index for ' + AProject.Name, False, 'symbols');
   AppendLine(Result, '<nav class="breadcrumb" aria-label="Breadcrumb">' +
     '<a href="index.html">API index</a><span aria-hidden="true">/' +
     '</span><span>Symbols Index</span></nav>');
   AppendLine(Result, '<section class="symbol-index-heading">');
   AppendLine(Result, '<p class="eyebrow">Reference</p><h1>Symbols Index</h1>');
-  AppendLine(Result, '<p>Every public API symbol across ' +
-    UTF8String(IntToStr(AProject.Units.Count)) +
-    ' units, ordered alphabetically.</p>');
+  AppendLine(Result, '<p>Public API symbols indexed by name and grouped ' +
+    'into navigable sections.</p>');
   AppendLine(Result, '</section>');
   AppendLine(Result, '<section class="symbol-index" data-symbol-index>');
 
@@ -1403,8 +1401,8 @@ begin
       end;
     end;
 
-    AppendLine(Result, '<nav class="letter-bar" aria-label="Alphabetical ' +
-      'symbol sections">');
+    AppendLine(Result, '<nav class="letter-bar" aria-label="Symbol index ' +
+      'sections">');
     for Letter := 'A' to 'Z' do
       if PresentLetters.IndexOf(Letter) >= 0 then
         AppendLine(Result, '<a href="#' + SymbolLetterSectionID(Letter) +
@@ -1515,8 +1513,8 @@ begin
   AppendLine(Result, '<p class="eyebrow">Free Pascal API reference</p>');
   AppendLine(Result, '<h1>' + EscapeHTML(AProject.Name) + '</h1>');
   AppendLine(Result, '<p class="hero-copy">Browse the API using the ' +
-    'A&#8211;Z symbol index, explore individual units, or search the ' +
-    'complete public API reference.</p>');
+    'symbol index, explore individual units, or search the complete public ' +
+    'API reference.</p>');
   AppendLine(Result, '<p class="source-root">Source root <code>' +
     EscapeHTML(AProject.SourceRoot) + '</code></p>');
   AppendLine(Result, '</section>');

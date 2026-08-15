@@ -68,7 +68,7 @@ changing or recreating a release tag.
 
 The `Publish documentation showcase` workflow builds and tests PasWeave on
 Ubuntu, regenerates the scientific example from committed sources, validates
-its coverage, A–Z symbol index, unit and category navigation, reader themes,
+its coverage, symbol index, unit and category navigation, reader themes,
 source links, diagrams, and mathematics, then uploads only the self-contained
 HTML tree. Pull requests run the build gate without configuring or publishing
 Pages. A push to `main` enables Pages when necessary and deploys

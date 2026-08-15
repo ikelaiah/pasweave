@@ -34,17 +34,17 @@ rules for `file://` URLs do not disable search.
 - The project index reports parsed declaration totals, a public API symbol
   total, and documentation coverage, and links to every successfully parsed
   unit. "Public API symbols" counts the same
-  browsable population as the A–Z symbol index (renderable non-unit symbols),
+  browsable population as the symbol index (renderable non-unit symbols),
   so the units count remains separate and coverage stays consistent with the
   index.
 - Unit pages render public, protected, published, automated, and
   strict-protected API. Private and strict-private symbols, including members
   beneath private parents, remain JSON-only.
 - The project index is ordered for documentation discovery: project summary,
-  a **Browse API** section linking the A–Z symbol index, the units table,
+  a **Browse API** section linking the symbol index, the units table,
   architecture diagrams, and build diagnostics last.
-- A generated `symbols.html` A–Z symbol index lists every renderable non-unit
-  API symbol, ordered alphabetically and grouped into letter sections, with
+- A generated `symbols.html` symbol index lists every renderable non-unit
+  API symbol, ordered by name and grouped into A–Z and `#` sections, with
   category filters for types, routines, members, constants, and variables.
 - Every page header exposes a persistent **Symbols Index** destination alongside
   the units destination, and a keyboard-accessible reader theme control.
@@ -104,7 +104,7 @@ usable, while global symbol search is unavailable. The category navigator is
 deliberately group-level; it does not duplicate the global search index with a
 link for every declaration.
 
-## A–Z symbol index
+## Symbol index
 
 Every build writes `symbols.html` beside the project index. It is derived
 entirely from the documentation model and requires no manually maintained index
@@ -113,21 +113,23 @@ five category filters match the roadmap contract exactly: types, routines,
 members, constants, and variables.
 
 Symbols are sorted case-insensitively by name, then grouped into ordinary HTML
-letter sections. A letter bar links each present section, and every entry links
-to its stable unit page and symbol anchor. The complete list is server-rendered,
-so a reader can browse the whole index with JavaScript disabled. The local
-application script adds category checkboxes that hide non-matching native list
-entries, re-hide empty letter sections, and announce the live filtered count
-through a polite status. Category deep links such as `symbols.html#types`
-pre-select that filter when the script is available.
+letter sections. Names beginning with `_`, digits, or other non-letter
+characters are grouped under a `#` section. A letter bar links each present
+section, and every entry links to its stable unit page and symbol anchor. The
+complete list is server-rendered, so a reader can browse the whole index with
+JavaScript disabled. The local application script adds category checkboxes that
+hide non-matching native list entries, re-hide empty letter sections, and
+announce the live filtered count through a polite status. Category deep links
+such as `symbols.html#types` pre-select that filter when the script is
+available.
 
 The project index introduces the page through a **Browse API** section placed
-directly beneath the project summary: a primary card linking the A–Z index with
-the total symbol count, plus one card per category that deep-links the matching
-filter. The header also persists a **Symbols Index** link on every generated
-page, including unit pages, while global search remains the fastest known-name
-lookup and the project index remains the canonical unit and architecture
-overview.
+directly beneath the project summary: a primary card linking the symbol index
+with the total symbol count, plus one card per category that deep-links the
+matching filter. The header also persists a **Symbols Index** link on every
+generated page, including unit pages, while global search remains the fastest
+known-name lookup and the project index remains the canonical unit and
+architecture overview.
 
 ## Reader themes
 

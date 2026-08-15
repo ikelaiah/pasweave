@@ -6,11 +6,11 @@ without first installing Free Pascal or compiling the project.
 
 - [Browse the Markdown project index](markdown/index.md)
 - [Open the HTML project index](html/index.html) after cloning the repository
-- [Browse the A–Z symbol index](html/symbols.html) after cloning the repository
+- [Browse the symbol index](html/symbols.html) after cloning the repository
 
 The snapshot reports 8 of 8 public API symbols documented and includes both
 unit pages. The HTML preview retains PasWeave's generated styling, offline
-search, A–Z symbol index, reader theme control, direct unit and category
+search, symbol index, reader theme control, direct unit and category
 navigation, mathematical rendering, relationship diagrams, and diagram
 controls.
 
