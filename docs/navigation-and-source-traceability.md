@@ -20,7 +20,7 @@ script adds category checkboxes, live counts, and category deep links. See the
 The project index now follows a discovery-first order: project summary,
 **Browse API**, the units table, architecture diagrams, then diagnostics. The
 **Browse API** section leads with an A–Z card and per-category cards, and every
-page header persists a **Symbols A–Z** destination. Unit URLs, overload-aware
+page header persists a **Symbols Index** destination. Unit URLs, overload-aware
 anchors, the search-index schema, source links, and both project diagrams
 retain their v0.5.0 and v0.5.1 contracts.
 

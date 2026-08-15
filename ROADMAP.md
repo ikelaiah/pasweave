@@ -1,9 +1,9 @@
 # PasWeave roadmap
 
-PasWeave is currently preparing `v0.5.2`. The parser-to-site pipeline works;
-the path to `v1.0.0` is about making that pipeline understand real project
-builds, improving author feedback and navigation, scaling it safely, and then
-freezing the public contracts.
+PasWeave has shipped `v0.5.2` and is preparing `v0.6.0`. The parser-to-site
+pipeline works; the path to `v1.0.0` is about making that pipeline understand
+real project builds, improving author feedback and navigation, scaling it
+safely, and then freezing the public contracts.
 
 This roadmap defines outcomes and release gates rather than dates. A milestone
 is complete only when its behavior is documented, covered by focused fixtures,
@@ -231,16 +231,16 @@ Exit criteria:
 searching, and can choose a comfortable color scheme without weakening the
 offline, accessible generated-site contract.
 
-Status: implemented on 2026-08-15. Focused fixtures, both checked-in examples,
+Status: completed on 2026-08-15. Focused fixtures, both checked-in examples,
 the complete suite, isolated desktop/phone/no-JavaScript browser checks, and
-the latest 50-unit `mathlib-fp` audit pass. The Pages workflow now checks the
-symbol index, header navigation, and reader-theme contract before upload and
-after deployment. The milestone remains pending until that public deployed-site
-smoke check succeeds after merge. Evidence is recorded in [navigation and source
+the latest 50-unit `mathlib-fp` audit pass, and the deployed Pages showcase
+smoke check succeeded after merge. Evidence is recorded in [navigation and source
 traceability](docs/navigation-and-source-traceability.md), the
 [HTML renderer guide](docs/html-renderer.md), the
 [real-project audit](docs/mathlib-fp-validation.md), the
-[changelog](CHANGELOG.md), and the v0.5.2 release note.
+[changelog](CHANGELOG.md), and the v0.5.2 release note. A follow-up v0.5.3
+release renamed the visible symbol-index label to **Symbols Index** without
+changing routes, anchors, or filters.
 
 Exit criteria:
 

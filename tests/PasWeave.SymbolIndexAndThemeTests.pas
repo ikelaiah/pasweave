@@ -80,9 +80,11 @@ begin
       'the symbol index should link every entry to its stable anchor');
     Check(Pos('aria-current="page"', string(SymbolHTML)) > 0,
       'the symbol index should mark itself as the current section');
-    Check(Pos('href="symbols.html" aria-current="page"',
+    Check(Pos('href="symbols.html" aria-current="page">Symbols Index</a>',
       string(SymbolHTML)) > 0,
       'the header should mark the symbol index as current');
+    Check(Pos('<h1>Symbols Index</h1>', string(SymbolHTML)) > 0,
+      'the symbol index should use the professional visible label');
     Check(Pos('href="index.html">Units</a>', string(SymbolHTML)) > 0,
       'the symbol index header should retain the units destination');
     LetterPositions[1] := Pos('id="symbol-a"', string(SymbolHTML));

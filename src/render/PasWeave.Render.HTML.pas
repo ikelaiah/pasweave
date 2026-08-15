@@ -872,10 +872,10 @@ begin
       'index.html">Units</a>');
   if ACurrentSection = 'symbols' then
     AppendLine(Result, '<a href="' + EscapeHTML(ARoot) +
-      'symbols.html" aria-current="page">Symbols A&#8211;Z</a>')
+      'symbols.html" aria-current="page">Symbols Index</a>')
   else
     AppendLine(Result, '<a href="' + EscapeHTML(ARoot) +
-      'symbols.html">Symbols A&#8211;Z</a>');
+      'symbols.html">Symbols Index</a>');
   AppendLine(Result, '</nav>');
   AppendLine(Result, '<div class="site-search" data-search-container>');
   AppendLine(Result, '<label class="sr-only" for="site-search">Search API' +
@@ -1292,8 +1292,8 @@ begin
     HTMLSymbolIndexFilename + '">');
   AppendLine(AOutput, '<span class="browse-count">' +
     UTF8String(IntToStr(TotalIndexedSymbolCount(AProject))) + '</span>');
-  AppendLine(AOutput, '<strong>Symbols A&#8211;Z</strong><span>Every public API ' +
-    'symbol across ' + UTF8String(IntToStr(AProject.Units.Count)) +
+  AppendLine(AOutput, '<strong>Symbols Index</strong><span>Every public API ' +
+    'symbol A&#8211;Z across ' + UTF8String(IntToStr(AProject.Units.Count)) +
     ' units, filterable by kind.</span></a>');
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '#types"><strong>Types</strong><span>' +
@@ -1355,9 +1355,9 @@ begin
     'A&#8211;Z symbol index for ' + AProject.Name, False, 'symbols');
   AppendLine(Result, '<nav class="breadcrumb" aria-label="Breadcrumb">' +
     '<a href="index.html">API index</a><span aria-hidden="true">/' +
-    '</span><span>Symbols A&#8211;Z</span></nav>');
+    '</span><span>Symbols Index</span></nav>');
   AppendLine(Result, '<section class="symbol-index-heading">');
-  AppendLine(Result, '<p class="eyebrow">Reference</p><h1>Symbols A&#8211;Z</h1>');
+  AppendLine(Result, '<p class="eyebrow">Reference</p><h1>Symbols Index</h1>');
   AppendLine(Result, '<p>Every public API symbol across ' +
     UTF8String(IntToStr(AProject.Units.Count)) +
     ' units, ordered alphabetically.</p>');
