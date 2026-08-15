@@ -1,94 +1,107 @@
-# Implementation Plan: PasWeave v0.5.0 navigation and source traceability
+# Implementation Plan: PasWeave v0.5.1 navigation polish
 
 ## Overview
 
-Add a renderer-neutral source-link contract, complete relationship navigation,
-and an accessible filtered offline search experience without changing existing
-unit URLs or stable symbol anchors. Publish the scientific example as the
-representative GitHub Pages showcase and record validation evidence for the
-examples, `mathlib-fp`, and the nested Lazarus fixture.
+Add direct unit-to-unit and in-page category navigation to generated HTML unit
+pages. The unit switcher remains a complete native link list without
+JavaScript, gains filtering and keyboard support when the local application
+script runs, and preserves every existing unit URL and symbol anchor.
+
+This plan is strictly limited to the `v0.5.1` roadmap. Incremental builds,
+project configuration, theming, portability expansion, contract freezing, and
+all `v0.6.0+` work are out of scope.
 
 ## Architecture decisions
 
-- Store the normalized repository URL and relative source-link template in the
-  project model. Validate them at the CLI boundary, then let both renderers use
-  one URL builder over normalized root-relative source paths.
-- Accept only deterministic relative templates containing exactly one
-  `{path}` and `{line}`. Reject absolute URLs, parent traversal, query strings,
-  fragments before the line placeholder, unknown placeholders, and repository
-  URLs with query/fragment components.
-- Preserve the existing route and anchor functions. Extend shared link helpers
-  so `@see`, dependencies, parents, and resolved type relationships all use the
-  same model IDs and renderer-specific route rules.
-- Keep search dependency-free and offline. Emit explicit unit, kind,
-  visibility, and documentation-status metadata, then filter and keyboard-
-  navigate the deterministic in-memory index.
-- Publish output generated from the committed scientific example through
-  GitHub Pages; the workflow regenerates and verifies it before deployment.
+- Render the unit switcher as a native `<details>` element containing all
+  sorted unit links. This makes every other unit reachable by opening the
+  switcher and following one link, even when JavaScript is unavailable.
+- Enhance, rather than create, navigation with JavaScript. A local filter,
+  live match count, Arrow-key movement, and Escape behavior operate on the
+  server-rendered link list.
+- Build the on-page navigator from the same renderable symbol groups already
+  used by the unit page: Types, Routines, Members, and Constants and variables.
+  Omit links for empty groups.
+- Reuse `HTMLUnitFilename` and the existing group IDs. Do not change
+  `units/<UnitName>.html`, project-index routes, symbol IDs, or diagram scope.
+- Keep the API index and global symbol search unchanged as the canonical
+  browse-all experience.
 
 ## Task list
 
-### Phase 1: Source traceability
+### Phase 1: Static navigation contract
 
-- [x] Task 1: Add failing model/CLI tests for accepted and rejected repository
-  URL plus source-link templates.
-- [x] Task 2: Implement normalized source-link configuration and shared,
-  line-aware URL generation for units and symbols.
-- [x] Task 3: Render source links consistently in Markdown and HTML and expose
-  the additive configuration in JSON.
+- [x] Task 1: Add failing renderer tests for the complete sorted unit list,
+  current-unit state, two-action no-JavaScript path, present-only category
+  links, and unchanged routes/anchors.
+- [x] Task 2: Render the unit switcher and on-page category navigator on every
+  HTML unit page.
 
-### Checkpoint: Source links
+### Checkpoint: Static navigation
 
-- [x] Focused tests prove root-relative normalization, line fragments,
-  escaping rejection, deterministic output, and unchanged output when source
-  links are not configured.
-- [x] The full parser/renderer suite remains green.
+- [x] Focused tests prove every fixture unit links directly to every other
+  unit through the switcher.
+- [x] Empty symbol categories do not produce dead on-page links.
+- [x] Existing unit filenames and symbol anchors remain unchanged.
 
-### Phase 2: Navigation and offline search
+### Phase 2: Search, keyboard access, and responsive layout
 
-- [x] Task 4: Add failing renderer tests for relationship-link parity and
-  search metadata/filter controls.
-- [x] Task 5: Complete dependency, parent, resolved `@see`, and type-
-  relationship links in both Markdown and HTML without changing routes or
-  anchors.
-- [x] Task 6: Add unit, symbol-kind, visibility, and documentation-status
-  filters plus keyboard result navigation, visible focus, live status, and
-  useful empty states.
+- [x] Task 3: Add failing asset-contract tests for filtering, live status,
+  ArrowUp/ArrowDown, Escape, visible focus, and phone-width layout.
+- [x] Task 4: Implement the dependency-free unit-switcher JavaScript and
+  responsive CSS while retaining the unmodified native link fallback.
+- [x] Task 5: Verify the generated pages in a real browser with JavaScript
+  enabled and disabled at desktop and phone widths.
 
-### Checkpoint: Navigation
+### Checkpoint: Interaction
 
-- [x] Focused tests cover filters, ArrowUp/ArrowDown/Enter/Escape behavior,
-  visible focus styles, zero matches, and consistent link targets.
-- [x] Search remains a local JavaScript asset and generated files remain
-  deterministic UTF-8 with LF endings.
+- [x] Keyboard users can open, search, traverse, dismiss, and follow unit
+  links with visible focus.
+- [x] The switcher and category navigator fit without horizontal overflow at
+  the repository's phone breakpoint.
+- [x] No external runtime dependency is introduced.
 
-### Phase 3: Showcase, validation, and release contract
+### Phase 3: Examples and deployed-showcase gate
 
-- [x] Task 7: Add a GitHub Pages workflow and committed scientific showcase
-  generated with repository source links.
-- [x] Task 8: Validate examples, the nested multi-package fixture, and
-  `mathlib-fp`; record routes, filters, accessibility, math, diagrams, and
-  stable-link evidence.
-- [x] Task 9: Update README, detailed docs, changelog, roadmap, release note,
-  release/version metadata, and sample outputs.
-- [x] Task 10: Run the complete suite, production/portable builds where
-  available, deterministic regeneration checks, and a five-axis code review.
+- [x] Task 6: Regenerate and verify the documented API sample output.
+- [x] Task 7: Regenerate and verify the scientific API sample output and add
+  Pages workflow assertions for the switcher and category navigator.
+- [x] Task 8: Validate the latest `mathlib-fp` corpus and record unit-count,
+  navigation, responsive, keyboard, and determinism evidence.
+
+### Checkpoint: Validation corpora
+
+- [x] Examples and `mathlib-fp` satisfy the v0.5.1 navigation contract.
+- [x] Unrelated generated output remains deterministic.
+- [x] The Pages workflow is ready to validate the deployed showcase after
+  merge.
+
+### Phase 4: Release contract
+
+- [x] Task 9: Update README and detailed renderer/navigation documentation,
+  including no-JavaScript behavior and limitations.
+- [x] Task 10: Update changelog, roadmap status, release note, version
+  metadata, portable-build default, and version regression test to `0.5.1`.
+- [x] Task 11: Run the complete suite, production and portable builds where
+  available, deterministic sample checks, and final five-axis review.
 
 ## Risks and mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Template expansion permits navigation outside the repository URL | Unsafe or misleading source links | Accept a constrained relative grammar and validate both the template and expanded URL. |
-| New search controls make keyboard use harder | Accessibility regression | Use native labelled controls, a live result count, roving result focus, and runtime browser checks. |
-| Renderer-specific link logic drifts | HTML and Markdown disagree | Resolve identities in the model and centralize route construction in shared helpers. |
-| Regenerated examples create noisy unrelated diffs | Review and stability risk | Keep anchors/routes unchanged and compare deterministic snapshots before updating them. |
-| GitHub Pages cannot deploy before merge | Milestone evidence is incomplete | Prepare and locally verify the workflow/site; report the exact external merge/deployment step if this branch cannot publish directly. |
+| JavaScript becomes required for unit navigation | Violates offline/no-JS contract | Render the full native link list first; JavaScript only hides non-matches. |
+| Large projects create an unwieldy switcher | Poor keyboard and responsive usability | Use a bounded scroll panel, filter, live count, and deterministic alphabetical order. |
+| New category links point to absent sections | Broken in-page navigation | Derive links from non-empty renderable groups using the renderer's existing visibility rules. |
+| Navigation changes alter stable routes or anchors | Breaks saved links | Reuse existing filename/anchor helpers and add explicit regression assertions. |
+| Browser behavior differs from string-level tests | Accessibility or layout regression | Perform real-browser keyboard, no-JS, and narrow-viewport checks on generated examples. |
+| Deployed validation cannot complete before merge | External release gate remains open | Make CI assertions part of the branch and report deployed-site validation as the post-merge gate. |
 
 ## Definition of done
 
-- [x] Branch is `release/v0.5.0`.
-- [ ] Every v0.5.0 roadmap exit criterion has code, fixtures, documentation,
-  or explicit deployed-site evidence.
-- [x] Existing unit URLs and symbol anchors are unchanged.
-- [x] Full tests and production build pass, and direct-file/default-`///`
+- [x] Every `v0.5.1` exit criterion has code, focused tests, documentation, or
+  explicit post-merge deployed-site evidence.
+- [x] No `v0.6.0+` capability or preparatory contract is introduced.
+- [x] Existing unit URLs, symbol anchors, API-index role, and diagram scope are
+  unchanged.
+- [x] Full tests and production build pass; direct-file and default-`///`
   workflows still work end to end.

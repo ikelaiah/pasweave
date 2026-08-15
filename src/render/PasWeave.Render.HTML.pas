@@ -681,6 +681,108 @@ begin
   end;
 end;
 
+function HasRenderableSymbols(AUnit: TDocUnit;
+  AKinds: TSymbolKinds): Boolean;
+var
+  I: Integer;
+  Symbol: TDocSymbol;
+begin
+  Result := False;
+  for I := 0 to AUnit.Symbols.Count - 1 do
+  begin
+    Symbol := TDocSymbol(AUnit.Symbols[I]);
+    if (Symbol.Kind in AKinds) and IsEffectivelyRenderable(AUnit, Symbol) then
+      Exit(True);
+  end;
+end;
+
+procedure RenderUnitSwitcher(var AOutput: UTF8String;
+  AProject: TDocProject; ACurrentUnit: TDocUnit);
+var
+  I: Integer;
+  UnitCountLabel: string;
+  UnitModel: TDocUnit;
+  Units: TStringList;
+begin
+  Units := SortedUnits(AProject);
+  try
+    if Units.Count = 1 then
+      UnitCountLabel := ' unit'
+    else
+      UnitCountLabel := ' units';
+    AppendLine(AOutput,
+      '<details class="unit-switcher" data-unit-switcher>');
+    AppendLine(AOutput, '<summary>Switch unit <span ' +
+      'class="unit-switcher-current"><code>' +
+      EscapeHTML(ACurrentUnit.Name) + '</code></span></summary>');
+    AppendLine(AOutput, '<div class="unit-switcher-panel">');
+    AppendLine(AOutput, '<label for="unit-switcher-filter">Find a unit' +
+      '</label>');
+    AppendLine(AOutput, '<input id="unit-switcher-filter" ' +
+      'data-unit-switcher-filter type="search" autocomplete="off" ' +
+      'placeholder="Filter units…">');
+    AppendLine(AOutput, '<p class="unit-switcher-status" ' +
+      'data-unit-switcher-status role="status" aria-live="polite">' +
+      UTF8String(IntToStr(Units.Count)) + UnitCountLabel + '</p>');
+    AppendLine(AOutput,
+      '<ul class="unit-switcher-list" data-unit-switcher-list>');
+    for I := 0 to Units.Count - 1 do
+    begin
+      UnitModel := TDocUnit(Units.Objects[I]);
+      if UnitModel = ACurrentUnit then
+        AppendLine(AOutput, '<li><a href="' +
+          EscapeHTML(HTMLUnitFilename(UnitModel)) +
+          '" aria-current="page"><code>' + EscapeHTML(UnitModel.Name) +
+          '</code></a></li>')
+      else
+        AppendLine(AOutput, '<li><a href="' +
+          EscapeHTML(HTMLUnitFilename(UnitModel)) + '"><code>' +
+          EscapeHTML(UnitModel.Name) + '</code></a></li>');
+    end;
+    AppendLine(AOutput, '</ul></div></details>');
+  finally
+    Units.Free;
+  end;
+end;
+
+procedure RenderPageNavigator(var AOutput: UTF8String; AUnit: TDocUnit);
+var
+  HasMembers: Boolean;
+  HasRoutines: Boolean;
+  HasTypes: Boolean;
+  HasValues: Boolean;
+begin
+  HasTypes := HasRenderableSymbols(AUnit, TypeKinds);
+  HasRoutines := HasRenderableSymbols(AUnit, RoutineKinds);
+  HasMembers := HasRenderableSymbols(AUnit, MemberKinds);
+  HasValues := HasRenderableSymbols(AUnit, ValueKinds);
+  if not (HasTypes or HasRoutines or HasMembers or HasValues) then
+    Exit;
+
+  AppendLine(AOutput,
+    '<nav class="page-navigator" aria-label="On this page">');
+  AppendLine(AOutput, '<span>On this page</span><ul>');
+  if HasTypes then
+    AppendLine(AOutput, '<li><a href="#types">Types</a></li>');
+  if HasRoutines then
+    AppendLine(AOutput, '<li><a href="#routines">Routines</a></li>');
+  if HasMembers then
+    AppendLine(AOutput, '<li><a href="#members">Members</a></li>');
+  if HasValues then
+    AppendLine(AOutput, '<li><a href="#values">' +
+      'Constants and variables</a></li>');
+  AppendLine(AOutput, '</ul></nav>');
+end;
+
+procedure RenderUnitPageNavigation(var AOutput: UTF8String;
+  AProject: TDocProject; AUnit: TDocUnit);
+begin
+  AppendLine(AOutput, '<div class="unit-navigation">');
+  RenderUnitSwitcher(AOutput, AProject, AUnit);
+  RenderPageNavigator(AOutput, AUnit);
+  AppendLine(AOutput, '</div>');
+end;
+
 function PageStart(AProject: TDocProject; const ATitle, ARoot,
   ADescription: string; AIncludeDiagram: Boolean): UTF8String;
 begin
@@ -1183,6 +1285,7 @@ begin
   AppendLine(Result, '<nav class="breadcrumb" aria-label="Breadcrumb">' +
     '<a href="../index.html">API index</a><span aria-hidden="true">/' +
     '</span><span>' + EscapeHTML(AUnit.Name) + '</span></nav>');
+  RenderUnitPageNavigation(Result, AProject, AUnit);
   AppendLine(Result, '<section class="unit-heading">');
   AppendLine(Result, '<p class="eyebrow">Unit</p><h1><code>' +
     EscapeHTML(AUnit.Name) + '</code></h1>');

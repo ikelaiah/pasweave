@@ -53,6 +53,41 @@ rules for `file://` URLs do not disable search.
 - Every output is deterministic UTF-8 without a byte-order mark and uses LF
   line endings.
 
+## Unit and on-page navigation
+
+Every generated unit page includes two local navigation layers above its unit
+heading:
+
+- a native **Switch unit** disclosure containing a deterministic alphabetical
+  link to every parsed unit; and
+- an **On this page** list containing only the non-empty symbol groups rendered
+  on that unit page: Types, Routines, Members, and Constants and variables.
+
+The switcher reuses the established `units/<UnitName>.html` filenames, and the
+category links reuse the existing `#types`, `#routines`, `#members`, and
+`#values` section IDs. Symbol IDs are unchanged. The project index remains the
+canonical table of all units, coverage, and architectural relationships.
+
+The complete unit list is ordinary HTML inside a native `details` element.
+Without JavaScript, a reader opens the disclosure and follows any unit link in
+two actions. With the local application script available, opening the switcher
+focuses its labelled filter; the live status reports the number of matching
+units, ArrowDown enters the visible links, ArrowDown and ArrowUp wrap through
+them, and Escape closes the disclosure and returns focus to its summary.
+Enter follows the focused native link.
+
+The list is height-bounded and scrollable for large projects. At 760 CSS pixels
+or below, the switcher and category navigator stack; at 480 CSS pixels or
+below, the disclosure panel participates in normal layout so it cannot extend
+beyond the phone viewport. Category targets use scroll margins for the sticky
+site header.
+
+Filtering and enhanced Arrow-key movement require JavaScript. With scripting
+disabled, the complete alphabetical unit list and all category links remain
+usable, while global symbol search is unavailable. The category navigator is
+deliberately group-level; it does not duplicate the global search index with a
+link for every declaration.
+
 ## Unit dependency diagram
 
 The project index embeds deterministic Mermaid flowchart source. Units are

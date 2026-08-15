@@ -123,4 +123,53 @@
   document.addEventListener("click", function (event) {
     if (!event.target.closest("[data-search-container]")) closeSearch();
   });
+  var unitSwitcher = document.querySelector("[data-unit-switcher]");
+  if (!unitSwitcher) return;
+  var unitInput = unitSwitcher.querySelector("[data-unit-switcher-filter]");
+  var unitList = unitSwitcher.querySelector("[data-unit-switcher-list]");
+  var unitStatus = unitSwitcher.querySelector("[data-unit-switcher-status]");
+  var unitSummary = unitSwitcher.querySelector("summary");
+  var unitItems = Array.prototype.slice.call(unitList.querySelectorAll("li"));
+  function visibleUnitLinks() {
+    return unitItems.filter(function (item) { return !item.hidden; })
+      .map(function (item) { return item.querySelector("a"); });
+  }
+  function updateUnitSwitcher() {
+    var query = unitInput.value.trim().toLowerCase();
+    unitItems.forEach(function (item) {
+      var link = item.querySelector("a");
+      item.hidden = link.textContent.toLowerCase().indexOf(query) < 0;
+    });
+    var count = visibleUnitLinks().length;
+    unitStatus.textContent = count ? count + (count === 1 ? " unit" : " units") : "No units match “" + unitInput.value.trim() + "”.";
+  }
+  function moveUnitFocus(current, offset) {
+    var links = visibleUnitLinks();
+    if (!links.length) return;
+    var index = links.indexOf(current);
+    links[(index + offset + links.length) % links.length].focus();
+  }
+  function closeUnitSwitcher() {
+    unitSwitcher.open = false;
+    unitSummary.focus();
+  }
+  unitInput.addEventListener("input", updateUnitSwitcher);
+  unitInput.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowDown") {
+      var links = visibleUnitLinks();
+      if (links.length) { event.preventDefault(); links[0].focus(); }
+    } else if (event.key === "Escape") {
+      event.preventDefault(); unitInput.value = ""; updateUnitSwitcher(); closeUnitSwitcher();
+    }
+  });
+  unitList.addEventListener("keydown", function (event) {
+    var link = event.target.closest("a");
+    if (!link) return;
+    if (event.key === "ArrowDown") { event.preventDefault(); moveUnitFocus(link, 1); }
+    else if (event.key === "ArrowUp") { event.preventDefault(); moveUnitFocus(link, -1); }
+    else if (event.key === "Escape") { event.preventDefault(); closeUnitSwitcher(); }
+  });
+  unitSwitcher.addEventListener("toggle", function () {
+    if (unitSwitcher.open) unitInput.focus();
+  });
 }());

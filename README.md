@@ -6,7 +6,7 @@
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Lazarus](https://img.shields.io/badge/Lazarus-.lpi%20%7C%20.lpk-7c3aed)](docs/lazarus-projects.md)
 [![Windows](https://img.shields.io/badge/platform-Windows%20x86--64-2563eb)](docs/releasing.md)
-[![Version](https://img.shields.io/badge/version-0.5.0-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.5.1-635bff)](CHANGELOG.md)
 [![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-10b981)](https://github.com/ikelaiah/pasweave/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/ikelaiah/pasweave/pages.yml?branch=main&label=tests)](https://github.com/ikelaiah/pasweave/actions/workflows/pages.yml)
 [![Documentation](https://img.shields.io/badge/docs-live-0ea5e9)](https://ikelaiah.github.io/pasweave/)
@@ -25,7 +25,7 @@ network connection, or registry changes.
 
 [View the live showcase](https://ikelaiah.github.io/pasweave/) ·
 [Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
-[Read the v0.5.0 release notes](RELEASE_NOTE_v0.5.0.md)
+[Read the v0.5.1 release notes](RELEASE_NOTE_v0.5.1.md)
 
 > **Project status:** PasWeave is pre-release software. It targets Free Pascal
 > and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
@@ -84,8 +84,9 @@ format details, schema notes, and exit codes.
   `.lpk` files.
 - 📦 **Zero runtime dependencies.** The portable Windows executable bundles
   search, diagrams, KaTeX, styles, and fonts for completely offline use.
-- 🔎 **Easy to navigate.** Stable overload-aware anchors, source links,
-  dependency diagrams, and class/interface relationships connect the API.
+- 🔎 **Easy to navigate.** Searchable unit switching, on-page category links,
+  stable overload-aware anchors, source links, dependency diagrams, and
+  class/interface relationships connect the API.
 - ✅ **Useful while authoring.** Find undocumented symbols, broken references,
   malformed directives, and coverage regressions before publishing.
 - ⚙️ **Automation friendly.** Deterministic Markdown and JSON make diffs and CI
@@ -224,11 +225,12 @@ Current limitations include:
 - unusual FPC syntax and every possible symbol kind are not yet covered by
   fixtures.
 
-The parser-to-site pipeline has also been tested against all 45 source units in
-[`mathlib-fp`](https://github.com/ikelaiah/mathlib-fp): 2,338 symbols were
-produced without parse errors, missing source positions, or duplicate stable
-IDs. Read the [validation report](docs/mathlib-fp-validation.md) for the tested
-revision, determinism result, and comment-syntax findings.
+The parser-to-site pipeline has also been tested against all 50 source units in
+the latest [`mathlib-fp`](https://github.com/ikelaiah/mathlib-fp): 2,978 symbols
+were produced with zero errors, and every generated unit page passed the
+v0.5.1 navigation audit. Read the
+[validation report](docs/mathlib-fp-validation.md) for the tested revision,
+determinism result, responsive browser evidence, and comment-syntax findings.
 
 PasWeave is not a fork of PasDoc or FPDoc. It explores a Free Pascal-first
 workflow centred on Markdown, structured output, and modern static

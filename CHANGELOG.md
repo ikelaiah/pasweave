@@ -7,6 +7,51 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-08-15
+
+### Added
+
+- A native searchable unit switcher on every generated HTML unit page, with
+  the complete deterministic unit list available without JavaScript.
+- Keyboard filtering with a polite match count, ArrowUp/ArrowDown link
+  movement, Escape focus restoration, and visible focus styling.
+- Present-only on-page links for Types, Routines, Members, and Constants and
+  variables using the established section fragments.
+- Pre-deploy and post-deploy GitHub Pages assertions for the unit switcher,
+  direct cross-unit link, category navigator, and enhancement script.
+
+### Changed
+
+- Unit navigation stacks at tablet widths and keeps its disclosure panel and
+  bounded unit list inside phone viewports.
+- Checked-in documented and scientific HTML examples now demonstrate direct
+  unit and category navigation.
+- Version metadata and portable-build defaults now report v0.5.1.
+
+### Compatibility
+
+- Existing `units/<UnitName>.html` routes, overload-aware symbol anchors, API
+  index behavior, diagram scope, source links, and search-index schema remain
+  unchanged.
+- With JavaScript disabled, readers can still open the native disclosure and
+  reach any unit directly; filtering and global symbol search remain enhanced
+  behaviors that require the local script.
+
+### Validation
+
+- The complete FPC 3.2.2 suite, CLI build, deterministic example goldens, and
+  direct-file/default-`///` workflows pass.
+- Isolated Chrome checks cover desktop and 390-pixel layouts, filtering, live
+  status, ArrowDown, Escape, category fragments, viewport fit, clean console,
+  and two-action no-JavaScript unit navigation.
+- Two runs of the latest 50-unit `mathlib-fp` commit produced 2,978 symbols,
+  2,707 search entries, 174 identical generated files, zero errors, and zero
+  navigation audit failures. A 50-unit browser check passed bounded scrolling,
+  keyboard behavior, desktop layout, and 390-pixel responsive layout.
+- The deployed showcase smoke check remains the post-merge release gate; the
+  workflow validates the same navigation contract before upload and after
+  deployment.
+
 ## [0.5.0] - 2026-08-12
 
 ### Added
@@ -193,7 +238,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/ikelaiah/pasweave/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/ikelaiah/pasweave/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ikelaiah/pasweave/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/ikelaiah/pasweave/compare/v0.2.0...v0.3.0

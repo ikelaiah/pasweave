@@ -9,8 +9,8 @@ expressions.
 - [Open the HTML project index](html/index.html) after cloning the repository
 
 The HTML preview retains PasWeave's generated styling, offline search, KaTeX
-rendering, linked dependency and relationship diagrams, and accessible diagram
-controls.
+rendering, direct unit and category navigation, linked dependency and
+relationship diagrams, and accessible diagram controls.
 
 The source snapshot was generated from the repository root with:
 

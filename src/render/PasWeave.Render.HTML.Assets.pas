@@ -153,11 +153,59 @@ begin
   AppendLine(Result, '.diagnostics li { margin: 9px 0; }');
   AppendLine(Result, '.breadcrumb { display: flex; gap: 9px; color: var(--muted); ' +
     'font-size: .86rem; }');
+  AppendLine(Result, '.unit-navigation { position: relative; display: grid; ' +
+    'grid-template-columns: minmax(240px, 360px) minmax(0, 1fr); ' +
+    'align-items: start; gap: 18px; margin: 24px 0 0; }');
+  AppendLine(Result, '.unit-switcher { position: relative; min-width: 0; }');
+  AppendLine(Result, '.unit-switcher summary { display: flex; align-items: center; ' +
+    'justify-content: flex-start; gap: 9px; padding: 10px 13px; ' +
+    'border: 1px solid var(--line); border-radius: 11px; background: ' +
+    'var(--surface); color: var(--muted); font-size: .84rem; font-weight: 700; ' +
+    'cursor: pointer; }');
+  AppendLine(Result, '.unit-switcher summary::before { content: "\25B8"; ' +
+    'flex: 0 0 auto; color: var(--accent); }');
+  AppendLine(Result, '.unit-switcher[open] summary::before { ' +
+    'transform: rotate(90deg); }');
+  AppendLine(Result, '.unit-switcher-current { min-width: 0; color: var(--text); ' +
+    'margin-left: auto; font-weight: 600; overflow-wrap: anywhere; ' +
+    'text-align: right; }');
+  AppendLine(Result, '.unit-switcher-panel { position: absolute; z-index: 10; ' +
+    'top: calc(100% + 8px); left: 0; width: 100%; min-width: min(320px, 90vw); ' +
+    'padding: 13px; border: 1px solid var(--line); border-radius: 13px; ' +
+    'background: var(--surface); box-shadow: var(--shadow); }');
+  AppendLine(Result, '.unit-switcher-panel label { display: block; margin-bottom: ' +
+    '5px; color: var(--muted); font-size: .72rem; font-weight: 750; ' +
+    'letter-spacing: .04em; text-transform: uppercase; }');
+  AppendLine(Result, '.unit-switcher-panel input { width: 100%; height: 38px; ' +
+    'padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; ' +
+    'background: var(--surface-2); color: var(--text); font: inherit; }');
+  AppendLine(Result, '.unit-switcher-status { margin: 8px 2px; color: ' +
+    'var(--muted); font-size: .78rem; }');
+  AppendLine(Result, '.unit-switcher-list { max-height: min(44vh, 340px); ' +
+    'overflow-y: auto; overscroll-behavior: contain; list-style: none; ' +
+    'margin: 0; padding: 0; }');
+  AppendLine(Result, '.unit-switcher-list li[hidden] { display: none; }');
+  AppendLine(Result, '.unit-switcher-list a { display: block; padding: 8px 9px; ' +
+    'border-radius: 8px; color: var(--text); text-decoration: none; ' +
+    'overflow-wrap: anywhere; }');
+  AppendLine(Result, '.unit-switcher-list a:hover { background: var(--surface-2); }');
+  AppendLine(Result, '.unit-switcher-list a[aria-current="page"] { background: ' +
+    'color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); ' +
+    'font-weight: 750; }');
+  AppendLine(Result, '.page-navigator { display: flex; align-items: baseline; ' +
+    'gap: 12px; min-width: 0; padding: 8px 0; }');
+  AppendLine(Result, '.page-navigator > span { flex: 0 0 auto; color: var(--muted); ' +
+    'font-size: .76rem; font-weight: 800; letter-spacing: .05em; ' +
+    'text-transform: uppercase; }');
+  AppendLine(Result, '.page-navigator ul { display: flex; flex-wrap: wrap; gap: ' +
+    '6px 14px; list-style: none; margin: 0; padding: 0; }');
+  AppendLine(Result, '.page-navigator a { font-size: .86rem; font-weight: 700; }');
   AppendLine(Result, '.unit-heading { margin: 34px 0 28px; }');
   AppendLine(Result, '.unit-heading h1 { margin: 0; font-size: clamp(2rem, 6vw, 4rem); ' +
     'overflow-wrap: anywhere; }');
   AppendLine(Result, '.unit-heading > p:last-child { color: var(--muted); }');
   AppendLine(Result, '.dependency-section, .symbol-group { margin-top: 46px; }');
+  AppendLine(Result, '.symbol-group { scroll-margin-top: 94px; }');
   AppendLine(Result, '.dependency-list { display: flex; flex-wrap: wrap; gap: 9px; ' +
     'list-style: none; margin: 0; padding: 0; }');
   AppendLine(Result, '.dependency-list li { padding: 7px 11px; border: 1px solid ' +
@@ -271,6 +319,7 @@ begin
   AppendLine(Result, '  .search-panel { right: -4px; width: min(94vw, 620px); }');
   AppendLine(Result, '  .search-filters { grid-template-columns: 1fr; }');
   AppendLine(Result, '  .main-content { padding-top: 28px; }');
+  AppendLine(Result, '  .unit-navigation { grid-template-columns: 1fr; }');
   AppendLine(Result, '  .hero { padding: 32px 24px; border-radius: 20px; }');
   AppendLine(Result, '  .stats { grid-template-columns: repeat(2, 1fr); }');
   AppendLine(Result, '  .section-heading { align-items: start; flex-direction: column; }');
@@ -284,6 +333,10 @@ begin
   AppendLine(Result, '  .header-inner { flex-wrap: wrap; padding: 10px 0; }');
   AppendLine(Result, '  .site-search { width: 100%; }');
   AppendLine(Result, '  .search-panel { right: 0; width: 100%; }');
+  AppendLine(Result, '  .unit-switcher-panel { position: static; width: 100%; ' +
+    'min-width: 0; margin-top: 8px; box-shadow: none; }');
+  AppendLine(Result, '  .page-navigator { align-items: flex-start; ' +
+    'flex-direction: column; }');
   AppendLine(Result, '  .stats { grid-template-columns: 1fr; }');
   AppendLine(Result, '  .hero { padding: 28px 24px; }');
   AppendLine(Result, '}');
@@ -430,6 +483,56 @@ begin
   AppendLine(Result, '  });');
   AppendLine(Result, '  document.addEventListener("click", function (event) {');
   AppendLine(Result, '    if (!event.target.closest("[data-search-container]")) closeSearch();');
+  AppendLine(Result, '  });');
+  AppendLine(Result, '  var unitSwitcher = document.querySelector("[data-unit-switcher]");');
+  AppendLine(Result, '  if (!unitSwitcher) return;');
+  AppendLine(Result, '  var unitInput = unitSwitcher.querySelector("[data-unit-switcher-filter]");');
+  AppendLine(Result, '  var unitList = unitSwitcher.querySelector("[data-unit-switcher-list]");');
+  AppendLine(Result, '  var unitStatus = unitSwitcher.querySelector("[data-unit-switcher-status]");');
+  AppendLine(Result, '  var unitSummary = unitSwitcher.querySelector("summary");');
+  AppendLine(Result, '  var unitItems = Array.prototype.slice.call(unitList.querySelectorAll("li"));');
+  AppendLine(Result, '  function visibleUnitLinks() {');
+  AppendLine(Result, '    return unitItems.filter(function (item) { return !item.hidden; })');
+  AppendLine(Result, '      .map(function (item) { return item.querySelector("a"); });');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function updateUnitSwitcher() {');
+  AppendLine(Result, '    var query = unitInput.value.trim().toLowerCase();');
+  AppendLine(Result, '    unitItems.forEach(function (item) {');
+  AppendLine(Result, '      var link = item.querySelector("a");');
+  AppendLine(Result, '      item.hidden = link.textContent.toLowerCase().indexOf(query) < 0;');
+  AppendLine(Result, '    });');
+  AppendLine(Result, '    var count = visibleUnitLinks().length;');
+  AppendLine(Result, '    unitStatus.textContent = count ? count + (count === 1 ? " unit" : " units") : ' +
+    '"No units match “" + unitInput.value.trim() + "”.";');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function moveUnitFocus(current, offset) {');
+  AppendLine(Result, '    var links = visibleUnitLinks();');
+  AppendLine(Result, '    if (!links.length) return;');
+  AppendLine(Result, '    var index = links.indexOf(current);');
+  AppendLine(Result, '    links[(index + offset + links.length) % links.length].focus();');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  function closeUnitSwitcher() {');
+  AppendLine(Result, '    unitSwitcher.open = false;');
+  AppendLine(Result, '    unitSummary.focus();');
+  AppendLine(Result, '  }');
+  AppendLine(Result, '  unitInput.addEventListener("input", updateUnitSwitcher);');
+  AppendLine(Result, '  unitInput.addEventListener("keydown", function (event) {');
+  AppendLine(Result, '    if (event.key === "ArrowDown") {');
+  AppendLine(Result, '      var links = visibleUnitLinks();');
+  AppendLine(Result, '      if (links.length) { event.preventDefault(); links[0].focus(); }');
+  AppendLine(Result, '    } else if (event.key === "Escape") {');
+  AppendLine(Result, '      event.preventDefault(); unitInput.value = ""; updateUnitSwitcher(); closeUnitSwitcher();');
+  AppendLine(Result, '    }');
+  AppendLine(Result, '  });');
+  AppendLine(Result, '  unitList.addEventListener("keydown", function (event) {');
+  AppendLine(Result, '    var link = event.target.closest("a");');
+  AppendLine(Result, '    if (!link) return;');
+  AppendLine(Result, '    if (event.key === "ArrowDown") { event.preventDefault(); moveUnitFocus(link, 1); }');
+  AppendLine(Result, '    else if (event.key === "ArrowUp") { event.preventDefault(); moveUnitFocus(link, -1); }');
+  AppendLine(Result, '    else if (event.key === "Escape") { event.preventDefault(); closeUnitSwitcher(); }');
+  AppendLine(Result, '  });');
+  AppendLine(Result, '  unitSwitcher.addEventListener("toggle", function () {');
+  AppendLine(Result, '    if (unitSwitcher.open) unitInput.focus();');
   AppendLine(Result, '  });');
   AppendLine(Result, '}());');
 end;
