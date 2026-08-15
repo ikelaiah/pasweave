@@ -20,6 +20,7 @@ function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
 function DocumentationSymbolSortKey(ASymbol: TDocSymbol): string;
 function EscapeHTML(const AText: string): UTF8String;
 function LightenThemeColor(const AColor: string; AWeight: Integer): string;
+function IsIndexedAPIKind(AKind: TSymbolKind): Boolean;
 
 implementation
 
@@ -75,6 +76,11 @@ begin
     Result := '0';
   Result := Result + ASymbol.QualifiedName + DocumentationSortSeparator +
     ASymbol.ID;
+end;
+
+function IsIndexedAPIKind(AKind: TSymbolKind): Boolean;
+begin
+  Result := AKind <> skUnit;
 end;
 
 function TOrdinalStringList.CompareStrings(const S1, S2: string): Integer;

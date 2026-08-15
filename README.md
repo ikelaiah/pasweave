@@ -6,7 +6,7 @@
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Lazarus](https://img.shields.io/badge/Lazarus-.lpi%20%7C%20.lpk-7c3aed)](docs/lazarus-projects.md)
 [![Windows](https://img.shields.io/badge/platform-Windows%20x86--64-2563eb)](docs/releasing.md)
-[![Version](https://img.shields.io/badge/version-0.5.3-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.5.4-635bff)](CHANGELOG.md)
 [![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-10b981)](https://github.com/ikelaiah/pasweave/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/ikelaiah/pasweave/pages.yml?branch=main&label=tests)](https://github.com/ikelaiah/pasweave/actions/workflows/pages.yml)
 [![Documentation](https://img.shields.io/badge/docs-live-0ea5e9)](https://ikelaiah.github.io/pasweave/)
@@ -25,7 +25,7 @@ network connection, or registry changes.
 
 [View the live showcase](https://ikelaiah.github.io/pasweave/) ·
 [Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
-[Read the v0.5.3 release notes](RELEASE_NOTE_v0.5.3.md)
+[Read the v0.5.4 release notes](RELEASE_NOTE_v0.5.4.md)
 
 > **Project status:** PasWeave is pre-release software. It targets Free Pascal
 > and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
@@ -54,13 +54,13 @@ Building on another platform? See [building from source](docs/building-from-sour
 ## See what it produces
 
 The [live PasWeave showcase](https://ikelaiah.github.io/pasweave/) is generated
-from the checked-in scientific example. It documents 30 public API symbols and
+from the checked-in scientific example. It documents 28 public API symbols and
 renders its equations without a network connection.
 
 For smaller examples, browse:
 
-- the [documented API example](examples/documented-api/README.md), with 10 of
-  10 public symbols documented;
+- the [documented API example](examples/documented-api/README.md), with 8 of
+  8 public symbols documented;
 - its checked-in [Markdown output](examples/documented-api/sample-output/markdown/index.md);
 - the [scientific API example](examples/scientific-api/README.md), including
   dependency and type-relationship diagrams.

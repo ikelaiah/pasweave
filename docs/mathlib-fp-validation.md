@@ -39,7 +39,10 @@ The project index followed the new discovery-first order (summary, Browse API,
 units, dependency diagram, relationship diagram, diagnostics), the `symbols.html`
 page contained `data-symbol-index`, `data-symbol-filter`, and 2,657
 `data-symbol-entry` rows with kind badges, and every unit page embedded the
-`data-theme` bootstrap and the `data-theme-control` select. The two complete
+`data-theme` bootstrap and the `data-theme-control` select. Under the v0.5.4
+count contract, the 2,657 A–Z index entries are exactly the project's "public
+API symbols": the 2,978 model symbols split into 50 unit declarations plus the
+renderable non-unit API (private symbols are excluded). The two complete
 output trees had the same audit digest, calculated as SHA-256 over sorted
 relative-path and file-SHA-256 rows:
 

@@ -46,7 +46,7 @@ jobs:
 
       - name: Validate the generated showcase
         run: |
-          grep --quiet '30 of 30 API symbols documented' build/pages/html/index.html
+          grep --quiet '28 of 28 API symbols documented' build/pages/html/index.html
           grep --quiet 'data-search-unit' build/pages/html/index.html
           grep --quiet 'data-search-documentation' build/pages/html/index.html
           grep --quiet 'Browse API' build/pages/html/index.html
@@ -118,7 +118,7 @@ jobs:
             "$site/assets/app.js" --output app.js
           curl --fail --location --retry 8 --retry-delay 5 \
             "$site/symbols.html" --output symbols.html
-          grep --quiet '30 of 30 API symbols documented' index.html
+          grep --quiet '28 of 28 API symbols documented' index.html
           grep --quiet 'data-search-unit' index.html
           grep --quiet 'Browse API' index.html
           grep --quiet 'href="symbols.html"' index.html

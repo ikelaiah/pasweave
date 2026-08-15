@@ -1,7 +1,7 @@
 # Scientific output showcase
 
 This directory contains a checked-in snapshot of the equation-rich
-`Scientific API showcase`. It documents both units and all 30 public API
+`Scientific API showcase`. It documents both units and all 28 public API
 symbols, including 16 display equations and 65 inline mathematical
 expressions.
 

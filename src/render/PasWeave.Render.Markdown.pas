@@ -136,7 +136,7 @@ begin
       Exit(TDocSymbol(AUnit.Symbols[I]));
 end;
 
-function RenderableSymbolCount(AUnit: TDocUnit): Integer;
+function IndexedSymbolCount(AUnit: TDocUnit): Integer;
 var
   I: Integer;
   Symbol: TDocSymbol;
@@ -145,12 +145,13 @@ begin
   for I := 0 to AUnit.Symbols.Count - 1 do
   begin
     Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if IsEffectivelyRenderable(AUnit, Symbol) then
+    if IsIndexedAPIKind(Symbol.Kind) and
+      IsEffectivelyRenderable(AUnit, Symbol) then
       Inc(Result);
   end;
 end;
 
-function DocumentedSymbolCount(AUnit: TDocUnit): Integer;
+function DocumentedIndexedSymbolCount(AUnit: TDocUnit): Integer;
 var
   I: Integer;
   Symbol: TDocSymbol;
@@ -159,7 +160,8 @@ begin
   for I := 0 to AUnit.Symbols.Count - 1 do
   begin
     Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if IsEffectivelyRenderable(AUnit, Symbol) and
+    if IsIndexedAPIKind(Symbol.Kind) and
+      IsEffectivelyRenderable(AUnit, Symbol) and
       (Trim(Symbol.MarkdownDocumentation) <> '') then
       Inc(Result);
   end;
@@ -443,19 +445,20 @@ begin
   AppendLine(Result);
   if AProject.Units.Count = 1 then
     AppendLine(Result, 'Generated from 1 unit and ' +
-      UTF8String(IntToStr(AProject.SymbolCount)) + ' symbols.')
+      UTF8String(IntToStr(AProject.SymbolCount)) + ' declarations.')
   else
     AppendLine(Result, 'Generated from ' +
       UTF8String(IntToStr(AProject.Units.Count)) + ' units and ' +
-      UTF8String(IntToStr(AProject.SymbolCount)) + ' symbols.');
+      UTF8String(IntToStr(AProject.SymbolCount)) + ' declarations.');
   AppendLine(Result);
 
   PublicCount := 0;
   DocumentedCount := 0;
   for I := 0 to AProject.Units.Count - 1 do
   begin
-    Inc(PublicCount, RenderableSymbolCount(TDocUnit(AProject.Units[I])));
-    Inc(DocumentedCount, DocumentedSymbolCount(TDocUnit(AProject.Units[I])));
+    Inc(PublicCount, IndexedSymbolCount(TDocUnit(AProject.Units[I])));
+    Inc(DocumentedCount,
+      DocumentedIndexedSymbolCount(TDocUnit(AProject.Units[I])));
   end;
   AppendLine(Result, '**Documented API symbols:** ' +
     UTF8String(IntToStr(DocumentedCount)) + ' of ' +
@@ -474,8 +477,8 @@ begin
       AppendLine(Result, '| [' + UTF8String(UnitModel.Name) + '](units/' +
         UTF8String(MarkdownUnitFilename(UnitModel)) + ') | `' +
         EscapeTableCell(UnitModel.SourceFilename) + '` | ' +
-        UTF8String(IntToStr(RenderableSymbolCount(UnitModel))) + ' | ' +
-        UTF8String(IntToStr(DocumentedSymbolCount(UnitModel))) + ' |');
+        UTF8String(IntToStr(IndexedSymbolCount(UnitModel))) + ' | ' +
+        UTF8String(IntToStr(DocumentedIndexedSymbolCount(UnitModel))) + ' |');
     end;
   finally
     Units.Free;

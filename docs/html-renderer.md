@@ -31,8 +31,15 @@ rules for `file://` URLs do not disable search.
 
 ## Rendering contract
 
-- The project index reports parsed, public, and documented symbol totals and
-  links to every successfully parsed unit.
+- The project index reports parsed declaration totals, a public API symbol
+  total, and documentation coverage, and links to every successfully parsed
+  unit. "Public API symbols" counts the same
+  browsable population as the A–Z symbol index (renderable non-unit symbols),
+  so the units count remains separate and coverage stays consistent with the
+  index.
+- Unit pages render public, protected, published, automated, and
+  strict-protected API. Private and strict-private symbols, including members
+  beneath private parents, remain JSON-only.
 - The project index is ordered for documentation discovery: project summary,
   a **Browse API** section linking the A–Z symbol index, the units table,
   architecture diagrams, and build diagnostics last.

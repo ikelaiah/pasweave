@@ -14,8 +14,8 @@ On Windows, use `build\bin\pasweave.exe` if your shell does not resolve the
 executable suffix automatically. Open `build/documented-api/html/index.html`
 afterward.
 
-The generated index reports `10 of 10 API symbols documented`: five in
-`Demo.Core` and five in `Demo.Services`. It also demonstrates structured
+The generated index reports `8 of 8 API symbols documented`: four in
+`Demo.Core` and four in `Demo.Services`. It also demonstrates structured
 directives, inline mathematics, a project dependency, class inheritance,
 line-aware repository links, filtered offline search, a generated A–Z symbol
 index, a reader theme control, and the interactive diagrams. Each generated

@@ -425,17 +425,7 @@ begin
       Exit(TDocSymbol(AUnit.Symbols[I]));
 end;
 
-function RenderableSymbolCount(AUnit: TDocUnit): Integer;
-var
-  I: Integer;
-begin
-  Result := 0;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if IsEffectivelyRenderable(AUnit, TDocSymbol(AUnit.Symbols[I])) then
-      Inc(Result);
-end;
-
-function DocumentedSymbolCount(AUnit: TDocUnit): Integer;
+function IndexedSymbolCount(AUnit: TDocUnit): Integer;
 var
   I: Integer;
   Symbol: TDocSymbol;
@@ -444,7 +434,23 @@ begin
   for I := 0 to AUnit.Symbols.Count - 1 do
   begin
     Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if IsEffectivelyRenderable(AUnit, Symbol) and
+    if IsIndexedAPIKind(Symbol.Kind) and
+      IsEffectivelyRenderable(AUnit, Symbol) then
+      Inc(Result);
+  end;
+end;
+
+function DocumentedIndexedSymbolCount(AUnit: TDocUnit): Integer;
+var
+  I: Integer;
+  Symbol: TDocSymbol;
+begin
+  Result := 0;
+  for I := 0 to AUnit.Symbols.Count - 1 do
+  begin
+    Symbol := TDocSymbol(AUnit.Symbols[I]);
+    if IsIndexedAPIKind(Symbol.Kind) and
+      IsEffectivelyRenderable(AUnit, Symbol) and
       (Trim(Symbol.MarkdownDocumentation) <> '') then
       Inc(Result);
   end;
@@ -1281,6 +1287,15 @@ begin
     CountIndexedSymbols(AProject, SymbolIndexVariableKinds);
 end;
 
+function TotalDocumentedIndexedSymbolCount(AProject: TDocProject): Integer;
+var
+  I: Integer;
+begin
+  Result := 0;
+  for I := 0 to AProject.Units.Count - 1 do
+    Inc(Result, DocumentedIndexedSymbolCount(TDocUnit(AProject.Units[I])));
+end;
+
 procedure RenderBrowseAPISection(var AOutput: UTF8String;
   AProject: TDocProject);
 begin
@@ -1489,13 +1504,8 @@ begin
   Result := PageStart(AProject, AProject.Name + ' API', '',
     'API documentation for ' + AProject.Name, AProject.Units.Count > 0,
     'index');
-  PublicCount := 0;
-  DocumentedCount := 0;
-  for I := 0 to AProject.Units.Count - 1 do
-  begin
-    Inc(PublicCount, RenderableSymbolCount(TDocUnit(AProject.Units[I])));
-    Inc(DocumentedCount, DocumentedSymbolCount(TDocUnit(AProject.Units[I])));
-  end;
+  PublicCount := TotalIndexedSymbolCount(AProject);
+  DocumentedCount := TotalDocumentedIndexedSymbolCount(AProject);
   if PublicCount > 0 then
     CoveragePercent := (DocumentedCount * 100) div PublicCount
   else
@@ -1516,7 +1526,7 @@ begin
     '</strong><span>Units</span></div>');
   AppendLine(Result, '<div class="stat"><strong>' +
     UTF8String(IntToStr(AProject.SymbolCount)) +
-    '</strong><span>Parsed symbols</span></div>');
+    '</strong><span>Parsed declarations</span></div>');
   AppendLine(Result, '<div class="stat"><strong>' +
     UTF8String(IntToStr(PublicCount)) +
     '</strong><span>Public API symbols</span></div>');
@@ -1546,9 +1556,9 @@ begin
         EscapeHTML(UnitModel.Name) + '</a></td><td><code>' +
         EscapeHTML(UnitModel.SourceFilename) +
         '</code></td><td class="number">' +
-        UTF8String(IntToStr(RenderableSymbolCount(UnitModel))) +
+        UTF8String(IntToStr(IndexedSymbolCount(UnitModel))) +
         '</td><td class="number">' +
-        UTF8String(IntToStr(DocumentedSymbolCount(UnitModel))) +
+        UTF8String(IntToStr(DocumentedIndexedSymbolCount(UnitModel))) +
         '</td></tr>');
     end;
   finally
