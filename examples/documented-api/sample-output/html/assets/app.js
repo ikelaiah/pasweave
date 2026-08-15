@@ -123,6 +123,66 @@
   document.addEventListener("click", function (event) {
     if (!event.target.closest("[data-search-container]")) closeSearch();
   });
+  var themeControl = document.querySelector("[data-theme-control]");
+  if (themeControl) {
+    var themeSelect = themeControl.querySelector("[data-theme-select]");
+    var currentTheme = document.documentElement.getAttribute("data-theme") || "system";
+    if (["system", "light", "dark"].indexOf(currentTheme) < 0) currentTheme = "system";
+    if (themeSelect) {
+      themeSelect.value = currentTheme;
+      themeSelect.addEventListener("change", function () {
+        var next = themeSelect.value;
+        document.documentElement.setAttribute("data-theme", next);
+        try {
+          window.localStorage.setItem("pasweave-theme", next);
+        } catch (error) {
+          /* storage unavailable; keep the choice for this page */
+        }
+        document.dispatchEvent(new window.CustomEvent("pasweave:themechange", { detail: { theme: next } }));
+      });
+    }
+    themeControl.hidden = false;
+  }
+  var symbolIndex = document.querySelector("[data-symbol-index]");
+  if (symbolIndex) {
+    var symbolFilters = Array.prototype.slice.call(symbolIndex.querySelectorAll("[data-symbol-filter]"));
+    var symbolEntries = Array.prototype.slice.call(symbolIndex.querySelectorAll("[data-symbol-entry]"));
+    var symbolSections = Array.prototype.slice.call(symbolIndex.querySelectorAll("[data-symbol-letter]"));
+    var symbolStatus = symbolIndex.querySelector("[data-symbol-status]");
+    function symbolGroups() {
+      return symbolFilters.filter(function (filter) { return filter.checked; })
+        .map(function (filter) { return filter.value; });
+    }
+    function updateSymbolIndex() {
+      var groups = symbolGroups();
+      var visible = 0;
+      symbolEntries.forEach(function (entry) {
+        var shown = groups.indexOf(entry.getAttribute("data-symbol-kind")) >= 0;
+        entry.hidden = !shown;
+        if (shown) visible += 1;
+      });
+      symbolSections.forEach(function (section) {
+        var any = section.querySelector("[data-symbol-entry]:not([hidden])");
+        section.hidden = !any;
+      });
+      if (symbolStatus) {
+        symbolStatus.textContent = visible + (visible === 1 ? " symbol" : " symbols");
+      }
+    }
+    symbolFilters.forEach(function (filter) {
+      filter.addEventListener("change", updateSymbolIndex);
+    });
+    function applySymbolHash() {
+      var hash = window.location.hash.replace(/^#/, "");
+      var known = ["types", "routines", "members", "constants", "variables"];
+      if (known.indexOf(hash) < 0) return;
+      symbolFilters.forEach(function (filter) {
+        filter.checked = filter.value === hash;
+      });
+      updateSymbolIndex();
+    }
+    applySymbolHash();
+  }
   var unitSwitcher = document.querySelector("[data-unit-switcher]");
   if (!unitSwitcher) return;
   var unitInput = unitSwitcher.querySelector("[data-unit-switcher-filter]");

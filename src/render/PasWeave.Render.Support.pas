@@ -19,6 +19,7 @@ type
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
 function DocumentationSymbolSortKey(ASymbol: TDocSymbol): string;
 function EscapeHTML(const AText: string): UTF8String;
+function LightenThemeColor(const AColor: string; AWeight: Integer): string;
 
 implementation
 
@@ -28,6 +29,42 @@ uses
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
 begin
   Result := PasWeave.Model.DocumentationSymbolAnchor(ASymbol);
+end;
+
+function HexDigitValue(const C: Char): Integer;
+begin
+  case C of
+    '0'..'9': Result := Ord(C) - Ord('0');
+    'a'..'f': Result := 10 + Ord(C) - Ord('a');
+    'A'..'F': Result := 10 + Ord(C) - Ord('A');
+  else
+    Result := 0;
+  end;
+end;
+
+function LightenThemeColor(const AColor: string; AWeight: Integer): string;
+var
+  Digits: string;
+  I: Integer;
+  Channel: Integer;
+begin
+  Result := AColor;
+  if (Length(AColor) < 4) or (AColor[1] <> '#') then
+    Exit;
+  Digits := Copy(AColor, 2, MaxInt);
+  if Length(Digits) = 3 then
+    Digits := Digits[1] + Digits[1] + Digits[2] + Digits[2] +
+      Digits[3] + Digits[3];
+  if Length(Digits) < 6 then
+    Exit;
+  Result := '#';
+  for I := 0 to 2 do
+  begin
+    Channel := HexDigitValue(Digits[I * 2 + 1]) * 16 +
+      HexDigitValue(Digits[I * 2 + 2]);
+    Channel := Channel + ((255 - Channel) * AWeight) div 100;
+    Result := Result + IntToHex(Channel, 2);
+  end;
 end;
 
 function DocumentationSymbolSortKey(ASymbol: TDocSymbol): string;

@@ -338,6 +338,7 @@ begin
   try
     IndexHTML := RenderHTMLIndex(Project);
     SearchIndex := RenderHTMLSearchIndex(Project);
+    Stylesheet := HTMLStylesheet(Project);
     Check(Pos('data-search-unit', string(IndexHTML)) > 0,
       'search should expose a unit filter');
     Check(Pos('data-search-kind', string(IndexHTML)) > 0,
@@ -398,7 +399,7 @@ begin
   Check(Pos('unitSwitcher.open = false', string(Script)) > 0,
     'Escape should close the unit switcher');
 
-  Stylesheet := HTMLStylesheet;
+  Stylesheet := HTMLStylesheet(Project);
   Check(Pos(':focus-visible', string(Stylesheet)) > 0,
     'interactive search and navigation controls should have visible focus');
   Check(Pos('@media (max-width: 480px)', string(Stylesheet)) > 0,

@@ -8,6 +8,7 @@ build/docs/
 ├── diagnostics.json
 ├── html/
 │   ├── index.html
+│   ├── symbols.html
 │   ├── assets/
 │   │   ├── app.js
 │   │   ├── diagram.js
@@ -33,9 +34,12 @@ and licenses are included in the output.
 The HTML site provides:
 
 - a responsive project overview and linked unit pages;
+- a model-derived A–Z symbol index page with category filters;
 - searchable API symbols with unit, kind, visibility, and documentation-status
   filters;
 - stable symbol anchors and repository source links when configured;
+- a System / Light / Dark reader theme control that persists explicit choices
+  when storage is available;
 - safely rendered documentation prose and escaped Pascal declarations;
 - offline KaTeX rendering, with invalid expressions left readable as source;
 - linked project-dependency and type-relationship diagrams with accessible
@@ -44,7 +48,8 @@ The HTML site provides:
 
 Private and strict-private symbols remain in `api-model.json` but are omitted
 from the generated API pages. See the [HTML renderer notes](html-renderer.md)
-for the rendering, search, safety, and Markdown-subset contracts.
+for the rendering, search, safety, theme, branding, and Markdown-subset
+contracts.
 
 ## Markdown
 
@@ -78,8 +83,9 @@ contain `targetSymbolId` for a resolved project-local `@see`; an empty value is
 deliberately unresolved.
 
 When source links are configured, the top-level model records the normalized
-`repositoryUrl` and `sourceLinkTemplate`. These fields are additive schema-v1
-changes.
+`repositoryUrl` and `sourceLinkTemplate`. The effective branding tokens
+(`projectMark`, `themeAccent`, `themeAccentAlt`, and `themeFont`) are recorded
+alongside them. These fields are additive schema-v1 changes.
 
 `diagnostics.json` contains the same stable diagnostic codes shown on the HTML
 and Markdown indexes, ready for CI systems to consume.

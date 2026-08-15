@@ -6,6 +6,22 @@
 <meta name="description" content="API documentation for Documented API example">
 <meta name="color-scheme" content="light dark">
 <title>Documented API example API</title>
+<script>
+(function () {
+  "use strict";
+  var stored = null;
+  try {
+    stored = window.localStorage.getItem("pasweave-theme");
+  } catch (error) {
+    stored = null;
+  }
+  var theme = "system";
+  if (stored === "system" || stored === "light" || stored === "dark") {
+    theme = stored;
+  }
+  document.documentElement.setAttribute("data-theme", theme);
+}());
+</script>
 <link rel="stylesheet" href="../../../../assets/katex/katex.min.css">
 <link rel="stylesheet" href="assets/site.css">
 <script defer src="../../../../assets/katex/katex.min.js"></script>
@@ -20,6 +36,11 @@
 <header class="site-header">
 <div class="shell header-inner">
 <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">PW</span><span><strong>Documented API example</strong><small>API documentation</small></span></a>
+<div class="header-tools">
+<nav class="site-nav" aria-label="Site">
+<a href="index.html" aria-current="page">Units</a>
+<a href="symbols.html">Symbols A&#8211;Z</a>
+</nav>
 <div class="site-search" data-search-container>
 <label class="sr-only" for="site-search">Search API</label>
 <input id="site-search" data-testid="site-search" data-search-input type="search" autocomplete="off" placeholder="Search symbols…" aria-controls="search-results" aria-expanded="false">
@@ -47,13 +68,22 @@
 <p class="search-status" data-search-status role="status" aria-live="polite"></p><ul data-search-results></ul>
 </div>
 </div>
+<div class="theme-control" hidden data-theme-control>
+<label for="pasweave-theme-select">Theme</label>
+<select id="pasweave-theme-select" data-theme-select>
+<option value="system">System</option>
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+</div>
+</div>
 </div>
 </header>
 <main id="main-content" class="shell main-content">
 <section class="hero">
 <p class="eyebrow">Free Pascal API reference</p>
 <h1>Documented API example</h1>
-<p class="hero-copy">Browse units and declarations, or search the complete public API.</p>
+<p class="hero-copy">Browse the API from the A&#8211;Z symbol index, jump to a unit, or search the complete public reference.</p>
 <p class="source-root">Source root <code>examples/documented-api</code></p>
 </section>
 <section class="stats" aria-label="Project totals">
@@ -62,6 +92,24 @@
 <div class="stat"><strong>10</strong><span>Public API symbols</span></div>
 <div class="stat"><strong>100%</strong><span>Documented</span></div>
 </section>
+<section class="index-section browse-section">
+<div class="section-heading"><div><p class="eyebrow">Reference</p><h2>Browse API</h2></div><p>Explore symbols alphabetically or jump to a kind.</p></div>
+<a class="browse-card" href="symbols.html">
+<span class="browse-count">8</span>
+<strong>Symbols A&#8211;Z</strong><span>Every public API symbol across 2 units, filterable by kind.</span></a>
+<a class="browse-card" href="symbols.html#types"><strong>Types</strong><span>3 symbols</span></a>
+<a class="browse-card" href="symbols.html#routines"><strong>Routines</strong><span>1 symbols</span></a>
+<a class="browse-card" href="symbols.html#members"><strong>Members</strong><span>4 symbols</span></a>
+<a class="browse-card" href="symbols.html#constants"><strong>Constants</strong><span>0 symbols</span></a>
+<a class="browse-card" href="symbols.html#variables"><strong>Variables</strong><span>0 symbols</span></a>
+</section>
+<section class="index-section">
+<div class="section-heading"><div><p class="eyebrow">Reference</p><h2>Units</h2></div><p>10 of 10 API symbols documented</p></div>
+<div class="table-shell"><table class="unit-table">
+<thead><tr><th>Unit</th><th>Source</th><th class="number">API symbols</th><th class="number">Documented</th></tr></thead><tbody>
+<tr><td><a class="unit-link" href="units/Demo.Core.html">Demo.Core</a></td><td><code>Demo.Core.pas</code></td><td class="number">5</td><td class="number">5</td></tr>
+<tr><td><a class="unit-link" href="units/Demo.Services.html">Demo.Services</a></td><td><code>Demo.Services.pas</code></td><td class="number">5</td><td class="number">5</td></tr>
+</tbody></table></div></section>
 <section class="index-section diagram-overview dependency-overview" data-diagram-section data-dependency-overview aria-labelledby="unit-dependencies">
 <div class="section-heading"><div><p class="eyebrow">Architecture</p><h2 id="unit-dependencies">Unit dependencies</h2></div><p>Arrows point from a unit to the project unit it imports.</p></div>
 <div class="diagram-toolbar" data-diagram-toolbar role="toolbar" aria-label="Unit dependency diagram controls" hidden>
@@ -135,13 +183,6 @@ flowchart BT
 </ul>
 </details>
 </section>
-<section class="index-section">
-<div class="section-heading"><div><p class="eyebrow">Reference</p><h2>Units</h2></div><p>10 of 10 API symbols documented</p></div>
-<div class="table-shell"><table class="unit-table">
-<thead><tr><th>Unit</th><th>Source</th><th class="number">API symbols</th><th class="number">Documented</th></tr></thead><tbody>
-<tr><td><a class="unit-link" href="units/Demo.Core.html">Demo.Core</a></td><td><code>Demo.Core.pas</code></td><td class="number">5</td><td class="number">5</td></tr>
-<tr><td><a class="unit-link" href="units/Demo.Services.html">Demo.Services</a></td><td><code>Demo.Services.pas</code></td><td class="number">5</td><td class="number">5</td></tr>
-</tbody></table></div></section>
 </main>
 <footer class="site-footer"><div class="shell">Generated by PasWeave from <code>examples/documented-api</code>.</div></footer>
 </body>

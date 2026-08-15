@@ -17,9 +17,10 @@ afterward.
 The generated index reports `10 of 10 API symbols documented`: five in
 `Demo.Core` and five in `Demo.Services`. It also demonstrates structured
 directives, inline mathematics, a project dependency, class inheritance,
-line-aware repository links, filtered offline search, and the interactive
-diagrams. Each generated unit page also demonstrates the native searchable
-unit switcher and present-only on-page category navigation.
+line-aware repository links, filtered offline search, a generated A–Z symbol
+index, a reader theme control, and the interactive diagrams. Each generated
+unit page also demonstrates the native searchable unit switcher and
+present-only on-page category navigation.
 
 A compact generated snapshot is checked in for visitors who want to inspect
 the output before building PasWeave:
@@ -27,6 +28,8 @@ the output before building PasWeave:
 - [Markdown project index](sample-output/markdown/index.md)
 - [HTML project index](sample-output/html/index.html) — clone the repository
   and open this file locally for styling, search, math, and diagrams
+- [A–Z symbol index](sample-output/html/symbols.html) — clone the repository
+  and open this file locally for the filterable symbol browser
 
 See the [sample-output notes](sample-output/README.md) for how the preview
 reuses the repository's existing third-party assets without duplicating them.

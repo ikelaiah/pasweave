@@ -222,6 +222,10 @@ begin
     Root.Add('sourceRoot', AProject.SourceRoot);
     Root.Add('repositoryUrl', AProject.RepositoryURL);
     Root.Add('sourceLinkTemplate', AProject.SourceLinkTemplate);
+    Root.Add('projectMark', AProject.ProjectMark);
+    Root.Add('themeAccent', AProject.ThemeAccent);
+    Root.Add('themeAccentAlt', AProject.ThemeAccentAlt);
+    Root.Add('themeFont', AProject.ThemeFont);
     Root.Add('units', UnitsToJSON(AProject.Units));
     Root.Add('warnings', DiagnosticListToJSON(AProject.Warnings));
     Root.Add('errors', DiagnosticListToJSON(AProject.Errors));

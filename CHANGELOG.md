@@ -7,6 +7,64 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-08-15
+
+### Added
+
+- A generated A–Z symbol index page (`symbols.html`) derived entirely from the
+  documentation model, with stable links, letter sections, and keyboard-usable
+  category filters for types, routines, members, constants, and variables.
+- A persistent **Symbols A–Z** destination in the header of every generated
+  page, plus a **Browse API** section on the project index that reports symbol
+  totals by category.
+- A keyboard-accessible reader theme control with `System`, `Light`, and `Dark`
+  choices. `System` remains the default and follows `prefers-color-scheme`;
+  an explicit choice is remembered through local storage when available and
+  falls back safely when storage is rejected, including under `file://`.
+- A dependency-free inline bootstrap that applies the selected scheme before
+  visible page rendering, with native controls, KaTeX, Mermaid diagrams, focus
+  states, and contrast synchronized through shared CSS tokens.
+- Build-time project branding through validated `--project-mark`,
+  `--theme-accent`, `--theme-accent-2`, and `--theme-font` options that feed a
+  small set of colors, typography, and a local project mark into the generated
+  site and model JSON.
+
+### Changed
+
+- The project index now leads with project summary, then **Browse API**, the
+  units table, architecture diagrams, and diagnostics last.
+- The stylesheet derives its dark-mode accent variants deterministically from
+  the configured tokens; the default colors are unchanged.
+- Checked-in documented and scientific HTML examples now include the symbol
+  index, header navigation, and theme control.
+- Version metadata and portable-build defaults now report v0.5.2.
+
+### Compatibility
+
+- Existing `units/<UnitName>.html` routes, overload-aware symbol anchors, the
+  project index role, diagram scope, source links, and search-index schema
+  remain unchanged.
+- With JavaScript disabled, the unit list, A–Z symbol index, category links,
+  and diagram text fallbacks remain ordinary HTML, and the site follows the
+  system color scheme when the interactive preference control is unavailable.
+- Reader-facing named-theme galleries, arbitrary script injection, and remote
+  theme assets remain out of scope.
+
+### Validation
+
+- The complete FPC 3.2.2 suite, CLI build, deterministic example goldens, and
+  direct-file/default-`///` workflows pass.
+- Headless Chrome runs over the generated index, unit page, and 2,657-entry
+  `mathlib-fp` symbol index report clean consoles, applied `data-theme`, and a
+  revealed theme control.
+- Two runs of the latest 50-unit `mathlib-fp` commit produced 2,978 symbols,
+  2,657 A–Z index entries, 175 identical generated files with audit digest
+  `98B9DAB763AD46D83E71A607E30211F05B7CB1DCDDF1903A9E273809BAD88F9B`, and
+  zero errors; every one of the 50 unit pages carries the theme control.
+- The deployed showcase smoke check remains the post-merge release gate; the
+  workflow validates the symbol index, theme control, and persistence script
+  before upload and after deployment.
+
 ## [0.5.1] - 2026-08-15
 
 ### Added
@@ -238,7 +296,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/ikelaiah/pasweave/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/ikelaiah/pasweave/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/ikelaiah/pasweave/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/ikelaiah/pasweave/compare/v0.3.0...v0.4.0

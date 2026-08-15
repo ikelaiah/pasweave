@@ -4,6 +4,59 @@ PasWeave's first substantial external test is
 [`ikelaiah/mathlib-fp`](https://github.com/ikelaiah/mathlib-fp), as planned in
 the project brief.
 
+## `v0.5.2` API-discovery and reader-theme revalidation
+
+The latest `mathlib-fp` `main` revision available on 2026-08-15 was
+`b5aea1c2d841fd82f9e98cb770c00fc04c2d9b17` (committed 2026-08-12). It contains
+50 Pascal units. The source directory was built twice with brace documentation,
+explicit `win64`/`x86_64` compiler settings, source links pinned to that exact
+revision, and the new branding options:
+
+```text
+pasweave build mathlib-fp/src --output build/mathlib-v052 \
+  --project-name mathlib-fp --doc-comments=brace \
+  --unit-path mathlib-fp/src --target-os win64 --target-cpu x86_64 \
+  --repository-url=https://github.com/ikelaiah/mathlib-fp \
+  '--source-link-template=blob/b5aea1c2d841fd82f9e98cb770c00fc04c2d9b17/src/{path}#L{line}' \
+  --project-mark ML
+```
+
+| Check | Result |
+|---|---:|
+| Source units parsed | 50 of 50 |
+| Model symbols | 2,978 |
+| Renderable search entries | 2,707 |
+| A–Z symbol index entries | 2,657 |
+| Symbol index letter sections | 26 |
+| Unit pages | 50 |
+| Unit pages with the theme control | 50 of 50 |
+| Generated files | 175 |
+| Authoring warnings | 2,846 |
+| Errors | 0 |
+| Differing files between runs | 0 |
+
+The project index followed the new discovery-first order (summary, Browse API,
+units, dependency diagram, relationship diagram, diagnostics), the `symbols.html`
+page contained `data-symbol-index`, `data-symbol-filter`, and 2,657
+`data-symbol-entry` rows with kind badges, and every unit page embedded the
+`data-theme` bootstrap and the `data-theme-control` select. The two complete
+output trees had the same audit digest, calculated as SHA-256 over sorted
+relative-path and file-SHA-256 rows:
+
+```text
+98B9DAB763AD46D83E71A607E30211F05B7CB1DCDDF1903A9E273809BAD88F9B
+```
+
+An isolated headless Chrome run opened `symbols.html` directly through
+`file://`. The 2,657-entry page rendered all letter sections and kind badges,
+the bootstrap published `data-theme="system"`, the theme control was revealed,
+and the console reported no errors or warnings. The index and unit-page runs
+reported the same clean-console result.
+
+The warning count comes from applying the existing authoring rules to upstream
+brace comments. It is non-fatal under the default local policy and is not a
+discovery or theme failure.
+
 ## `v0.5.1` navigation-polish revalidation
 
 The latest `mathlib-fp` `main` revision available on 2026-08-15 was

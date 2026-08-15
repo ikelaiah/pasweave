@@ -99,6 +99,10 @@ type
     SourceRoot: string;
     RepositoryURL: string;
     SourceLinkTemplate: string;
+    ProjectMark: string;
+    ThemeAccent: string;
+    ThemeAccentAlt: string;
+    ThemeFont: string;
     Units: TObjectList;
     Warnings: TObjectList;
     Errors: TObjectList;
@@ -107,6 +111,12 @@ type
     function SymbolCount: Integer;
   end;
 
+const
+  DefaultProjectMark = 'PW';
+  DefaultThemeAccent = '#5b4ee6';
+  DefaultThemeAccentAlt = '#0e8f81';
+  DefaultThemeFont = 'Inter';
+
 function SymbolKindName(AKind: TSymbolKind): string;
 function SymbolVisibilityName(AVisibility: TSymbolVisibility): string;
 function TypeRelationshipKindName(AKind: TTypeRelationshipKind): string;
@@ -114,6 +124,9 @@ function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
 function FindSymbolByID(AUnit: TDocUnit; const AID: string): TDocSymbol;
 function FindProjectSymbolByID(AProject: TDocProject; const AID: string;
   out AUnit: TDocUnit): TDocSymbol;
+function IsValidProjectMark(const AValue: string): Boolean;
+function IsValidThemeColor(const AValue: string): Boolean;
+function IsValidThemeFont(const AValue: string): Boolean;
 
 implementation
 
@@ -178,6 +191,10 @@ end;
 constructor TDocProject.Create;
 begin
   inherited Create;
+  ProjectMark := DefaultProjectMark;
+  ThemeAccent := DefaultThemeAccent;
+  ThemeAccentAlt := DefaultThemeAccentAlt;
+  ThemeFont := DefaultThemeFont;
   Units := TObjectList.Create(True);
   Warnings := TObjectList.Create(True);
   Errors := TObjectList.Create(True);
@@ -313,6 +330,48 @@ function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
 begin
   Result := 'symbol-' + AnchorNamePart(ASymbol.QualifiedName) + '-' +
     LowerCase(IntToHex(StableHash64(ASymbol.ID), 16));
+end;
+
+function IsValidProjectMark(const AValue: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := (Length(AValue) >= 1) and (Length(AValue) <= 4);
+  if not Result then
+    Exit;
+  for I := 1 to Length(AValue) do
+    if not (AValue[I] in ['A'..'Z', 'a'..'z', '0'..'9']) then
+      Exit(False);
+end;
+
+function IsValidThemeColor(const AValue: string): Boolean;
+var
+  I: Integer;
+  DigitCount: Integer;
+begin
+  Result := (Length(AValue) > 1) and (AValue[1] = '#');
+  if not Result then
+    Exit;
+  DigitCount := Length(AValue) - 1;
+  if not (DigitCount in [3, 6, 8]) then
+    Exit(False);
+  for I := 2 to Length(AValue) do
+    if not (AValue[I] in ['0'..'9', 'A'..'F', 'a'..'f']) then
+      Exit(False);
+end;
+
+function IsValidThemeFont(const AValue: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := (Length(AValue) >= 1) and (Length(AValue) <= 64);
+  if not Result then
+    Exit;
+  if not (AValue[1] in ['A'..'Z', 'a'..'z', '0'..'9']) then
+    Exit(False);
+  for I := 2 to Length(AValue) do
+    if not (AValue[I] in ['A'..'Z', 'a'..'z', '0'..'9', ' ', '-']) then
+      Exit(False);
 end;
 
 end.
