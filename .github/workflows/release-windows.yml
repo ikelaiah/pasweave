@@ -111,7 +111,7 @@ jobs:
             '--verify-tag',
             '--title', "PasWeave $env:GITHUB_REF_NAME"
           )
-          $notesFile = "RELEASE_NOTE_$($env:GITHUB_REF_NAME).md"
+          $notesFile = "docs/RELEASE_NOTE_$($env:GITHUB_REF_NAME).md"
           if (Test-Path -LiteralPath $notesFile) {
             $arguments += @('--notes-file', $notesFile)
           } else {
