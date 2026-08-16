@@ -51,7 +51,7 @@ Lazarus project (`.lpi`), or a Lazarus package (`.lpk`).
 
 Building on another platform? See [building from source](docs/building-from-source.md).
 
-## See what it produces
+## 🔎 See what it produces
 
 The [live PasWeave showcase](https://ikelaiah.github.io/pasweave/) is generated
 from the checked-in scientific example. It documents 28 public API symbols and
@@ -97,7 +97,7 @@ format details, schema notes, and exit codes.
 - ⚙️ **Automation friendly.** Deterministic Markdown and JSON make diffs and CI
   checks predictable.
 
-## Document an API
+## 📚 Document an API
 
 Place consecutive `///` lines immediately before an interface declaration:
 
@@ -123,7 +123,7 @@ See [documentation comments](docs/documentation-comments.md) for supported
 forms, association rules, structured directives, and the block-comment
 trade-offs.
 
-## Common workflows
+## 🧭 Common workflows
 
 ### Discover a nested source tree
 
@@ -208,7 +208,7 @@ The default is `--fail-on=error`, so authoring warnings do not block local
 rendering. See [authoring feedback and reference integrity](docs/authoring-feedback.md)
 for diagnostic codes and coverage rules.
 
-## Documentation
+## 📖 Documentation
 
 | Guide | What it covers |
 |---|---|
@@ -223,7 +223,7 @@ for diagnostic codes and coverage rules.
 | [Building from source](docs/building-from-source.md) | Requirements, compilation, tests, and release builds |
 | [Parser integration](docs/parser-integration.md) | `fcl-passrc` adapter details |
 
-## Scope and limitations
+## 🛎️ Scope and limitations
 
 PasWeave targets Free Pascal and `{$mode objfpc}` first. Delphi-compatible
 syntax is accepted where it works naturally through FPC's `fcl-passrc`
@@ -261,7 +261,7 @@ workflow centred on Markdown, structured output, and modern static
 documentation, while recognizing those projects' substantial contributions to
 the Pascal ecosystem.
 
-## Build and contribute
+## 🤝 Contribute
 
 PasWeave requires Free Pascal 3.2.2 or newer plus the `fcl-passrc` and
 `fcl-json` packages when compiling from source:
@@ -278,7 +278,7 @@ real-world parser fixtures are welcome.
 The project history is in the [changelog](CHANGELOG.md); planned work and
 acceptance evidence are in the [roadmap](ROADMAP.md).
 
-## Download integrity
+## 👨‍💻 Download integrity
 
 Each Windows release includes `pasweave.exe.sha256`:
 
@@ -290,8 +290,20 @@ Pre-release executables are not code-signed, so Windows may show a SmartScreen
 warning. Download only from the PasWeave release page and compare the SHA-256
 value before running the executable.
 
-## License
+## 📄 License
 
 PasWeave is released under the [MIT License](LICENSE). Bundled third-party
 components retain their own licenses; see
 [third-party notices](THIRD_PARTY_NOTICES.md).
+
+## 🙏 Acknowledgments
+
+- [Free Pascal Dev Team](https://www.freepascal.org/) for the Free Pascal compiler
+- [Lazarus IDE Team](https://www.lazarus-ide.org/) for such an amazing IDE
+- The helpful folks on various online communities:
+    - [Unofficial Free Pascal Discord server](https://discord.com/channels/570025060312547359/570091337173696513)
+    - [Free Pascal & Lazarus forum](https://forum.lazarus.freepascal.org/index.php)
+    - [Tweaking4All Delphi, Lazarus, Free Pascal forum](https://www.tweaking4all.com/forum/delphi-lazarus-free-pascal/)
+    - [Laz Planet - Blogspot](https://lazplanet.blogspot.com/) / [Laz Planet - GitLab](https://lazplanet.gitlab.io/)
+    - [Delphi Basics](https://www.delphibasics.co.uk/index.html)
+- Everyone who has helped make this project better
