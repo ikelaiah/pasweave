@@ -48,8 +48,8 @@ New-Item -ItemType Directory -Force build/bin, build/tests, build/units
 Compile the CLI and tests from the repository root:
 
 ```text
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/bin src/pasweave.lpr
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/tests tests/test_pasweave.pas
+fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/incremental -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/bin src/pasweave.lpr
+fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/incremental -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/tests tests/test_pasweave.pas
 ```
 
 ## Build the portable Windows executable

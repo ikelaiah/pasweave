@@ -10,7 +10,7 @@ uses
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
   PasWeave.NavigationTests, PasWeave.SymbolIndexAndThemeTests,
-  PasWeave.ValidationTests,
+  PasWeave.ValidationTests, PasWeave.IncrementalTests,
   PasWeave.Version;
 
 procedure Check(ACondition: Boolean; const AMessage: string);
@@ -219,7 +219,7 @@ var
   LazarusErrorMessage: string;
   StyleProject: TDocProject;
 begin
-  Check(PasWeaveVersion = '0.5.6',
+  Check(PasWeaveVersion = '0.6.0',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');
@@ -1666,6 +1666,7 @@ begin
     RunSymbolIndexAndThemeTests;
     RunTests;
     RunValidationTests;
+    RunIncrementalTests;
     WriteLn('All PasWeave tests passed.');
   except
     on E: Exception do

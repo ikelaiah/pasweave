@@ -21,6 +21,10 @@ type
     destructor Destroy; override;
     procedure AddExcludePattern(const APattern: string);
     procedure AddIncludePattern(const APattern: string);
+    function IsExcluded(const ARelativePath: string): Boolean;
+    function IsIncluded(const ARelativePath: string): Boolean;
+    property ExcludePatterns: TStringList read FExcludePatterns;
+    property IncludePatterns: TStringList read FIncludePatterns;
     property HasExplicitSettings: Boolean read GetHasExplicitSettings;
     property Recursive: Boolean read FRecursive write FRecursive;
   end;
@@ -245,6 +249,17 @@ begin
   for I := 0 to APatterns.Count - 1 do
     if DiscoveryPatternMatches(APatterns[I], ARelativePath) then
       Exit(True);
+end;
+
+function TSourceDiscoveryOptions.IsExcluded(const ARelativePath: string): Boolean;
+begin
+  Result := MatchesAnyDiscoveryPattern(FExcludePatterns, ARelativePath);
+end;
+
+function TSourceDiscoveryOptions.IsIncluded(const ARelativePath: string): Boolean;
+begin
+  Result := (FIncludePatterns.Count = 0) or
+    MatchesAnyDiscoveryPattern(FIncludePatterns, ARelativePath);
 end;
 
 function IsPascalUnitFilename(const AFilename: string): Boolean;

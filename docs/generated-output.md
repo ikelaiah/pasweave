@@ -6,6 +6,7 @@ A successful build writes a self-contained documentation bundle:
 build/docs/
 ├── api-model.json
 ├── diagnostics.json
+├── manifest.json
 ├── html/
 │   ├── index.html
 │   ├── symbols.html
@@ -89,6 +90,14 @@ alongside them. These fields are additive schema-v1 changes.
 
 `diagnostics.json` contains the same stable diagnostic codes shown on the HTML
 and Markdown indexes, ready for CI systems to consume.
+
+## Incremental builds and manifest
+
+`manifest.json` records the deterministic list of generated pages and assets
+(each with a SHA-256 and size) plus the input fingerprint used to decide
+whether a build can be skipped. It is also the ownership proof for stale-output
+removal. See [safe incremental builds](incremental-builds.md) for the cache key,
+clean-build path, interruption recovery, and invalidation rules.
 
 ## Exit codes
 

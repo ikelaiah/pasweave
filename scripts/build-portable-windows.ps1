@@ -3,7 +3,7 @@ param(
   [string]$Fpc = 'fpc',
   [string]$FpcRes = 'fpcres',
   [string]$Windres = 'windres',
-  [string]$ExpectedVersion = '0.5.6'
+  [string]$ExpectedVersion = '0.6.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -66,8 +66,8 @@ try {
   Assert-LastExitCode 'resource compilation'
 
   $unitPaths = @(
-    '-Fusrc/cli', '-Fusrc/diagnostics', '-Fusrc/model', '-Fusrc/parser',
-    '-Fusrc/render', '-Fusrc/validation'
+    '-Fusrc/cli', '-Fusrc/diagnostics', '-Fusrc/incremental', '-Fusrc/model',
+    '-Fusrc/parser', '-Fusrc/render', '-Fusrc/validation'
   )
   $testCompilerArguments = @(
     '-Twin64', '-Px86_64', '-B', '-O2', '-Mobjfpc', '-Sh'

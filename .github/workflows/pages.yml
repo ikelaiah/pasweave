@@ -73,6 +73,17 @@ jobs:
           grep --quiet '"visibility"' build/pages/html/assets/search-index.js
           grep --quiet '"documented"' build/pages/html/assets/search-index.js
 
+      - name: Verify the incremental manifest and up-to-date skip
+        run: |
+          grep --quiet '"schemaVersion"' build/pages/manifest.json
+          grep --quiet '"inputFingerprint"' build/pages/manifest.json
+          build/bin/pasweave build examples/scientific-api \
+            --output build/pages \
+            --project-name "Scientific API showcase" \
+            --repository-url=https://github.com/ikelaiah/pasweave \
+            '--source-link-template=blob/main/examples/scientific-api/{path}#L{line}' \
+            | grep --quiet '\[up-to-date\]'
+
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
