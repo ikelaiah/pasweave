@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave has shipped `v0.5.2` and is preparing `v0.6.0`. The parser-to-site
+PasWeave has shipped `v0.5.6` and is preparing `v0.6.0`. The parser-to-site
 pipeline works; the path to `v1.0.0` is about making that pipeline understand
 real project builds, improving author feedback and navigation, scaling it
 safely, and then freezing the public contracts.
@@ -57,7 +57,7 @@ The association rules remain deliberately conservative:
   relationships, prose, or compiler behavior.
 - Keep the command-line pipeline usable at the end of every milestone.
 
-## Current baseline — `v0.1.0-alpha.1`
+## Foundation baseline — `v0.1.0-alpha.1`
 
 The first alpha established the complete vertical slice:
 
@@ -197,12 +197,10 @@ Exit criteria:
 **Outcome:** readers can move between units and sections without returning to
 the API index or using global symbol search.
 
-Status: implemented on 2026-08-15. Focused fixtures, both checked-in examples,
-the complete suite, isolated desktop/phone/no-JavaScript browser checks, and
-the latest 50-unit `mathlib-fp` audit pass. The Pages workflow now checks the
-same contract before upload and after deployment. The milestone remains
-pending until that public deployed-site smoke check succeeds after merge.
-Evidence is recorded in [navigation and source
+Status: completed on 2026-08-15. Focused fixtures, both checked-in examples,
+the complete suite, isolated desktop/phone/no-JavaScript browser checks, the
+latest 50-unit `mathlib-fp` audit pass, and the deployed Pages showcase smoke
+check succeeded after merge. Evidence is recorded in [navigation and source
 traceability](docs/navigation-and-source-traceability.md), the
 [HTML renderer guide](docs/html-renderer.md), the
 [real-project audit](docs/mathlib-fp-validation.md), the
@@ -232,16 +230,13 @@ searching, and can choose a comfortable color scheme without weakening the
 offline, accessible generated-site contract.
 
 Status: completed on 2026-08-15. Focused fixtures, both checked-in examples,
-the complete suite, isolated desktop/phone/no-JavaScript browser checks, and
-the latest 50-unit `mathlib-fp` audit pass, and the deployed Pages showcase
-smoke check succeeded after merge. Evidence is recorded in [navigation and source
+the complete suite, isolated desktop/phone/no-JavaScript browser checks, the
+latest 50-unit `mathlib-fp` audit pass, and the deployed Pages showcase smoke
+check succeeded after merge. Evidence is recorded in [navigation and source
 traceability](docs/navigation-and-source-traceability.md), the
 [HTML renderer guide](docs/html-renderer.md), the
 [real-project audit](docs/mathlib-fp-validation.md), the
-[changelog](CHANGELOG.md), and the v0.5.2 release note. Follow-up v0.5.3 and
-v0.5.4 releases renamed the visible symbol-index label to **Symbols Index**
-and aligned the project index's "Public API symbols" and coverage totals with
-the A–Z index population, without changing routes, anchors, or filters.
+[changelog](CHANGELOG.md), and the v0.5.2 release note.
 
 Exit criteria:
 
@@ -249,7 +244,7 @@ Exit criteria:
   Browse API, units, architecture diagrams, then diagnostics and coverage.
   Architectural views remain available without delaying the primary route
   into the reference.
-- Add a generated A–Z symbol index with stable links and filters for types,
+- Add a generated symbol index with stable links and filters for types,
   routines, members, constants, and variables. It must be derived entirely
   from the documentation model and require no manually maintained index data.
 - Make the symbol index an obvious persistent destination from generated HTML
@@ -268,13 +263,91 @@ Exit criteria:
   set of theme tokens for colors, typography, and a local project mark. Keep
   reader-facing named-theme galleries, arbitrary script injection, and remote
   theme assets out of scope.
-- Preserve useful no-JavaScript browsing: unit and A–Z symbol indexes remain
+- Preserve useful no-JavaScript browsing: unit and symbol indexes remain
   ordinary HTML, while the site follows the system color scheme when the
   interactive preference control is unavailable.
 - Validate index usability, theme persistence and fallback, responsive layout,
   keyboard operation, contrast, diagrams, and direct-from-disk behavior
   against both examples, the latest `mathlib-fp` corpus, and the deployed
   showcase.
+
+## `v0.5.3` — Symbols Index label polish
+
+**Outcome:** the visible name of the generated symbol browser reads
+professionally as **Symbols Index** instead of **Symbols A–Z**.
+
+Status: completed on 2026-08-15. The visible **Symbols A–Z** label was renamed
+to **Symbols Index** in the page header, the `symbols.html` heading and
+breadcrumb, and the project-index Browse API card. Routes, stable anchors,
+filters, reader themes, and generated-site behavior were preserved. Evidence is
+recorded in the [changelog](CHANGELOG.md), the [v0.5.3 release
+note](RELEASE_NOTE_v0.5.3.md), and the [HTML renderer
+guide](docs/html-renderer.md).
+
+Exit criteria:
+
+- Rename the visible **Symbols A–Z** label to **Symbols Index**.
+- Preserve routes, anchors, filters, themes, and generated-site behavior.
+
+## `v0.5.4` — Public symbol and coverage alignment
+
+**Outcome:** the project index totals and documentation coverage agree with
+the browsable symbol-index population.
+
+Status: completed on 2026-08-15. **Parsed symbols** became **Parsed
+declarations**, and the public API totals, documentation coverage, and per-unit
+totals were aligned with the renderable non-unit symbol-index population in
+both HTML and Markdown. The CI coverage metric behind
+`--min-documentation-coverage` was intentionally unchanged. Evidence is
+recorded in the [changelog](CHANGELOG.md), the [v0.5.4 release
+note](RELEASE_NOTE_v0.5.4.md), and the [HTML renderer
+guide](docs/html-renderer.md).
+
+Exit criteria:
+
+- Rename **Parsed symbols** to **Parsed declarations**.
+- Align public API totals, documentation coverage, and per-unit totals with
+  the renderable non-unit symbol-index population.
+
+## `v0.5.5` — Project-index hero-copy polish
+
+**Outcome:** the project-index hero clearly describes symbol browsing, unit
+navigation, and public API search.
+
+Status: completed on 2026-08-15. The hero was rephrased to "Browse the API
+using the A–Z symbol index, explore individual units, or search the complete
+public API reference." This records the wording shipped in v0.5.5; v0.5.6
+later refined the terminology. Evidence is recorded in the
+[changelog](CHANGELOG.md) and the [v0.5.5 release
+note](RELEASE_NOTE_v0.5.5.md).
+
+Exit criteria:
+
+- Improve the hero description of symbol browsing, unit navigation, and public
+  API search.
+
+## `v0.5.6` — Symbol-index terminology correction
+
+**Outcome:** generated copy no longer implies that the symbol index contains
+only A–Z names.
+
+Status: completed on 2026-08-15. Visible copy, metadata, accessibility wording,
+tests, living documentation, and generated examples were updated to use
+"symbol index"; `_`, digit-leading, and other non-letter symbols are documented
+as appearing under the `#` section. Routes, stable anchors, sorting, filters,
+and category links were preserved. Evidence is recorded in the
+[changelog](CHANGELOG.md), the [v0.5.6 release
+note](RELEASE_NOTE_v0.5.6.md), the [HTML renderer guide](docs/html-renderer.md),
+and the [v0.5.6 PR note](docs/PR_NOTE_v0.5.6.md).
+
+Exit criteria:
+
+- Remove wording implying that the complete index contains only A–Z symbols.
+- Document that `_`, digit-leading, and other non-letter symbols appear under
+  `#`.
+- Update visible copy, metadata, accessibility wording, tests, living
+  documentation, and generated examples.
+- Preserve routes, anchors, sorting, filters, and category links.
 
 ## `v0.6.0` — Safe incremental builds
 
