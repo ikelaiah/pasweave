@@ -15,7 +15,7 @@ procedure WriteDiagnosticsJSON(AProject: TDocProject; const AFileName: string);
 implementation
 
 uses
-  Classes, SysUtils, FPJSON, PasWeave.Diagnostics;
+  Classes, SysUtils, FPJSON, PasWeave.Diagnostics, PasWeave.Incremental;
 
 function SortedObjects(AList: TList; const AKeyPrefix: string): TStringList;
 var
@@ -268,7 +268,6 @@ end;
 
 procedure WriteDiagnosticsJSON(AProject: TDocProject; const AFileName: string);
 var
-  OutputStream: TFileStream;
   Data: UTF8String;
   ParentDirectory: string;
 begin
@@ -277,18 +276,11 @@ begin
     raise EFCreateError.CreateFmt('cannot create output directory: %s',
       [ParentDirectory]);
   Data := DiagnosticsToJSON(AProject);
-  OutputStream := TFileStream.Create(AFileName, fmCreate);
-  try
-    if Length(Data) > 0 then
-      OutputStream.WriteBuffer(Data[1], Length(Data));
-  finally
-    OutputStream.Free;
-  end;
+  WriteOutputFile(AFileName, Data);
 end;
 
 procedure WriteProjectJSON(AProject: TDocProject; const AFileName: string);
 var
-  OutputStream: TFileStream;
   Data: UTF8String;
   ParentDirectory: string;
 begin
@@ -298,13 +290,7 @@ begin
       [ParentDirectory]);
 
   Data := ProjectToJSON(AProject);
-  OutputStream := TFileStream.Create(AFileName, fmCreate);
-  try
-    if Length(Data) > 0 then
-      OutputStream.WriteBuffer(Data[1], Length(Data));
-  finally
-    OutputStream.Free;
-  end;
+  WriteOutputFile(AFileName, Data);
 end;
 
 end.

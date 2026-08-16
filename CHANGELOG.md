@@ -7,6 +7,46 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-17
+
+### Added
+
+- Safe incremental builds that detect unchanged inputs and skip redundant
+  parse and render work. An input fingerprint hashes the PasWeave version,
+  every build-affecting option, the content of every reached source, include,
+  project, and package file, and the vendored KaTeX and Mermaid assets.
+- A deterministic `manifest.json` at the output root recording every generated
+  page and asset (path, SHA-256, size) plus the input fingerprint and build
+  summary counts.
+- Ownership-based stale-output removal: superseded pages and assets are deleted
+  only when the prior manifest proves PasWeave created them, never by extension
+  or wildcard, so user files such as `.nojekyll` are preserved.
+- Atomic output writes (temp file plus rename) with `manifest.json` written
+  last, so an interrupted build never publishes a mixed old/new site as
+  successful output and the next run repairs it.
+- An explicit `--clean` flag to force a full rebuild; clean and incremental
+  results are byte-for-byte identical.
+- Recoverable corrupted-cache handling: an unreadable, malformed, or
+  schema-incompatible `manifest.json` produces a warning and a clean rebuild
+  instead of a fatal error.
+- `--verbose` elapsed-time and peak-heap reporting, plus a self-contained
+  SHA-256 implementation used for the fingerprint and manifest.
+
+### Changed
+
+- Renderers, JSON writers, and third-party asset copies now write output
+  atomically through a shared path that also feeds the manifest.
+- Version metadata and portable-build defaults now report v0.6.0.
+
+### Validation
+
+- The complete FPC 3.2.2 suite passes, including new focused incremental
+  fixtures covering SHA-256 vectors, fingerprint determinism and invalidation,
+  manifest determinism, interrupted-build detection, stale-output removal with
+  unowned-file preservation, and clean-versus-incremental byte parity.
+- Two independent clean builds produce identical trees, and an unchanged
+  second run reports `[up-to-date]` while a changed source or option rebuilds.
+
 ## [0.5.6] - 2026-08-15
 
 ### Changed
@@ -398,7 +438,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.5.6...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/ikelaiah/pasweave/compare/v0.5.6...v0.6.0
 [0.5.6]: https://github.com/ikelaiah/pasweave/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/ikelaiah/pasweave/compare/v0.5.4...v0.5.5
 [0.5.4]: https://github.com/ikelaiah/pasweave/compare/v0.5.3...v0.5.4

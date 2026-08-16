@@ -10,10 +10,10 @@ implementation
 
 uses
   Classes, SysUtils, PasWeave.Comments, PasWeave.Compiler,
-  PasWeave.Diagnostics, PasWeave.Lazarus, PasWeave.Model,
+  PasWeave.Diagnostics, PasWeave.Incremental, PasWeave.Lazarus, PasWeave.Model,
   PasWeave.Model.JSON, PasWeave.Parser, PasWeave.SourceLinks,
-  PasWeave.Render.Markdown,
-  PasWeave.Render.HTML, PasWeave.Validation, PasWeave.Version;
+  PasWeave.Render.Markdown, PasWeave.Render.HTML,
+  PasWeave.Render.HTML.Assets, PasWeave.Validation, PasWeave.Version;
 
 procedure PrintUsage;
 begin
@@ -31,6 +31,7 @@ begin
   WriteLn('                 [--source-link-template=<relative-template>]');
   WriteLn('                 [--min-documentation-coverage=<0-100>]');
   WriteLn('                 [--fail-on=<error|warning>]');
+  WriteLn('                 [--clean]');
   WriteLn('                 [--verbose]');
   WriteLn;
   WriteLn('Source discovery:');
@@ -54,6 +55,11 @@ begin
   WriteLn('  --min-documentation-coverage fails the build below the percentage');
   WriteLn('  --fail-on=error is the default; warning also fails on authoring feedback');
   WriteLn('  diagnostics.json is written beside api-model.json');
+  WriteLn;
+  WriteLn('Incremental builds:');
+  WriteLn('  repeated builds skip unchanged parse and render work by default');
+  WriteLn('  --clean forces a full rebuild from scratch');
+  WriteLn('  manifest.json records every generated page and asset');
   WriteLn;
   WriteLn('Source links:');
   WriteLn('  --repository-url and --source-link-template must be supplied together');
@@ -143,6 +149,70 @@ var
   HasThemeAccent: Boolean;
   HasThemeAccentAlt: Boolean;
   HasThemeFont: Boolean;
+  CleanBuild: Boolean;
+  SkipBuild: Boolean;
+  ManifestExisted: Boolean;
+  StartTick: QWord;
+  Fingerprint: string;
+  ConfigText: string;
+  InputFiles: TStringList;
+  OldManifest: TManifest;
+  NewManifest: TManifest;
+  NewPaths: TStringList;
+
+  procedure AppendConfigLine(const ALine: string);
+  begin
+    ConfigText := ConfigText + ALine + #10;
+  end;
+
+  procedure AppendConfigValue(const AKey, AValue: string);
+  begin
+    AppendConfigLine(AKey + '=' + AValue);
+  end;
+
+  procedure AppendConfigFlag(const AKey: string; AValue: Boolean);
+  begin
+    if AValue then
+      AppendConfigLine(AKey + '=true')
+    else
+      AppendConfigLine(AKey + '=false');
+  end;
+
+  function BuildManifestFromLedger: TManifest;
+  var
+    Entries: TStringList;
+    I: Integer;
+    FirstSeparator: Integer;
+    SecondSeparator: Integer;
+  begin
+    Result := TManifest.Create;
+    Result.SchemaVersion := ManifestSchemaVersion;
+    Result.PasWeaveVersion := PasWeaveVersion;
+    Result.InputFingerprint := Fingerprint;
+    Result.UnitCount := Project.Units.Count;
+    Result.SymbolCount := Project.SymbolCount;
+    Result.AttemptedCount := AttemptedCount;
+    Result.WarningCount := Project.Warnings.Count;
+    Result.ErrorCount := Project.Errors.Count;
+    Entries := LedgerEntries(OutputPath);
+    try
+      SetLength(Result.Entries, Entries.Count);
+      for I := 0 to Entries.Count - 1 do
+      begin
+        FirstSeparator := Pos(#1, Entries[I]);
+        SecondSeparator := Pos(#1, Copy(Entries[I], FirstSeparator + 1,
+          MaxInt)) + FirstSeparator;
+        Result.Entries[I].Path := Copy(Entries[I], 1, FirstSeparator - 1);
+        Result.Entries[I].SHA256 := Copy(Entries[I], FirstSeparator + 1,
+          SecondSeparator - FirstSeparator - 1);
+        Result.Entries[I].Size := StrToInt64(Copy(Entries[I],
+          SecondSeparator + 1, MaxInt));
+      end;
+    finally
+      Entries.Free;
+    end;
+  end;
+
 begin
   SourcePath := '';
   OutputPath := 'build/docs';
@@ -163,6 +233,10 @@ begin
   HasThemeAccent := False;
   HasThemeAccentAlt := False;
   HasThemeFont := False;
+  CleanBuild := False;
+  SkipBuild := False;
+  OldManifest := nil;
+  StartTick := MonotonicMilliseconds;
   CommentStyles := DefaultDocumentationCommentStyles;
   DiscoveryOptions := TSourceDiscoveryOptions.Create;
   CompilerOptions := TCompilerOptions.Create;
@@ -370,6 +444,8 @@ begin
           raise EPasWeaveInputError.Create(
             '--fail-on must be warning or error');
       end
+      else if ParamStr(I) = '--clean' then
+        CleanBuild := True
       else if ParamStr(I) = '--verbose' then
         Verbose := True
       else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
@@ -403,9 +479,6 @@ begin
         ProjectName := LazarusConfiguration.ProjectName;
       CompilerOptions.ApplyDefaultsFrom(
         LazarusConfiguration.CompilerOptions);
-      Project := BuildProjectFromFiles(LazarusConfiguration.SourceRoot,
-        ProjectName, LazarusConfiguration.SourceFiles, AttemptedCount,
-        CommentStyles, CompilerOptions);
     end
     else
     begin
@@ -415,8 +488,99 @@ begin
       if PackagePaths.Count > 0 then
         raise EPasWeaveInputError.Create(
           '--package-path requires a Lazarus .lpi or .lpk input');
-      Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
-        CommentStyles, DiscoveryOptions, CompilerOptions);
+    end;
+
+    AppendConfigValue('source-path',
+      StringReplace(SourcePath, '\', '/', [rfReplaceAll]));
+    AppendConfigValue('project-name', ProjectName);
+    AppendConfigValue('doc-comments',
+      DocumentationCommentStylesText(CommentStyles));
+    AppendConfigFlag('recursive', DiscoveryOptions.Recursive);
+    for I := 0 to DiscoveryOptions.IncludePatterns.Count - 1 do
+      AppendConfigValue('include', DiscoveryOptions.IncludePatterns[I]);
+    for I := 0 to DiscoveryOptions.ExcludePatterns.Count - 1 do
+      AppendConfigValue('exclude', DiscoveryOptions.ExcludePatterns[I]);
+    for I := 0 to CompilerOptions.UnitPaths.Count - 1 do
+      AppendConfigValue('unit-path', CompilerOptions.UnitPaths[I]);
+    for I := 0 to CompilerOptions.IncludePaths.Count - 1 do
+      AppendConfigValue('include-path', CompilerOptions.IncludePaths[I]);
+    for I := 0 to CompilerOptions.Defines.Count - 1 do
+      AppendConfigValue('define', CompilerOptions.Defines[I]);
+    AppendConfigValue('target-os', CompilerOptions.TargetOS);
+    AppendConfigFlag('target-os-explicit', CompilerOptions.TargetOSExplicit);
+    AppendConfigValue('target-cpu', CompilerOptions.TargetCPU);
+    AppendConfigFlag('target-cpu-explicit', CompilerOptions.TargetCPUExplicit);
+    AppendConfigValue('build-mode', BuildMode);
+    for I := 0 to PackagePaths.Count - 1 do
+      AppendConfigValue('package-path', PackagePaths[I]);
+    AppendConfigValue('repository-url', RepositoryURL);
+    AppendConfigValue('source-link-template', SourceLinkTemplate);
+    AppendConfigValue('project-mark', ProjectMark);
+    AppendConfigFlag('project-mark-explicit', HasProjectMark);
+    AppendConfigValue('theme-accent', ThemeAccent);
+    AppendConfigFlag('theme-accent-explicit', HasThemeAccent);
+    AppendConfigValue('theme-accent-2', ThemeAccentAlt);
+    AppendConfigFlag('theme-accent-2-explicit', HasThemeAccentAlt);
+    AppendConfigValue('theme-font', ThemeFont);
+    AppendConfigFlag('theme-font-explicit', HasThemeFont);
+    if HasMinimumCoverage then
+      AppendConfigValue('min-documentation-coverage',
+        IntToStr(MinimumCoverage))
+    else
+      AppendConfigValue('min-documentation-coverage', '');
+    AppendConfigValue('fail-on', DiagnosticSeverityName(FailureSeverity));
+    AppendConfigValue('output',
+      StringReplace(OutputPath, '\', '/', [rfReplaceAll]));
+
+    if IsLazarusInput then
+      InputFiles := EnumerateInputFiles(SourcePath, True, nil, CompilerOptions,
+        LazarusConfiguration.SourceFiles, LazarusConfiguration.PackageFiles)
+    else
+      InputFiles := EnumerateInputFiles(SourcePath, False, DiscoveryOptions,
+        CompilerOptions, nil, nil);
+    try
+      Fingerprint := ComputeBuildFingerprint(ConfigText, InputFiles,
+        ThirdPartyAssetFingerprint);
+    finally
+      InputFiles.Free;
+    end;
+
+    ManifestExisted := FileExists(ManifestFilePath(OutputPath));
+    OldManifest := ReadManifest(OutputPath);
+    if ManifestExisted and not Assigned(OldManifest) then
+      WriteLn(StdErr, 'pasweave: warning: manifest.json is unreadable or ' +
+        'invalid; rebuilding from scratch');
+    if (not CleanBuild) and Assigned(OldManifest) and
+      (OldManifest.InputFingerprint = Fingerprint) and
+      ManifestOutputsPresent(OldManifest, OutputPath) then
+    begin
+      WriteLn('[up-to-date] output already matches current inputs');
+      WriteLn('Generated ', OldManifest.SymbolCount, ' symbols from ',
+        OldManifest.UnitCount, ' of ', OldManifest.AttemptedCount,
+        ' units, with ', OldManifest.WarningCount, ' warnings and ',
+        OldManifest.ErrorCount, ' errors.');
+      WriteLn('Wrote ', ManifestFilePath(OutputPath), ' (unchanged)');
+      if Verbose then
+        WriteLn('elapsed=', MonotonicMilliseconds - StartTick, ' ms; ' +
+          'peak-heap=', PeakHeapBytes, ' bytes');
+      Result := 0;
+      if (OldManifest.ErrorCount > 0) or
+        ((FailureSeverity = dsWarning) and (OldManifest.WarningCount > 0)) then
+        Result := 1;
+      SkipBuild := True;
+    end
+    else
+    begin
+      ResetPeakHeap;
+      BeginOutputLedger;
+      if IsLazarusInput then
+        Project := BuildProjectFromFiles(LazarusConfiguration.SourceRoot,
+          ProjectName, LazarusConfiguration.SourceFiles, AttemptedCount,
+          CommentStyles, CompilerOptions)
+      else
+        Project := BuildProject(SourcePath, ProjectName, AttemptedCount,
+          CommentStyles, DiscoveryOptions, CompilerOptions);
+      SamplePeakHeap;
     end;
   finally
     LazarusConfiguration.Free;
@@ -424,9 +588,17 @@ begin
     CompilerOptions.Free;
     DiscoveryOptions.Free;
   end;
+
+  if SkipBuild then
+  begin
+    OldManifest.Free;
+    Exit;
+  end;
+
   if not TryConfigureSourceLinks(Project, RepositoryURL, SourceLinkTemplate,
     SourceLinkError) then
   begin
+    OldManifest.Free;
     Project.Free;
     raise EPasWeaveInputError.Create(SourceLinkError);
   end;
@@ -481,12 +653,32 @@ begin
     WriteLn('Wrote ', IncludeTrailingPathDelimiter(HTMLOutputPath),
       'index.html, search assets, and ', Project.Units.Count, ' unit pages');
 
+    NewManifest := BuildManifestFromLedger;
+    try
+      NewPaths := LedgerPaths(OutputPath);
+      try
+        RemoveStaleOutputs(OutputPath, OldManifest, NewPaths);
+      finally
+        NewPaths.Free;
+      end;
+      WriteManifest(OutputPath, NewManifest);
+    finally
+      NewManifest.Free;
+    end;
+    WriteLn('Wrote ', ManifestFilePath(OutputPath));
+
+    SamplePeakHeap;
+    if Verbose then
+      WriteLn('elapsed=', MonotonicMilliseconds - StartTick, ' ms; ' +
+        'peak-heap=', PeakHeapBytes, ' bytes');
+
     if HasDiagnosticsAtOrAbove(Project, FailureSeverity) then
       Result := 1
     else
       Result := 0;
   finally
     Project.Free;
+    OldManifest.Free;
   end;
 end;
 

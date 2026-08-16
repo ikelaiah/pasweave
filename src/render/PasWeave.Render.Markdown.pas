@@ -20,7 +20,7 @@ implementation
 
 uses
   Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Render.Support,
-  PasWeave.Render.Links, PasWeave.SourceLinks;
+  PasWeave.Render.Links, PasWeave.SourceLinks, PasWeave.Incremental;
 
 type
   TSymbolKinds = set of TSymbolKind;
@@ -570,16 +570,8 @@ begin
 end;
 
 procedure WriteUTF8File(const AFileName: string; const AData: UTF8String);
-var
-  Stream: TFileStream;
 begin
-  Stream := TFileStream.Create(AFileName, fmCreate);
-  try
-    if Length(AData) > 0 then
-      Stream.WriteBuffer(AData[1], Length(AData));
-  finally
-    Stream.Free;
-  end;
+  WriteOutputFile(AFileName, AData);
 end;
 
 procedure WriteMarkdownDocumentation(AProject: TDocProject;

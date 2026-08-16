@@ -354,6 +354,12 @@ Exit criteria:
 **Outcome:** repeated builds of large projects are faster without weakening
 determinism or deleting files PasWeave does not own.
 
+Status: completed on 2026-08-17. The manifest contract, input fingerprint,
+stale-output ownership rules, interrupted-build recovery, clean-build parity,
+timing and peak-heap baselines, and cache-invalidation diagnostics are recorded
+in [safe incremental builds](docs/incremental-builds.md), the
+[changelog](CHANGELOG.md), and the v0.6.0 release note.
+
 Exit criteria:
 
 - Record a deterministic manifest of generated pages and assets.

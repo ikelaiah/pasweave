@@ -6,7 +6,7 @@
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Lazarus](https://img.shields.io/badge/Lazarus-.lpi%20%7C%20.lpk-7c3aed)](docs/lazarus-projects.md)
 [![Windows](https://img.shields.io/badge/platform-Windows%20x86--64-2563eb)](docs/releasing.md)
-[![Version](https://img.shields.io/badge/version-0.5.6-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.6.0-635bff)](CHANGELOG.md)
 [![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-10b981)](https://github.com/ikelaiah/pasweave/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/ikelaiah/pasweave/pages.yml?branch=main&label=tests)](https://github.com/ikelaiah/pasweave/actions/workflows/pages.yml)
 [![Documentation](https://img.shields.io/badge/docs-live-0ea5e9)](https://ikelaiah.github.io/pasweave/)
@@ -25,7 +25,7 @@ network connection, or registry changes.
 
 [View the live showcase](https://ikelaiah.github.io/pasweave/) ·
 [Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
-[Read the v0.5.6 release notes](RELEASE_NOTE_v0.5.6.md)
+[Read the v0.6.0 release notes](RELEASE_NOTE_v0.6.0.md)
 
 > **Project status:** PasWeave is pre-release software. It targets Free Pascal
 > and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
@@ -94,6 +94,8 @@ format details, schema notes, and exit codes.
   add restrained branding tokens for colors, typography, and a local mark.
 - ✅ **Useful while authoring.** Find undocumented symbols, broken references,
   malformed directives, and coverage regressions before publishing.
+- ⚡ **Fast on repeated builds.** Incremental builds skip unchanged parse and
+  render work by default; pass `--clean` to force a full rebuild.
 - ⚙️ **Automation friendly.** Deterministic Markdown and JSON make diffs and CI
   checks predictable.
 
@@ -208,6 +210,19 @@ The default is `--fail-on=error`, so authoring warnings do not block local
 rendering. See [authoring feedback and reference integrity](docs/authoring-feedback.md)
 for diagnostic codes and coverage rules.
 
+### Rebuild quickly with incremental caching
+
+Repeated builds skip unchanged parse and render work automatically. A matching
+run prints `[up-to-date]`; force a full rebuild with `--clean`:
+
+~~~text
+pasweave build src --output docs --clean
+~~~
+
+PasWeave writes a deterministic `manifest.json` and only ever removes files it
+created before. See [safe incremental builds](docs/incremental-builds.md) for
+the cache key, invalidation rules, and interruption recovery.
+
 ## 📖 Documentation
 
 | Guide | What it covers |
@@ -220,6 +235,7 @@ for diagnostic codes and coverage rules.
 | [Authoring feedback](docs/authoring-feedback.md) | References, coverage, diagnostics, and CI |
 | [Navigation and source links](docs/navigation-and-source-traceability.md) | Anchors, routes, symbol index, themes, and repository links |
 | [HTML renderer](docs/html-renderer.md) | Offline rendering, search, themes, branding, safety, and diagrams |
+| [Incremental builds](docs/incremental-builds.md) | Fingerprints, `manifest.json`, `--clean`, and stale-output safety |
 | [Building from source](docs/building-from-source.md) | Requirements, compilation, tests, and release builds |
 | [Parser integration](docs/parser-integration.md) | `fcl-passrc` adapter details |
 

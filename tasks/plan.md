@@ -146,3 +146,20 @@ and group under the `#` section. Routes, anchors, filters, sorting, and
 grouping are unchanged; living docs are corrected while historical records are
 preserved. Example goldens and version metadata are regenerated to v0.5.6.
 
+## `v0.6.0` safe incremental builds
+
+A follow-up release adds safe incremental builds. A content-addressed input
+fingerprint (PasWeave version, every build-affecting option, every reached
+source/include/project/package file, and the vendored assets) is computed
+before parsing; an unchanged run prints `[up-to-date]` and exits with parity.
+A deterministic `manifest.json` records every generated page and asset with a
+SHA-256 and size and serves as the ownership proof for stale-output removal,
+which deletes only previously manifest-owned files. Output writes are atomic
+(temp plus rename) with the manifest written last, so interrupted builds are
+never published as successful and are repaired on the next run. `--clean`
+forces a full rebuild, and clean and incremental results are byte-for-byte
+identical. A corrupted or schema-incompatible manifest is a recoverable
+warning that triggers a clean rebuild. `--verbose` reports elapsed time and
+peak heap; baselines are recorded in the incremental-builds guide.
+
+

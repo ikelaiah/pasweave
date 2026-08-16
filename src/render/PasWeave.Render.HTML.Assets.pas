@@ -17,6 +17,9 @@ function HTMLThemeBootstrap: UTF8String;
 function HTMLApplicationScript: UTF8String;
 function HTMLMathScript: UTF8String;
 function HTMLDiagramScript: UTF8String;
+function FindKaTeXAssetsDirectory: string;
+function FindMermaidAssetsDirectory: string;
+function ThirdPartyAssetFingerprint: string;
 procedure WriteThirdPartyAssets(const AAssetsDirectory: string);
 procedure WriteKaTeXAssets(const AAssetsDirectory: string);
 procedure WriteMermaidAssets(const AAssetsDirectory: string);
@@ -24,7 +27,8 @@ procedure WriteMermaidAssets(const AAssetsDirectory: string);
 implementation
 
 uses
-  Classes, SysUtils, StrUtils, PasWeave.Render.Support
+  Classes, SysUtils, StrUtils, PasWeave.Render.Support,
+  PasWeave.Incremental, PasWeave.Hashing
   {$IFDEF PASWEAVE_PORTABLE_ASSETS}
   {$IFDEF MSWINDOWS}
   , Zipper
@@ -1280,23 +1284,75 @@ begin
     'PasWeave');
 end;
 
-procedure CopyFileBytes(const ASourceFilename, ADestinationFilename: string);
+procedure CollectTreeFiles(const ADirectory, ARelative: string;
+  AFiles: TStringList);
 var
-  SourceStream: TFileStream;
-  DestinationStream: TFileStream;
+  Search: TSearchRec;
+  Relative: string;
 begin
-  SourceStream := TFileStream.Create(ASourceFilename,
-    fmOpenRead or fmShareDenyWrite);
+  if FindFirst(IncludeTrailingPathDelimiter(ADirectory) + '*', faAnyFile,
+    Search) <> 0 then
+    Exit;
   try
-    DestinationStream := TFileStream.Create(ADestinationFilename, fmCreate);
-    try
-      DestinationStream.CopyFrom(SourceStream, 0);
-    finally
-      DestinationStream.Free;
-    end;
+    repeat
+      if (Search.Name = '.') or (Search.Name = '..') then
+        Continue;
+      if ARelative = '' then
+        Relative := Search.Name
+      else
+        Relative := ARelative + '/' + Search.Name;
+      if (Search.Attr and faDirectory) <> 0 then
+        CollectTreeFiles(IncludeTrailingPathDelimiter(ADirectory) + Search.Name,
+          Relative, AFiles)
+      else
+        AFiles.Add(Relative);
+    until FindNext(Search) <> 0;
   finally
-    SourceStream.Free;
+    FindClose(Search);
   end;
+end;
+
+function SHA256HexDirectory(const ADirectory: string): string;
+var
+  Files: TStringList;
+  I: Integer;
+  Text: string;
+  Full: string;
+begin
+  Files := TStringList.Create;
+  try
+    Files.Sorted := True;
+    Files.CaseSensitive := True;
+    CollectTreeFiles(ADirectory, '', Files);
+    Text := '';
+    for I := 0 to Files.Count - 1 do
+    begin
+      Full := IncludeTrailingPathDelimiter(ADirectory) +
+        StringReplace(Files[I], '/', PathDelim, [rfReplaceAll]);
+      Text := Text + Files[I] + #9 + SHA256HexFile(Full) + #10;
+    end;
+    Result := SHA256HexString(Text);
+  finally
+    Files.Free;
+  end;
+end;
+
+function ThirdPartyAssetFingerprint: string;
+begin
+  {$IFDEF PASWEAVE_PORTABLE_ASSETS}
+  Result := SHA256HexString('katex=' + KaTeXVersion + #10 + 'mermaid=' +
+    MermaidVersion);
+  {$ELSE}
+  Result := SHA256HexString('katex=' + KaTeXVersion + #10 +
+    SHA256HexDirectory(FindKaTeXAssetsDirectory) + #10 +
+    'mermaid=' + MermaidVersion + #10 +
+    SHA256HexDirectory(FindMermaidAssetsDirectory));
+  {$ENDIF}
+end;
+
+procedure CopyFileBytes(const ASourceFilename, ADestinationFilename: string);
+begin
+  WriteOutputCopy(ASourceFilename, ADestinationFilename);
 end;
 
 procedure CopyFontFiles(const ASourceDirectory, ADestinationDirectory: string);

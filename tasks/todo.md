@@ -75,6 +75,23 @@
 - [x] Full suite and production build pass
 - [x] No `v0.6.0+` work included
 
+# v0.6.0 task checklist
+
+- [x] Self-contained SHA-256 implementation with NIST-vector fixtures
+- [x] Deterministic input fingerprint over version, options, source files, assets
+- [x] Deterministic `manifest.json` (path, SHA-256, size) at the output root
+- [x] Skip unchanged parse and render work; `[up-to-date]` exit parity
+- [x] Ownership-based stale-output removal; never sweep by extension
+- [x] Atomic output writes with manifest written last; interrupted-build recovery
+- [x] `--clean` full-rebuild path; clean == incremental byte-for-byte
+- [x] Recoverable corrupted-manifest diagnostic (warning + clean rebuild)
+- [x] `--verbose` elapsed-time and peak-heap reporting
+- [x] Focused incremental fixtures registered in the test suite
+- [x] README, detailed docs, changelog, roadmap, and release/PR notes updated
+- [x] Version metadata and portable-build default updated to `0.6.0`
+- [x] Full suite and production build pass
+- [x] No `v0.7.0+` work included
+
 
 
 
