@@ -1,5 +1,9 @@
 # Scientific API example
 
+> **Second step.** Read the [documented API example](../documented-api/README.md)
+> first for the minimal `///` pattern. This showcase adds equations, `@raises`,
+> cross-unit dependencies, and interface inheritance.
+
 This runnable two-unit library is PasWeave's equation-rich showcase. Its API
 documentation covers vector geometry, Gaussian densities, numerical methods,
 descriptive statistics, softmax, and Shannon entropy with inline and display
@@ -12,11 +16,22 @@ fpc -Mobjfpc -Sh -Fuexamples/scientific-api -FUbuild/units -FEbuild/bin examples
 build/bin/ScientificDemo
 ```
 
+On Windows (PowerShell), run `build\bin\ScientificDemo.exe` instead of
+`build/bin/ScientificDemo`.
+
 Generate the documentation site with:
 
 ```text
-build/bin/pasweave build examples/scientific-api --output build/scientific-api --project-name "Scientific API showcase" --repository-url=https://github.com/ikelaiah/pasweave '--source-link-template=blob/main/examples/scientific-api/{path}#L{line}'
+build/bin/pasweave build examples/scientific-api --output build/scientific-api --project-name "Scientific API showcase" --repository-url=https://github.com/ikelaiah/pasweave "--source-link-template=blob/main/examples/scientific-api/{path}#L{line}"
 ```
+
+On Windows (PowerShell):
+
+```powershell
+build\bin\pasweave.exe build examples/scientific-api --output build/scientific-api --project-name "Scientific API showcase" --repository-url=https://github.com/ikelaiah/pasweave "--source-link-template=blob/main/examples/scientific-api/{path}#L{line}"
+```
+
+Expected result: the index reports `28 of 28 public API symbols documented`.
 
 The example deliberately exercises:
 

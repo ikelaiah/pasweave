@@ -25,7 +25,7 @@ network connection, or registry changes.
 
 [View the live showcase](https://ikelaiah.github.io/pasweave/) ·
 [Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
-[Read the v0.6.0 release notes](RELEASE_NOTE_v0.6.0.md)
+[Read the v0.6.0 release notes](docs/RELEASE_NOTE_v0.6.0.md)
 
 > **Project status:** PasWeave is pre-release software. It targets Free Pascal
 > and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
@@ -35,21 +35,36 @@ network connection, or registry changes.
 
 ## 🚀 Quick start
 
-Download the portable `pasweave.exe` from the
-[GitHub Releases page](https://github.com/ikelaiah/pasweave/releases), place it
-anywhere, and run:
+**Prerequisites:** none for the portable Windows release. To compile from
+source you need Free Pascal 3.2.2+, `fcl-passrc`, `fcl-json`, and `make`
+(see [building from source](docs/building-from-source.md)).
+
+**Option A — Windows (no install):** download portable `pasweave.exe` from
+the [GitHub Releases page](https://github.com/ikelaiah/pasweave/releases),
+place it anywhere, and run:
 
 ~~~powershell
 .\pasweave.exe build path\to\project --output docs
 ~~~
 
-Open `docs/html/index.html`. No installer, web server, internet connection,
-or Free Pascal runtime is required.
+**Option B — Linux / from source:**
+
+~~~bash
+make
+./build/bin/pasweave build path/to/project --output docs
+~~~
+
+Then open `docs/html/index.html`. No installer, web server, internet
+connection, or Free Pascal runtime is required to browse the output.
 
 PasWeave accepts a Pascal unit, a directory of `.pas` and `.pp` units, a
 Lazarus project (`.lpi`), or a Lazarus package (`.lpk`).
 
-Building on another platform? See [building from source](docs/building-from-source.md).
+New to PasWeave? Start with the [documented API example](examples/documented-api/README.md)
+(8 of 8 symbols documented, minimal `///` usage), then explore the
+[scientific showcase](examples/scientific-api/README.md) (28 symbols,
+equations, diagrams). Building on another platform? See
+[building from source](docs/building-from-source.md).
 
 ## 🔎 See what it produces
 
@@ -127,6 +142,10 @@ trade-offs.
 
 ## 🧭 Common workflows
 
+> Copy-paste note: commands below are single-line so they work in both
+> PowerShell and bash. On Windows use `.\pasweave.exe` (or
+> `build\bin\pasweave.exe` from source); on Linux use `./build/bin/pasweave`.
+
 ### Discover a nested source tree
 
 Enable recursive discovery explicitly and exclude trees outside the public API:
@@ -144,12 +163,7 @@ to the source directory. Exclusions take precedence. See
 Pass the source paths, defines, and target selected by the project build:
 
 ~~~text
-pasweave build src --recursive \
-  --unit-path=packages/core/src \
-  --include-path=include \
-  --define=USE_FAST_MATH \
-  --target-os=linux \
-  --target-cpu=aarch64
+pasweave build src --recursive --unit-path=packages/core/src --include-path=include --define=USE_FAST_MATH --target-os=linux --target-cpu=aarch64
 ~~~
 
 Paths and defines are repeatable. Explicit target settings replace host
@@ -161,8 +175,7 @@ precedence, supported values, diagnostics, and limitations.
 Point PasWeave at an `.lpi` or `.lpk`; Lazarus itself is not started:
 
 ~~~text
-pasweave build path/to/Application.lpi --build-mode=Release \
-  --package-path=path/to/local-packages --output docs
+pasweave build path/to/Application.lpi --build-mode=Release --package-path=path/to/local-packages --output docs
 ~~~
 
 Command-line compiler options override imported values. See the
@@ -174,9 +187,7 @@ elements, package discovery, and diagnostics.
 Configure the repository origin and a repository-relative line template:
 
 ~~~text
-pasweave build src \
-  --repository-url=https://github.com/example/project \
-  '--source-link-template=blob/main/{path}#L{line}'
+pasweave build src --repository-url=https://github.com/example/project "--source-link-template=blob/main/{path}#L{line}"
 ~~~
 
 See [navigation and source traceability](docs/navigation-and-source-traceability.md)
@@ -187,11 +198,7 @@ for template validation and normalization.
 Set a local project mark, two accent colors, and the body font:
 
 ~~~text
-pasweave build src \
-  --project-mark=ACME \
-  --theme-accent=#7c3aed \
-  --theme-accent-2=#0e7490 \
-  --theme-font="Avenir Next"
+pasweave build src --project-mark=ACME --theme-accent=#7c3aed --theme-accent-2=#0e7490 --theme-font="Avenir Next"
 ~~~
 
 Defaults reproduce the built-in light and dark schemes; invalid values are
@@ -225,6 +232,9 @@ the cache key, invalidation rules, and interruption recovery.
 
 ## 📖 Documentation
 
+Start with [documentation comments](docs/documentation-comments.md) and
+[generated output](docs/generated-output.md); follow task links from there.
+
 | Guide | What it covers |
 |---|---|
 | [Documentation comments](docs/documentation-comments.md) | Comment forms, association, and directives |
@@ -238,6 +248,58 @@ the cache key, invalidation rules, and interruption recovery.
 | [Incremental builds](docs/incremental-builds.md) | Fingerprints, `manifest.json`, `--clean`, and stale-output safety |
 | [Building from source](docs/building-from-source.md) | Requirements, compilation, tests, and release builds |
 | [Parser integration](docs/parser-integration.md) | `fcl-passrc` adapter details |
+| [Real-project validation](docs/mathlib-fp-validation.md) | `mathlib-fp` corpus results and determinism evidence |
+| [Release procedure](docs/releasing.md) | Versioning, validation gates, and publishing |
+| [Windows CI troubleshooting](docs/windows-ci-troubleshooting.md) | Runner, path, and tooling fixes |
+| [Architecture decisions](docs/decisions/0001-model-driven-authoring-validation.md) | Why validation lives in the model (ADR-0001) |
+
+## ⌨️ Commands
+
+| Command | Description |
+|---|---|
+| `pasweave build <input> --output docs` | Generate HTML, Markdown, JSON, and diagnostics |
+| `pasweave build --help` | Show all build options |
+| `pasweave --version` | Print version |
+| `make` | Compile `build/bin/pasweave` from source |
+| `make test` | Compile and run the full FPC test suite |
+| `.\scripts\build-portable-windows.ps1` | Build portable Windows `dist\pasweave.exe` + checksum |
+
+## 🧱 Architecture
+
+```text
+src/cli/          Command-line pipeline (pasweave build)
+src/parser/       fcl-passrc adapter, comments, Lazarus, compiler options
+src/model/        Renderer-independent documentation model + JSON
+src/validation/   Authoring diagnostics and coverage gates
+src/render/       HTML, Markdown, links, offline assets
+src/diagnostics/  Stable diagnostic codes and severities
+src/incremental/  Fingerprints, manifest.json, atomic writes
+tests/            Fixtures + focused regression suites
+examples/         Minimal documented-api first, rich scientific-api second
+```
+
+Design rules: reuse `fcl-passrc` (no second parser), keep parser types out
+of the model, keep renderers model-driven, prefer explicit unresolved data
+over guessed links. See [ADR-0001](docs/decisions/0001-model-driven-authoring-validation.md)
+and [ADR-0002](docs/decisions/0002-repository-relative-source-links.md).
+
+Supported platforms: portable release targets Windows x86-64 (see
+[download integrity](#-download-integrity)); source builds are tested on
+Windows with FPC 3.2.2, with Linux validation planned in
+[roadmap v0.8.0](ROADMAP.md).
+
+## 🆘 Troubleshooting
+
+- `manifest.json is unreadable or invalid; rebuilding from scratch` — cached
+  state was corrupt; the rebuild is the fix, no action needed.
+- No output / wrong units — check `--recursive`, `--include`/`--exclude`
+  precedence in [source discovery](docs/source-discovery.md).
+- Missing Lazarus units — check `--package-path` and build-mode selection in
+  [Lazarus projects](docs/lazarus-projects.md).
+- CI failures on warnings/coverage — see
+  [authoring feedback](docs/authoring-feedback.md) (`--fail-on`, `--min-documentation-coverage`).
+- Windows runner issues — see
+  [Windows CI troubleshooting](docs/windows-ci-troubleshooting.md).
 
 ## 🛎️ Scope and limitations
 
@@ -287,9 +349,15 @@ make
 make test
 ~~~
 
-See [building from source](docs/building-from-source.md) for direct FPC and
-portable Windows build commands. Bug reports, focused pull requests, and
-real-world parser fixtures are welcome.
+Run tests from the repository root so fixtures resolve. See
+[building from source](docs/building-from-source.md) for direct FPC and
+portable Windows build commands.
+
+How to help: bug reports with a minimal `.pas` reproducer, focused pull
+requests (one logical change + fixtures + docs), and real-world parser
+fixtures. Keep `README.md`, `docs/`, `CHANGELOG.md`, and version metadata in
+the same change; keep unrelated golden output byte-identical. The quality bar
+for every milestone is defined in the [roadmap](ROADMAP.md).
 
 The project history is in the [changelog](CHANGELOG.md); planned work and
 acceptance evidence are in the [roadmap](ROADMAP.md).
