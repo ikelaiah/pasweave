@@ -7,6 +7,38 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Fixed
+
+- Hardened incremental manifest path handling against unsafe and
+  stale-output paths, including absolute paths, drive-letter paths,
+  backslash paths, `..` traversal segments, and paths resolving outside
+  the output root.
+- Fail-closed validation for malformed manifest entries: unreadable,
+  non-object, undersized, negative-size, or unsafe-path entries now
+  discard the manifest and rebuild from scratch.
+- Safer stale-output resolution and deletion: superseded outputs are
+  removed only after their manifest-relative path is validated to stay
+  inside the output root.
+- Initialized the CLI `Project` reference before the build pipeline so a
+  failed parse cannot free an uninitialized reference.
+- Robust output-ledger entry parsing using guarded separators and
+  `TryStrToInt64`, including rejection of negative sizes and
+  separator-less entries.
+
+### Documentation
+
+- Improved README onboarding for portable Windows versus source builds,
+  with prerequisites and a suggested learning order.
+- Corrected the release-note link to `docs/RELEASE_NOTE_v0.6.0.md`.
+- Improved command copy/paste portability across PowerShell and bash.
+- Expanded command, architecture, guide, support, and troubleshooting
+  navigation in the README.
+- Added a clearer learning progression between the documented-api and
+  scientific-api examples, with per-OS commands.
+- Corrected the example expected documentation counts to the reported
+  index totals (8 of 8 and 28 of 28 public API symbols documented).
+- Updated the roadmap to show v0.6.0 shipped and v0.7.0 being prepared.
+
 ## [0.6.0] - 2026-08-17
 
 ### Added
