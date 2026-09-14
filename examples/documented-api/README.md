@@ -1,5 +1,10 @@
 # Documented API example
 
+> **Start here.** This is the minimal copy-paste example: two units, 8 of 8
+> symbols documented, one `@param`/`@returns` pattern to imitate. Once this
+> builds, see the [scientific showcase](../scientific-api/README.md) for
+> equations, diagrams, and interface inheritance.
+
 This two-unit project demonstrates PasWeave's explicit `///` documentation
 marker. FPC treats these as ordinary `//` comments; PasWeave associates only
 the triple-slash form because `slash` is the default documentation style.
@@ -7,12 +12,18 @@ the triple-slash form because `slash` is the default documentation style.
 Build PasWeave from the repository root, then generate the example site:
 
 ```text
-build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example" --repository-url=https://github.com/ikelaiah/pasweave '--source-link-template=blob/main/examples/documented-api/{path}#L{line}'
+build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example" --repository-url=https://github.com/ikelaiah/pasweave "--source-link-template=blob/main/examples/documented-api/{path}#L{line}"
 ```
 
-On Windows, use `build\bin\pasweave.exe` if your shell does not resolve the
-executable suffix automatically. Open `build/documented-api/html/index.html`
-afterward.
+On Windows (PowerShell):
+
+```powershell
+build\bin\pasweave.exe build examples/documented-api --output build/documented-api --project-name "Documented API example" --repository-url=https://github.com/ikelaiah/pasweave "--source-link-template=blob/main/examples/documented-api/{path}#L{line}"
+```
+
+Open `build/documented-api/html/index.html` afterward. The index reports
+`8 of 8 API symbols documented` (four in `Demo.Core`, four in
+`Demo.Services`).
 
 The generated index reports `8 of 8 API symbols documented`: four in
 `Demo.Core` and four in `Demo.Services`. It also demonstrates structured

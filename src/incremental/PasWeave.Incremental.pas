@@ -1,3 +1,8 @@
+/// Tracks incremental build state so repeated builds skip unchanged work.
+///
+/// The manifest records every file PasWeave created plus a fingerprint of
+/// all build-affecting inputs. Stale outputs are removed only when the prior
+/// manifest proves PasWeave created them.
 unit PasWeave.Incremental;
 
 {$mode objfpc}{$H+}
@@ -8,59 +13,155 @@ uses
   Classes, SysUtils, PasWeave.Compiler, PasWeave.Parser;
 
 const
+  /// Expected `schemaVersion` inside `manifest.json`.
   ManifestSchemaVersion = 1;
+  /// Manifest filename written at the output root.
   ManifestFilename = 'manifest.json';
 
 type
+  /// One generated file recorded in the manifest.
   TManifestEntry = record
+    /// Output-relative path using `/` separators (for example `html/index.html`).
     Path: string;
+    /// Lowercase hex SHA-256 of the file content.
     SHA256: string;
+    /// File size in bytes.
     Size: Int64;
   end;
 
+  /// Deterministic record of one completed build.
   TManifest = class
   public
+    /// Manifest schema version.
     SchemaVersion: Integer;
+    /// PasWeave version that produced this manifest.
     PasWeaveVersion: string;
+    /// Fingerprint of every build-affecting input.
     InputFingerprint: string;
+    /// Number of parsed units.
     UnitCount: Integer;
+    /// Number of documented symbols.
     SymbolCount: Integer;
+    /// Number of attempted units including failures.
     AttemptedCount: Integer;
+    /// Number of warnings in the completed build.
     WarningCount: Integer;
+    /// Number of errors in the completed build.
     ErrorCount: Integer;
+    /// Generated files owned by PasWeave.
     Entries: array of TManifestEntry;
+    /// Returns the entry path at `AIndex`, or `''` when out of range.
+    ///
+    /// @param AIndex Zero-based entry index.
+    /// @returns The output-relative entry path.
     function EntryPath(const AIndex: Integer): string;
   end;
 
+/// Returns the full path to `manifest.json` inside an output directory.
+///
+/// @param AOutputDirectory Output root.
+/// @returns The manifest file path.
 function ManifestFilePath(const AOutputDirectory: string): string;
 
+/// Starts a fresh per-build ledger of generated files.
 procedure BeginOutputLedger;
+/// Writes `AData` atomically and records it in the ledger.
+///
+/// @param AFilename Destination file.
+/// @param AData UTF-8 content to write.
+/// @returns Hex SHA-256 of the written content.
 function WriteOutputFile(const AFilename: string;
   const AData: UTF8String): string;
+/// Copies `ASource` to `ADestination` atomically and records it.
+///
+/// @param ASource Existing file to copy.
+/// @param ADestination Destination file.
+/// @returns Hex SHA-256 of the copied content.
 function WriteOutputCopy(const ASource, ADestination: string): string;
+/// Returns ledger entries as output-relative `path + #1 + sha + #1 + size` rows.
+///
+/// @param AOutputDirectory Output root used to relativize paths.
+/// @returns Owned sorted list; caller frees it.
 function LedgerEntries(const AOutputDirectory: string): TStringList;
+/// Returns only the output-relative paths from the current ledger.
+///
+/// @param AOutputDirectory Output root used to relativize paths.
+/// @returns Owned sorted list; caller frees it.
 function LedgerPaths(const AOutputDirectory: string): TStringList;
 
+/// Writes `AData` through a temp file plus rename so readers never see half-written output.
+///
+/// @param AFilename Destination file.
+/// @param AData UTF-8 content to write.
 procedure WriteFileAtomic(const AFilename: string; const AData: UTF8String);
+/// Copies a file through a temp file plus rename.
+///
+/// @param ASource Existing file to copy.
+/// @param ADestination Destination file.
 procedure WriteFileAtomicCopy(const ASource, ADestination: string);
 
+/// Reads and validates a prior manifest, or returns `nil` when missing or invalid.
+///
+/// Corrupt manifests are recoverable: the caller rebuilds from scratch.
+///
+/// @param AOutputDirectory Output root.
+/// @returns Owned manifest, or `nil`.
 function ReadManifest(const AOutputDirectory: string): TManifest;
+/// Returns True when every manifest-listed output exists with matching size.
+///
+/// @param AManifest Prior manifest to check.
+/// @param AOutputDirectory Output root.
+/// @returns True when an incremental skip is safe.
 function ManifestOutputsPresent(AManifest: TManifest;
   const AOutputDirectory: string): Boolean;
+/// Writes `AManifest` as deterministic JSON.
+///
+/// @param AOutputDirectory Output root.
+/// @param AManifest Manifest to persist.
 procedure WriteManifest(const AOutputDirectory: string; AManifest: TManifest);
 
+/// Deletes superseded outputs owned by the prior manifest, never user files.
+///
+/// Paths are validated to stay inside the output root before deletion.
+///
+/// @param AOutputDirectory Output root.
+/// @param AOldManifest Prior manifest proving ownership.
+/// @param ANewPaths Output-relative paths in the current build.
 procedure RemoveStaleOutputs(const AOutputDirectory: string;
   AOldManifest: TManifest; const ANewPaths: TStrings);
 
+/// Hashes version, config, assets, and every input file into one fingerprint.
+///
+/// @param AConfigText Normalized build-affecting options.
+/// @param AInputFiles Reached source, include, project, and package files.
+/// @param AAssetFingerprint Fingerprint of vendored web assets.
+/// @returns Hex SHA-256 fingerprint.
 function ComputeBuildFingerprint(const AConfigText: string;
   const AInputFiles: TStrings; const AAssetFingerprint: string): string;
+/// Lists every input file affecting the build, sorted and deduplicated.
+///
+/// @param ASourcePath CLI source input.
+/// @param AIsLazarusInput True for `.lpi`/`.lpk` inputs.
+/// @param ADiscovery Source discovery options.
+/// @param ACompiler Compiler search paths and defines.
+/// @param ALazarusSourceFiles Source files imported from Lazarus.
+/// @param ALazarusPackageFiles Package files imported from Lazarus.
+/// @returns Owned list; caller frees it.
 function EnumerateInputFiles(const ASourcePath: string; AIsLazarusInput: Boolean;
   ADiscovery: TSourceDiscoveryOptions; ACompiler: TCompilerOptions;
   const ALazarusSourceFiles, ALazarusPackageFiles: TStrings): TStringList;
 
+/// Returns monotonic milliseconds for `--verbose` timing.
+///
+/// @returns Milliseconds since an arbitrary origin.
 function MonotonicMilliseconds: QWord;
+/// Resets the peak-heap tracker.
 procedure ResetPeakHeap;
+/// Samples current heap usage into the peak tracker.
 procedure SamplePeakHeap;
+/// Returns the peak heap bytes observed since the last reset.
+///
+/// @returns Peak bytes.
 function PeakHeapBytes: QWord;
 
 implementation
@@ -75,6 +176,62 @@ var
 function NormalisePath(const APath: string): string;
 begin
   Result := StringReplace(APath, '\', '/', [rfReplaceAll]);
+end;
+
+/// Returns True when a manifest-relative path is safe to resolve inside the
+/// output directory (no absolute paths, drive letters, or parent traversal).
+function IsSafeManifestPath(const APath: string): Boolean;
+var
+  Normalised: string;
+  Segment: string;
+  StartPos: Integer;
+  SlashPos: Integer;
+begin
+  Result := False;
+  if APath = '' then
+    Exit;
+  Normalised := NormalisePath(APath);
+  if (Normalised[1] = '/') or (Pos(':', Normalised) > 0) or
+    (Pos('\', APath) > 0) then
+    Exit;
+  StartPos := 1;
+  while StartPos <= Length(Normalised) do
+  begin
+    SlashPos := StartPos;
+    while (SlashPos <= Length(Normalised)) and
+      (Normalised[SlashPos] <> '/') do
+      Inc(SlashPos);
+    Segment := Copy(Normalised, StartPos, SlashPos - StartPos);
+    if (Segment = '..') then
+      Exit;
+    StartPos := SlashPos + 1;
+  end;
+  Result := True;
+end;
+
+/// Resolves a manifest-relative path inside AOutputDirectory.
+/// Returns '' when the resolved location would escape the output root.
+function ResolveOutputPath(const AOutputDirectory,
+  ARelativePath: string): string;
+var
+  Root: string;
+  Candidate: string;
+begin
+  Result := '';
+  if not IsSafeManifestPath(ARelativePath) then
+    Exit;
+  Root := NormalisePath(ExpandFileName(AOutputDirectory));
+  if (Root <> '') and (Root[Length(Root)] <> '/') then
+    Root := Root + '/';
+  Candidate := NormalisePath(ExpandFileName(IncludeTrailingPathDelimiter(
+    AOutputDirectory) + StringReplace(ARelativePath, '/', PathDelim,
+    [rfReplaceAll])));
+  if (Candidate = Copy(Root, 1, Length(Root) - 1)) then
+    Exit;
+  if Pos(Root, Candidate) <> 1 then
+    Exit;
+  Result := IncludeTrailingPathDelimiter(AOutputDirectory) +
+    StringReplace(ARelativePath, '/', PathDelim, [rfReplaceAll]);
 end;
 
 function FileSizeOf(const AFilename: string): Int64;
@@ -308,16 +465,19 @@ begin
       SetLength(Result.Entries, Files.Count);
       for I := 0 to Files.Count - 1 do
       begin
-        if Files[I] is TJSONObject then
+        if not (Files[I] is TJSONObject) then
         begin
-          Entry := ManifestEntryFromJSON(TJSONObject(Files[I]));
-          if (Entry.Path = '') or (Length(Entry.SHA256) <> 64) then
-          begin
-            FreeAndNil(Result);
-            Exit;
-          end;
-          Result.Entries[I] := Entry;
+          FreeAndNil(Result);
+          Exit;
         end;
+        Entry := ManifestEntryFromJSON(TJSONObject(Files[I]));
+        if (Entry.Path = '') or (Length(Entry.SHA256) <> 64) or
+          (Entry.Size < 0) or not IsSafeManifestPath(Entry.Path) then
+        begin
+          FreeAndNil(Result);
+          Exit;
+        end;
+        Result.Entries[I] := Entry;
       end;
     end;
   finally
@@ -344,8 +504,10 @@ begin
     Exit;
   for I := 0 to Length(AManifest.Entries) - 1 do
   begin
-    FullPath := IncludeTrailingPathDelimiter(AOutputDirectory) +
-      StringReplace(AManifest.Entries[I].Path, '/', PathDelim, [rfReplaceAll]);
+    FullPath := ResolveOutputPath(AOutputDirectory,
+      AManifest.Entries[I].Path);
+    if FullPath = '' then
+      Exit;
     if not FileExists(FullPath) then
       Exit;
     if FileSizeOf(FullPath) <> AManifest.Entries[I].Size then
@@ -546,6 +708,8 @@ begin
     for I := 0 to Entries.Count - 1 do
     begin
       Separator := Pos(#1, Entries[I]);
+      if Separator <= 1 then
+        Continue;
       Result.Add(Copy(Entries[I], 1, Separator - 1));
     end;
   finally
@@ -566,11 +730,11 @@ begin
     if Assigned(ANewPaths) and
       (ANewPaths.IndexOf(AOldManifest.Entries[I].Path) >= 0) then
       Continue;
-    FullPath := IncludeTrailingPathDelimiter(AOutputDirectory) +
-      StringReplace(AOldManifest.Entries[I].Path, '/', PathDelim,
-      [rfReplaceAll]);
-    if FileExists(FullPath) then
-      DeleteFile(FullPath);
+    FullPath := ResolveOutputPath(AOutputDirectory,
+      AOldManifest.Entries[I].Path);
+    if (FullPath = '') or not FileExists(FullPath) then
+      Continue;
+    DeleteFile(FullPath);
   end;
 end;
 

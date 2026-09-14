@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave has shipped `v0.5.6` and is preparing `v0.6.0`. The parser-to-site
+PasWeave has shipped `v0.6.0` and is preparing `v0.7.0`. The parser-to-site
 pipeline works; the path to `v1.0.0` is about making that pipeline understand
 real project builds, improving author feedback and navigation, scaling it
 safely, and then freezing the public contracts.

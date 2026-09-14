@@ -1,9 +1,17 @@
+/// Implements the `pasweave build` command-line pipeline.
+///
+/// Usage starts at @see RunPasWeave, which parses options, builds the
+/// documentation model, renders HTML/Markdown/JSON, and writes `manifest.json`
+/// for safe incremental rebuilds.
 unit PasWeave.CLI;
 
 {$mode objfpc}{$H+}
 
 interface
 
+/// Runs PasWeave with the process command line.
+///
+/// @returns Process exit code (`0` for success, `1` for diagnostics failures).
 function RunPasWeave: Integer;
 
 implementation
@@ -178,12 +186,39 @@ var
       AppendConfigLine(AKey + '=false');
   end;
 
+  function TryParseLedgerEntry(const AEntry: string; out APath, ASHA: string;
+    out ASize: Int64): Boolean;
+  var
+    FirstSeparator: Integer;
+    SecondSeparator: Integer;
+    SizeText: string;
+  begin
+    Result := False;
+    APath := '';
+    ASHA := '';
+    ASize := 0;
+    FirstSeparator := Pos(#1, AEntry);
+    if FirstSeparator <= 1 then
+      Exit;
+    SecondSeparator := Pos(#1, Copy(AEntry, FirstSeparator + 1,
+      MaxInt)) + FirstSeparator;
+    if SecondSeparator <= FirstSeparator + 1 then
+      Exit;
+    APath := Copy(AEntry, 1, FirstSeparator - 1);
+    ASHA := Copy(AEntry, FirstSeparator + 1,
+      SecondSeparator - FirstSeparator - 1);
+    SizeText := Copy(AEntry, SecondSeparator + 1, MaxInt);
+    if not TryStrToInt64(SizeText, ASize) then
+      Exit;
+    if ASize < 0 then
+      Exit;
+    Result := True;
+  end;
+
   function BuildManifestFromLedger: TManifest;
   var
     Entries: TStringList;
     I: Integer;
-    FirstSeparator: Integer;
-    SecondSeparator: Integer;
   begin
     Result := TManifest.Create;
     Result.SchemaVersion := ManifestSchemaVersion;
@@ -199,14 +234,13 @@ var
       SetLength(Result.Entries, Entries.Count);
       for I := 0 to Entries.Count - 1 do
       begin
-        FirstSeparator := Pos(#1, Entries[I]);
-        SecondSeparator := Pos(#1, Copy(Entries[I], FirstSeparator + 1,
-          MaxInt)) + FirstSeparator;
-        Result.Entries[I].Path := Copy(Entries[I], 1, FirstSeparator - 1);
-        Result.Entries[I].SHA256 := Copy(Entries[I], FirstSeparator + 1,
-          SecondSeparator - FirstSeparator - 1);
-        Result.Entries[I].Size := StrToInt64(Copy(Entries[I],
-          SecondSeparator + 1, MaxInt));
+        if not TryParseLedgerEntry(Entries[I], Result.Entries[I].Path,
+          Result.Entries[I].SHA256, Result.Entries[I].Size) then
+        begin
+          Result.Entries[I].Path := '';
+          Result.Entries[I].SHA256 := '';
+          Result.Entries[I].Size := 0;
+        end;
       end;
     finally
       Entries.Free;
@@ -235,6 +269,7 @@ begin
   HasThemeFont := False;
   CleanBuild := False;
   SkipBuild := False;
+  Project := nil;
   OldManifest := nil;
   StartTick := MonotonicMilliseconds;
   CommentStyles := DefaultDocumentationCommentStyles;
