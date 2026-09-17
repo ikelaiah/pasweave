@@ -28,7 +28,7 @@ uses
   PasWeave.Render.Support, PasWeave.Render.HTML.Diagrams,
   PasWeave.Render.HTML.Markdown,
   PasWeave.Render.HTML.Assets, PasWeave.Render.Links, PasWeave.SourceLinks,
-  PasWeave.Incremental;
+  PasWeave.Output;
 
 type
   TIndexedSymbolEntry = class

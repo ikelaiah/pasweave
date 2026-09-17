@@ -28,7 +28,7 @@ implementation
 
 uses
   Classes, SysUtils, StrUtils, PasWeave.Render.Support,
-  PasWeave.Incremental, PasWeave.Hashing,
+  PasWeave.Output, PasWeave.Hashing,
   PasWeave.Render.HTML.CSS, PasWeave.Render.HTML.Scripts
   {$IFDEF PASWEAVE_PORTABLE_ASSETS}
   {$IFDEF MSWINDOWS}
