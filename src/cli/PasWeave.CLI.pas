@@ -19,7 +19,7 @@ implementation
 uses
   Classes, SysUtils, PasWeave.Comments, PasWeave.Compiler,
   PasWeave.Diagnostics, PasWeave.Incremental, PasWeave.Lazarus, PasWeave.Model,
-  PasWeave.Model.JSON, PasWeave.Parser, PasWeave.SourceLinks,
+  PasWeave.Model.JSON, PasWeave.Output, PasWeave.Parser, PasWeave.SourceLinks,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Assets, PasWeave.Validation, PasWeave.Version;
 
