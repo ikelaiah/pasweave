@@ -50,11 +50,6 @@ type
     ErrorCount: Integer;
     /// Generated files owned by PasWeave.
     Entries: array of TManifestEntry;
-    /// Returns the entry path at `AIndex`, or `''` when out of range.
-    ///
-    /// @param AIndex Zero-based entry index.
-    /// @returns The output-relative entry path.
-    function EntryPath(const AIndex: Integer): string;
   end;
 
 /// Returns the full path to `manifest.json` inside an output directory.
@@ -168,6 +163,19 @@ implementation
 
 uses
   FPJSON, JSONParser, PasWeave.Hashing, PasWeave.Version;
+
+const
+  TempFileSuffix = '.pasweave-tmp';
+
+{$IFDEF MSWINDOWS}
+const
+  { Defined here instead of pulling in the Windows unit, whose FindFirst and
+    friends would shadow SysUtils. }
+  MoveFileReplaceExisting = $1;
+
+function MoveFileExA(lpExistingFileName, lpNewFileName: PAnsiChar;
+  dwFlags: DWORD): LongBool; stdcall; external 'kernel32' name 'MoveFileExA';
+{$ENDIF}
 
 var
   GLedger: TStringList;
@@ -485,14 +493,6 @@ begin
   end;
 end;
 
-function TManifest.EntryPath(const AIndex: Integer): string;
-begin
-  if (AIndex >= 0) and (AIndex < Length(Entries)) then
-    Result := Entries[AIndex].Path
-  else
-    Result := '';
-end;
-
 function ManifestOutputsPresent(AManifest: TManifest;
   const AOutputDirectory: string): Boolean;
 var
@@ -559,6 +559,30 @@ begin
     ManifestToJSON(AManifest));
 end;
 
+{ Replaces the destination in one step. Deleting the destination before
+  renaming is not atomic: if the rename fails (or the process dies) between the
+  two calls, the previous output is lost. MoveFileEx replaces the existing file
+  directly, so readers observe either the old or the new content. }
+procedure CommitTempFile(const ATemp, ADestination: string);
+begin
+  {$IFDEF MSWINDOWS}
+  if MoveFileExA(PAnsiChar(ATemp), PAnsiChar(ADestination),
+    MoveFileReplaceExisting) then
+    Exit;
+  {$ELSE}
+  if RenameFile(ATemp, ADestination) then
+    Exit;
+  {$ENDIF}
+  raise EFCreateError.CreateFmt('cannot finalize output file: %s',
+    [ADestination]);
+end;
+
+procedure DiscardTempFile(const ATemp: string);
+begin
+  if FileExists(ATemp) then
+    DeleteFile(ATemp);
+end;
+
 procedure WriteFileAtomic(const AFilename: string; const AData: UTF8String);
 var
   Temp: string;
@@ -569,23 +593,20 @@ begin
   if (ParentDirectory <> '') and not ForceDirectories(ParentDirectory) then
     raise EFCreateError.CreateFmt('cannot create output directory: %s',
       [ParentDirectory]);
-  Temp := AFilename + '.pasweave-tmp';
-  Stream := TFileStream.Create(Temp, fmCreate);
+  Temp := AFilename + TempFileSuffix;
   try
-    if Length(AData) > 0 then
-      Stream.WriteBuffer(AData[1], Length(AData));
-  finally
-    Stream.Free;
+    Stream := TFileStream.Create(Temp, fmCreate);
+    try
+      if Length(AData) > 0 then
+        Stream.WriteBuffer(AData[1], Length(AData));
+    finally
+      Stream.Free;
+    end;
+    CommitTempFile(Temp, AFilename);
+  except
+    DiscardTempFile(Temp);
+    raise;
   end;
-  {$IFDEF MSWINDOWS}
-  if FileExists(AFilename) then
-    if not DeleteFile(AFilename) then
-      raise EFCreateError.CreateFmt('cannot replace output file: %s',
-        [AFilename]);
-  {$ENDIF}
-  if not RenameFile(Temp, AFilename) then
-    raise EFCreateError.CreateFmt('cannot finalize output file: %s',
-      [AFilename]);
 end;
 
 procedure WriteFileAtomicCopy(const ASource, ADestination: string);
@@ -599,27 +620,24 @@ begin
   if (ParentDirectory <> '') and not ForceDirectories(ParentDirectory) then
     raise EFCreateError.CreateFmt('cannot create output directory: %s',
       [ParentDirectory]);
-  Temp := ADestination + '.pasweave-tmp';
-  SourceStream := TFileStream.Create(ASource, fmOpenRead or fmShareDenyWrite);
+  Temp := ADestination + TempFileSuffix;
   try
-    DestinationStream := TFileStream.Create(Temp, fmCreate);
+    SourceStream := TFileStream.Create(ASource, fmOpenRead or fmShareDenyWrite);
     try
-      DestinationStream.CopyFrom(SourceStream, 0);
+      DestinationStream := TFileStream.Create(Temp, fmCreate);
+      try
+        DestinationStream.CopyFrom(SourceStream, 0);
+      finally
+        DestinationStream.Free;
+      end;
     finally
-      DestinationStream.Free;
+      SourceStream.Free;
     end;
-  finally
-    SourceStream.Free;
+    CommitTempFile(Temp, ADestination);
+  except
+    DiscardTempFile(Temp);
+    raise;
   end;
-  {$IFDEF MSWINDOWS}
-  if FileExists(ADestination) then
-    if not DeleteFile(ADestination) then
-      raise EFCreateError.CreateFmt('cannot replace output file: %s',
-        [ADestination]);
-  {$ENDIF}
-  if not RenameFile(Temp, ADestination) then
-    raise EFCreateError.CreateFmt('cannot finalize output file: %s',
-      [ADestination]);
 end;
 
 procedure BeginOutputLedger;

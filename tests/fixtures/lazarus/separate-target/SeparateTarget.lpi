@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <General><Title Value="Separate Target Fixture"/></General>
+    <BuildModes>
+      <Item Name="Default" Default="True">
+        <CompilerOptions>
+          <Other><CustomOptions Value="-T linux -P aarch64"/></Other>
+        </CompilerOptions>
+      </Item>
+    </BuildModes>
+    <Units><Unit><Filename Value="Main.pas"/><IsPartOfProject Value="True"/></Unit></Units>
+  </ProjectOptions>
+</CONFIG>

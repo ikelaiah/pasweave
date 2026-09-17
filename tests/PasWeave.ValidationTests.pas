@@ -12,59 +12,7 @@ uses
   Classes, SysUtils, FPJSON, JSONParser, PasWeave.Comments,
   PasWeave.Diagnostics, PasWeave.Model, PasWeave.Model.JSON,
   PasWeave.Parser, PasWeave.Render.HTML, PasWeave.Render.Markdown,
-  PasWeave.Validation;
-
-procedure Check(ACondition: Boolean; const AMessage: string);
-begin
-  if not ACondition then
-    raise Exception.Create('validation test failed: ' + AMessage);
-end;
-
-function FindUnitModel(AProject: TDocProject; const AName: string): TDocUnit;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AProject.Units.Count - 1 do
-    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
-      Exit(TDocUnit(AProject.Units[I]));
-end;
-
-function FindSymbol(AUnit: TDocUnit; const AName: string): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if SameText(TDocSymbol(AUnit.Symbols[I]).Name, AName) then
-      Exit(TDocSymbol(AUnit.Symbols[I]));
-end;
-
-function FindDirective(ASymbol: TDocSymbol; const AName,
-  ASubject: string): TDocDirective;
-var
-  I: Integer;
-  Candidate: TDocDirective;
-begin
-  Result := nil;
-  for I := 0 to ASymbol.Directives.Count - 1 do
-  begin
-    Candidate := TDocDirective(ASymbol.Directives[I]);
-    if SameText(Candidate.Name, AName) and
-      SameText(Candidate.Subject, ASubject) then
-      Exit(Candidate);
-  end;
-end;
-
-function HasDiagnosticCode(ADiagnostics: TList; const ACode: string): Boolean;
-var
-  I: Integer;
-begin
-  Result := False;
-  for I := 0 to ADiagnostics.Count - 1 do
-    if TDiagnostic(ADiagnostics[I]).Code = ACode then
-      Exit(True);
-end;
+  PasWeave.Validation, PasWeave.TestSupport;
 
 procedure CheckDirectiveDiagnostics(AProject: TDocProject;
   AFunctionSymbol: TDocSymbol; const AStyleName: string);
@@ -125,12 +73,23 @@ begin
   end;
 end;
 
+function NewRoutineSymbol(const AID, AName, AQualifiedName: string): TDocSymbol;
+begin
+  Result := TDocSymbol.Create;
+  Result.ID := AID;
+  Result.Name := AName;
+  Result.QualifiedName := AQualifiedName;
+  Result.Kind := skRoutine;
+  Result.Visibility := svPublic;
+end;
+
 procedure CheckOutputIntegrityDiagnostics;
 var
   Project: TDocProject;
   UnitModel: TDocUnit;
   FirstSymbol: TDocSymbol;
   SecondSymbol: TDocSymbol;
+  ParentedSymbol: TDocSymbol;
 begin
   Project := TDocProject.Create;
   try
@@ -158,6 +117,69 @@ begin
   finally
     Project.Free;
   end;
+
+  Project := TDocProject.Create;
+  try
+    UnitModel := TDocUnit.Create;
+    UnitModel.Name := '';
+    UnitModel.Symbols.Add(NewRoutineSymbol('orphan-id', 'Orphan', 'Orphan'));
+    Project.Units.Add(UnitModel);
+    ValidateProject(Project);
+    Check(HasDiagnosticCode(Project.Errors, DiagnosticCodeUnreachablePage),
+      'a unit page without a stable route should be a build defect');
+  finally
+    Project.Free;
+  end;
+
+  Project := TDocProject.Create;
+  try
+    UnitModel := TDocUnit.Create;
+    UnitModel.Name := 'SameRoute';
+    UnitModel.Symbols.Add(NewRoutineSymbol('same-route-a', 'A', 'SameRoute.A'));
+    Project.Units.Add(UnitModel);
+    UnitModel := TDocUnit.Create;
+    UnitModel.Name := 'SameRoute';
+    UnitModel.Symbols.Add(NewRoutineSymbol('same-route-b', 'B', 'SameRoute.B'));
+    Project.Units.Add(UnitModel);
+    ValidateProject(Project);
+    Check(HasDiagnosticCode(Project.Errors, DiagnosticCodeDuplicatePage),
+      'duplicate generated unit page routes should be build defects');
+  finally
+    Project.Free;
+  end;
+
+  Project := TDocProject.Create;
+  try
+    UnitModel := TDocUnit.Create;
+    UnitModel.Name := 'ParentFixture';
+    UnitModel.Symbols.Add(NewRoutineSymbol('parent-ok', 'Parent',
+      'ParentFixture.Parent'));
+    ParentedSymbol := NewRoutineSymbol('parent-missing', 'Child',
+      'ParentFixture.Child');
+    ParentedSymbol.ParentSymbolID := 'does-not-exist';
+    UnitModel.Symbols.Add(ParentedSymbol);
+    Project.Units.Add(UnitModel);
+    ValidateProject(Project);
+    Check(HasDiagnosticCode(Project.Errors,
+      DiagnosticCodeBrokenGeneratedLink),
+      'a parent link to a missing symbol should be a build defect');
+  finally
+    Project.Free;
+  end;
+
+  Project := TDocProject.Create;
+  try
+    UnitModel := TDocUnit.Create;
+    UnitModel.Name := 'ValidFixture';
+    UnitModel.Symbols.Add(NewRoutineSymbol('valid-symbol', 'Routine',
+      'ValidFixture.Routine'));
+    Project.Units.Add(UnitModel);
+    ValidateProject(Project);
+    Check(Project.Errors.Count = 0,
+      'a well-formed model should raise no output-integrity defects');
+  finally
+    Project.Free;
+  end;
 end;
 
 procedure RunValidationTests;
@@ -173,6 +195,7 @@ var
   HTML: UTF8String;
   FailureSeverity: TDiagnosticSeverity;
 begin
+  BeginTest('validation and coverage');
   Check(TryParseDiagnosticSeverity('warning', FailureSeverity) and
     (FailureSeverity = dsWarning),
     'warning should be a supported diagnostic failure threshold');
@@ -237,6 +260,7 @@ begin
     Project.Free;
   end;
 
+  BeginTest('output integrity diagnostics');
   CheckOutputIntegrityDiagnostics;
 end;
 

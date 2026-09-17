@@ -5,7 +5,7 @@ unit PasWeave.Validation;
 interface
 
 uses
-  PasWeave.Diagnostics, PasWeave.Model;
+  PasWeave.Diagnostics, PasWeave.Model, PasWeave.Render.Support;
 
 const
   DiagnosticCodeMissingParameter = 'PW401';
@@ -38,37 +38,6 @@ implementation
 
 uses
   Classes, SysUtils;
-
-function FindUnitByName(AProject: TDocProject; const AName: string): TDocUnit;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AProject.Units.Count - 1 do
-    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
-      Exit(TDocUnit(AProject.Units[I]));
-end;
-
-function IsDirectlyRenderable(ASymbol: TDocSymbol): Boolean;
-begin
-  Result := not (ASymbol.Visibility in [svPrivate, svStrictPrivate]);
-end;
-
-function IsEffectivelyRenderable(AUnit: TDocUnit;
-  ASymbol: TDocSymbol): Boolean;
-var
-  ParentSymbol: TDocSymbol;
-begin
-  Result := IsDirectlyRenderable(ASymbol);
-  ParentSymbol := ASymbol;
-  while Result and (ParentSymbol.ParentSymbolID <> '') do
-  begin
-    ParentSymbol := FindSymbolByID(AUnit, ParentSymbol.ParentSymbolID);
-    if not Assigned(ParentSymbol) then
-      Break;
-    Result := IsDirectlyRenderable(ParentSymbol);
-  end;
-end;
 
 procedure AddDiagnostic(AProject: TDocProject; ASeverity: TDiagnosticSeverity;
   ASymbol: TDocSymbol; const ACode, AMessage: string);

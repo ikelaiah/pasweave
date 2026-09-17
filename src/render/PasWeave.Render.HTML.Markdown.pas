@@ -18,14 +18,57 @@ begin
   AOutput := AOutput + ALine + #10;
 end;
 
+const
+  { Only these schemes may become clickable links. Anything else is rendered
+    as plain label text so documentation prose cannot smuggle active content
+    (javascript:, data:, vbscript:) into the generated site. }
+  AllowedLinkSchemes: array[0..2] of string = ('http', 'https', 'mailto');
+
+{ Browsers ignore control characters inside URLs, so "java<TAB>script:" must be
+  classified as the javascript: scheme. Removing them before the scheme check
+  closes that bypass; the cleaned target is also what gets rendered. }
+function NormaliseLinkTarget(const ATarget: string): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to Length(ATarget) do
+    if Ord(ATarget[I]) >= 32 then
+      Result := Result + ATarget[I];
+  Result := Trim(Result);
+end;
+
+function TryExtractLinkScheme(const ATarget: string;
+  out AScheme: string): Boolean;
+var
+  I: Integer;
+  C: Char;
+begin
+  AScheme := '';
+  Result := False;
+  for I := 1 to Length(ATarget) do
+  begin
+    C := ATarget[I];
+    if C = ':' then
+      Exit(AScheme <> '');
+    if not (C in ['a'..'z', 'A'..'Z', '0'..'9', '+', '-', '.']) then
+      Exit(False);
+    AScheme := AScheme + LowerCase(C);
+  end;
+  AScheme := '';
+end;
+
 function IsSafeLinkTarget(const ATarget: string): Boolean;
 var
-  LowerTarget: string;
+  Scheme: string;
+  I: Integer;
 begin
-  LowerTarget := LowerCase(Trim(ATarget));
-  Result := (Pos('javascript:', LowerTarget) <> 1) and
-    (Pos('data:', LowerTarget) <> 1) and
-    (Pos('vbscript:', LowerTarget) <> 1);
+  Result := False;
+  if not TryExtractLinkScheme(NormaliseLinkTarget(ATarget), Scheme) then
+    Exit(True);
+  for I := Low(AllowedLinkSchemes) to High(AllowedLinkSchemes) do
+    if Scheme = AllowedLinkSchemes[I] then
+      Exit(True);
 end;
 
 function IsEscaped(const AText: string; APosition: Integer): Boolean;
@@ -106,7 +149,8 @@ begin
           Target := Copy(AText, LabelEnd + 2,
             TargetEnd - LabelEnd - 2);
           if IsSafeLinkTarget(Target) then
-            Result := Result + '<a href="' + EscapeHTML(Target) + '">' +
+            Result := Result + '<a href="' +
+              EscapeHTML(NormaliseLinkTarget(Target)) + '">' +
               EscapeHTML(LabelText) + '</a>'
           else
             Result := Result + EscapeHTML(LabelText);

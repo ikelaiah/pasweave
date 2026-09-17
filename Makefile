@@ -5,19 +5,26 @@ FPC_FLAGS = -Mobjfpc -Sh $(UNIT_PATHS) -FUbuild/units
 ifeq ($(OS),Windows_NT)
 MKDIR_COMMAND = cmd /c "if not exist build\bin mkdir build\bin && if not exist build\tests mkdir build\tests && if not exist build\units mkdir build\units"
 TEST_COMMAND = build\tests\test_pasweave.exe
+CLI_TEST_COMMAND = build\tests\test_cli.exe
 CLEAN_COMMAND = cmd /c "if exist build rmdir /s /q build"
 else
 MKDIR_COMMAND = mkdir -p build/bin build/tests build/units
 TEST_COMMAND = ./build/tests/test_pasweave
+CLI_TEST_COMMAND = ./build/tests/test_cli
 CLEAN_COMMAND = rm -rf build
 endif
 
-.PHONY: all test clean dirs
+.PHONY: all test test-cli clean dirs
 
 all: dirs
 	$(FPC) $(FPC_FLAGS) -FEbuild/bin src/pasweave.lpr
 
-test: dirs
+# The CLI suite exercises the compiled executable, so `all` runs first.
+test-cli: all
+	$(FPC) $(FPC_FLAGS) -FEbuild/tests tests/test_cli.pas
+	$(CLI_TEST_COMMAND)
+
+test: test-cli dirs
 	$(FPC) $(FPC_FLAGS) -FEbuild/tests tests/test_pasweave.pas
 	$(TEST_COMMAND)
 

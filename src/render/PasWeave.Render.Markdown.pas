@@ -22,24 +22,6 @@ uses
   Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Render.Support,
   PasWeave.Render.Links, PasWeave.SourceLinks, PasWeave.Incremental;
 
-type
-  TSymbolKinds = set of TSymbolKind;
-
-const
-  TypeKinds: TSymbolKinds = [
-    skClass, skInterface, skRecord, skEnumeration, skTypeAlias
-  ];
-  RoutineKinds: TSymbolKinds = [skRoutine];
-  MemberKinds: TSymbolKinds = [
-    skMethod, skConstructor, skDestructor, skProperty, skField
-  ];
-  ValueKinds: TSymbolKinds = [skConstant, skVariable];
-
-procedure AppendLine(var AOutput: UTF8String; const ALine: UTF8String = '');
-begin
-  AOutput := AOutput + ALine + #10;
-end;
-
 function EscapeTableCell(const AText: string): UTF8String;
 begin
   Result := UTF8String(StringReplace(AText, '|', '\|', [rfReplaceAll]));
@@ -53,118 +35,12 @@ end;
 
 function MarkdownUnitFilename(AUnit: TDocUnit): string;
 begin
-  Result := AUnit.Name + '.md';
+  Result := SafeFileNameBase(AUnit.Name) + '.md';
 end;
 
 function MarkdownSymbolAnchor(ASymbol: TDocSymbol): string;
 begin
   Result := DocumentationSymbolAnchor(ASymbol);
-end;
-
-function SortedUnits(AProject: TDocProject): TStringList;
-var
-  I: Integer;
-  UnitModel: TDocUnit;
-begin
-  Result := TOrdinalStringList.Create;
-  Result.Sorted := True;
-  Result.CaseSensitive := True;
-  Result.Duplicates := dupAccept;
-  for I := 0 to AProject.Units.Count - 1 do
-  begin
-    UnitModel := TDocUnit(AProject.Units[I]);
-    Result.AddObject(UnitModel.Name + DocumentationSortSeparator +
-      UnitModel.SourceFilename, UnitModel);
-  end;
-end;
-
-function FindUnitByName(AProject: TDocProject; const AName: string): TDocUnit;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AProject.Units.Count - 1 do
-    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
-      Exit(TDocUnit(AProject.Units[I]));
-end;
-
-function IsDirectlyRenderable(ASymbol: TDocSymbol): Boolean;
-begin
-  Result := not (ASymbol.Visibility in [svPrivate, svStrictPrivate]);
-end;
-
-function IsEffectivelyRenderable(AUnit: TDocUnit;
-  ASymbol: TDocSymbol): Boolean;
-var
-  ParentSymbol: TDocSymbol;
-begin
-  Result := IsDirectlyRenderable(ASymbol);
-  ParentSymbol := ASymbol;
-  while Result and (ParentSymbol.ParentSymbolID <> '') do
-  begin
-    ParentSymbol := FindSymbolByID(AUnit, ParentSymbol.ParentSymbolID);
-    if not Assigned(ParentSymbol) then
-      Break;
-    Result := IsDirectlyRenderable(ParentSymbol);
-  end;
-end;
-
-function SortedSymbols(AUnit: TDocUnit; AKinds: TSymbolKinds): TStringList;
-var
-  I: Integer;
-  Symbol: TDocSymbol;
-begin
-  Result := TOrdinalStringList.Create;
-  Result.Sorted := True;
-  Result.CaseSensitive := True;
-  Result.Duplicates := dupAccept;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-  begin
-    Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if (Symbol.Kind in AKinds) and IsEffectivelyRenderable(AUnit, Symbol) then
-      Result.AddObject(DocumentationSymbolSortKey(Symbol), Symbol);
-  end;
-end;
-
-function UnitSymbol(AUnit: TDocUnit): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if TDocSymbol(AUnit.Symbols[I]).Kind = skUnit then
-      Exit(TDocSymbol(AUnit.Symbols[I]));
-end;
-
-function IndexedSymbolCount(AUnit: TDocUnit): Integer;
-var
-  I: Integer;
-  Symbol: TDocSymbol;
-begin
-  Result := 0;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-  begin
-    Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if IsIndexedAPIKind(Symbol.Kind) and
-      IsEffectivelyRenderable(AUnit, Symbol) then
-      Inc(Result);
-  end;
-end;
-
-function DocumentedIndexedSymbolCount(AUnit: TDocUnit): Integer;
-var
-  I: Integer;
-  Symbol: TDocSymbol;
-begin
-  Result := 0;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-  begin
-    Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if IsIndexedAPIKind(Symbol.Kind) and
-      IsEffectivelyRenderable(AUnit, Symbol) and
-      (Trim(Symbol.MarkdownDocumentation) <> '') then
-      Inc(Result);
-  end;
 end;
 
 procedure RenderDirectives(var AOutput: UTF8String; AProject: TDocProject;
@@ -417,17 +293,6 @@ begin
   end;
 end;
 
-function DiagnosticLocation(ADiagnostic: TDiagnostic): string;
-begin
-  Result := ADiagnostic.SourceFilename;
-  if ADiagnostic.SourceLine > 0 then
-  begin
-    Result := Result + ':' + IntToStr(ADiagnostic.SourceLine);
-    if ADiagnostic.SourceColumn > 0 then
-      Result := Result + ':' + IntToStr(ADiagnostic.SourceColumn);
-  end;
-end;
-
 function RenderMarkdownIndex(AProject: TDocProject): UTF8String;
 var
   Units: TStringList;
@@ -569,11 +434,6 @@ begin
     ValueKinds);
 end;
 
-procedure WriteUTF8File(const AFileName: string; const AData: UTF8String);
-begin
-  WriteOutputFile(AFileName, AData);
-end;
-
 procedure WriteMarkdownDocumentation(AProject: TDocProject;
   const AOutputDirectory: string);
 var
@@ -587,7 +447,7 @@ begin
     raise EFCreateError.CreateFmt('cannot create Markdown output directory: %s',
       [UnitsDirectory]);
 
-  WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.md',
+  WriteOutputFile(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.md',
     RenderMarkdownIndex(AProject));
 
   Units := SortedUnits(AProject);
@@ -595,7 +455,7 @@ begin
     for I := 0 to Units.Count - 1 do
     begin
       UnitModel := TDocUnit(Units.Objects[I]);
-      WriteUTF8File(IncludeTrailingPathDelimiter(UnitsDirectory) +
+      WriteOutputFile(IncludeTrailingPathDelimiter(UnitsDirectory) +
         MarkdownUnitFilename(UnitModel),
         RenderMarkdownUnit(AProject, UnitModel));
     end;
