@@ -39,8 +39,8 @@ misleading **Parsed symbols** label becomes **Parsed declarations**.
   navigation and are not normal API symbols; the separate **Units** card keeps
   that count visible.
 
-See [the HTML renderer guide](html-renderer.md) and
-[navigation and source traceability](navigation-and-source-traceability.md)
+See [the HTML renderer guide](../html-renderer.md) and
+[navigation and source traceability](../navigation-and-source-traceability.md)
 for the surrounding discovery and theme behavior.
 
 ## Compatibility

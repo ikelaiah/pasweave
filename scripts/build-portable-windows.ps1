@@ -3,7 +3,7 @@ param(
   [string]$Fpc = 'fpc',
   [string]$FpcRes = 'fpcres',
   [string]$Windres = 'windres',
-  [string]$ExpectedVersion = '0.6.0'
+  [string]$ExpectedVersion = '0.7.0'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -93,6 +93,21 @@ try {
   Assert-LastExitCode 'version check'
   if ($reportedVersion -ne "PasWeave $ExpectedVersion") {
     throw "version mismatch: expected PasWeave $ExpectedVersion, got $reportedVersion"
+  }
+
+  $cliTestCompilerArguments = @(
+    '-Twin64', '-Px86_64', '-B', '-O2', '-Mobjfpc', '-Sh'
+  ) + $unitPaths + @(
+    "-FU$testUnitDirectory", "-FE$testDirectory", 'tests/test_cli.pas'
+  )
+  & $Fpc @cliTestCompilerArguments
+  Assert-LastExitCode 'CLI test-suite compilation'
+  $env:PASWEAVE_BIN = $releaseExecutable
+  try {
+    & (Join-Path $testDirectory 'test_cli.exe')
+    Assert-LastExitCode 'CLI test suite'
+  } finally {
+    Remove-Item Env:\PASWEAVE_BIN -ErrorAction SilentlyContinue
   }
 
   $smokeBin = Join-Path $smokeDirectory 'bin'

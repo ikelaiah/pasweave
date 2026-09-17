@@ -132,7 +132,10 @@ filesystem condition occurred.
 - Unit paths search only their top-level directory and conventional
   `<unit-name>.pas` or `<unit-name>.pp` source names. They do not recurse,
   interpret FPC configuration files, or search compiled units.
-- Lazarus `.lpi` and `.lpk` inputs are not read in this release. Their settings
-  must be supplied explicitly on the command line.
+- Lazarus `.lpi` and `.lpk` inputs import their compiler settings
+  automatically; see the
+  [Lazarus project and package guide](lazarus-projects.md) for precedence and
+  diagnostics. Settings supplied on the command line still replace imported
+  values.
 - Parsing remains interface-only. Conditional implementation bodies do not
   affect generated API documentation.

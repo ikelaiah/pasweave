@@ -19,7 +19,7 @@ Highlights:
   retaining error-only failure by default; and
 - regression fixtures for `///`, `{ ... }`, and `(* ... *)` comment forms.
 
-See [authoring feedback and reference integrity](docs/authoring-feedback.md)
+See [authoring feedback and reference integrity](../authoring-feedback.md)
 for the diagnostic contract and CI examples.
 
 Validation includes the complete fixture suite, CLI checks for default and CI

@@ -21,7 +21,7 @@ Highlights:
   and smoke-checks the scientific API showcase at
   `https://ikelaiah.github.io/pasweave/`.
 
-See [navigation and source traceability](docs/navigation-and-source-traceability.md)
+See [navigation and source traceability](../navigation-and-source-traceability.md)
 for the template contract, accessibility behavior, validation results, and
 known constraints.
 

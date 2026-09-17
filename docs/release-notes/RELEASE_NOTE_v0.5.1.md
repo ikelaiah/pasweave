@@ -33,8 +33,8 @@ identical generated files, zero errors, and zero unit-navigation audit
 failures. Its real-browser check passed bounded 50-unit scrolling, filtering,
 keyboard focus, and responsive layout.
 
-See [navigation and source traceability](docs/navigation-and-source-traceability.md)
-and the [HTML renderer guide](docs/html-renderer.md) for behavior, fallback,
+See [navigation and source traceability](../navigation-and-source-traceability.md)
+and the [HTML renderer guide](../html-renderer.md) for behavior, fallback,
 and limitations. The public GitHub Pages smoke check is the final post-merge
 release gate because the deployed showcase cannot contain this branch before
 it reaches `main`.

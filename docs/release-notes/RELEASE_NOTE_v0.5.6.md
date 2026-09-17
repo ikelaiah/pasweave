@@ -28,6 +28,6 @@ leading symbol appears in the index, is grouped under `#`, and keeps a working
 stable link, and direct-file/default-`///` workflows. No runtime dependency is
 added.
 
-See [navigation and source traceability](docs/navigation-and-source-traceability.md)
-and the [HTML renderer guide](docs/html-renderer.md) for behavior, fallback,
+See [navigation and source traceability](../navigation-and-source-traceability.md)
+and the [HTML renderer guide](../html-renderer.md) for behavior, fallback,
 and limitations.

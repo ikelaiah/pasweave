@@ -36,8 +36,8 @@ clean and incremental results are byte-for-byte identical.
 - Bumped version metadata, portable-build default, README badge, and changelog
   to v0.6.0.
 
-See [safe incremental builds](incremental-builds.md) and
-[generated output](generated-output.md) for the manifest contract, cache
+See [safe incremental builds](../incremental-builds.md) and
+[generated output](../generated-output.md) for the manifest contract, cache
 invalidation, and clean-build behavior.
 
 ## Compatibility

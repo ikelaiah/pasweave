@@ -17,7 +17,7 @@ controls.
 The source snapshot was generated from the repository root with:
 
 ```text
-build/bin/pasweave build examples/scientific-api --output build/scientific-api --project-name "Scientific API showcase"
+build/bin/pasweave build examples/scientific-api --output build/scientific-api --project-name "Scientific API showcase" --repository-url=https://github.com/ikelaiah/pasweave "--source-link-template=blob/main/examples/scientific-api/{path}#L{line}"
 ```
 
 Normal PasWeave output is fully self-contained. To avoid duplicating roughly

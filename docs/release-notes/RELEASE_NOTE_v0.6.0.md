@@ -29,6 +29,6 @@ determinism, interrupted-build detection, stale removal with unowned-file
 preservation, and clean-versus-incremental byte parity). No runtime dependency
 is added and generated output is unchanged except for the new `manifest.json`.
 
-See [safe incremental builds](docs/incremental-builds.md) and
-[generated output](docs/generated-output.md) for the manifest contract, cache
+See [safe incremental builds](../incremental-builds.md) and
+[generated output](../generated-output.md) for the manifest contract, cache
 invalidation, and baseline methodology.

@@ -17,7 +17,7 @@ controls.
 The source snapshot was generated from the repository root with:
 
 ```text
-build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example"
+build/bin/pasweave build examples/documented-api --output build/documented-api --project-name "Documented API example" --repository-url=https://github.com/ikelaiah/pasweave "--source-link-template=blob/main/examples/documented-api/{path}#L{line}"
 ```
 
 Normal PasWeave output is fully self-contained. To avoid checking in another

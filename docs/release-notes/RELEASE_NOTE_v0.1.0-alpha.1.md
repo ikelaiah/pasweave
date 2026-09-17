@@ -105,8 +105,8 @@ contains 16 display equations and 65 inline mathematical expressions. The
 portable smoke test also verifies all 67 extracted third-party assets
 byte-for-byte.
 
-See the complete [mathlib-fp validation report](docs/mathlib-fp-validation.md)
-and the checked-in [scientific API showcase](examples/scientific-api/README.md).
+See the complete [mathlib-fp validation report](../mathlib-fp-validation.md)
+and the checked-in [scientific API showcase](../../examples/scientific-api/README.md).
 
 ## Known alpha limitations
 
@@ -122,14 +122,14 @@ and the checked-in [scientific API showcase](examples/scientific-api/README.md).
 - Markdown and mathematical rendering deliberately support a focused,
   documented subset.
 
-See the [README limitations](README.md#current-limitations) and
-[roadmap](ROADMAP.md) for the current boundaries and next milestones.
+See the [README limitations](../../README.md#current-limitations) and
+[roadmap](../../ROADMAP.md) for the current boundaries and next milestones.
 
 ## License and attribution
 
-PasWeave is released under the [MIT License](LICENSE). Embedded KaTeX and
+PasWeave is released under the [MIT License](../../LICENSE). Embedded KaTeX and
 Mermaid components retain their own license notices in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md).
 
 Questions, bugs, and real-world compatibility reports are welcome in
 [GitHub Issues](https://github.com/ikelaiah/pasweave/issues).

@@ -24,8 +24,8 @@ search the complete public API reference." It is a pure copy change; the
 - The en dash is emitted as `&#8211;` exactly as before, so rendered output is
   identical apart from the wording.
 
-See [the HTML renderer guide](html-renderer.md) and
-[navigation and source traceability](navigation-and-source-traceability.md)
+See [the HTML renderer guide](../html-renderer.md) and
+[navigation and source traceability](../navigation-and-source-traceability.md)
 for the surrounding discovery and theme behavior.
 
 ## Compatibility

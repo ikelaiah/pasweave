@@ -37,7 +37,7 @@ The script:
 
 1. Update `PasWeaveVersion`, its regression assertion, and the README version
    badge.
-2. Update `CHANGELOG.md` and add `docs/RELEASE_NOTE_<tag>.md`, including the
+2. Update `CHANGELOG.md` and add `docs/release-notes/RELEASE_NOTE_<tag>.md`, including the
    leading `v` in the tag name.
 3. Run the complete test suite and the portable release build.
 4. Commit the release-ready source and merge it into `main`.
@@ -50,7 +50,7 @@ GitHub release containing only:
 - `pasweave.exe`
 - `pasweave.exe.sha256`
 
-When `docs/RELEASE_NOTE_<tag>.md` exists, its contents become the GitHub release
+When `docs/release-notes/RELEASE_NOTE_<tag>.md` exists, its contents become the GitHub release
 description. Otherwise, GitHub generates release notes from the repository
 history.
 
