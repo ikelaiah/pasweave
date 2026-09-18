@@ -15,7 +15,7 @@ procedure WriteDiagnosticsJSON(AProject: TDocProject; const AFileName: string);
 implementation
 
 uses
-  Classes, SysUtils, FPJSON, PasWeave.Diagnostics, PasWeave.Incremental;
+  Classes, SysUtils, FPJSON, PasWeave.Diagnostics, PasWeave.Output;
 
 function SortedObjects(AList: TList; const AKeyPrefix: string): TStringList;
 var

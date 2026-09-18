@@ -7,6 +7,16 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Changed
+
+- Decomposed the largest source units into focused units with their public
+  APIs preserved and no output changes: HTML diagrams
+  (`Render.HTML.Diagrams`), stylesheet and scripts (`Render.HTML.CSS`,
+  `Render.HTML.Scripts`), output writes/ledger/manifest (`PasWeave.Output`),
+  and the fcl-passrc element-to-symbol conversion
+  (`FPCAdapter.Symbols`). Renderers and the model no longer link the parser
+  or compiler layers.
+
 ## [0.7.0] - 2026-09-17
 
 ### Added
