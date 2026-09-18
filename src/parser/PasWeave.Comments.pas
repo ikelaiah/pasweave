@@ -8,19 +8,45 @@ uses
   Contnrs;
 
 type
+  /// A documentation comment form PasWeave can recognize.
   TDocumentationCommentStyle = (dcsSlash, dcsBrace, dcsParen);
   TDocumentationCommentStyles = set of TDocumentationCommentStyle;
 
 const
+  /// `///` lines only; the safe default that never captures ordinary `//`.
   DefaultDocumentationCommentStyles: TDocumentationCommentStyles =
     [dcsSlash];
+  /// Every supported form: `///`, `{ ... }`, and `(* ... *)`.
   AllDocumentationCommentStyles: TDocumentationCommentStyles =
     [dcsSlash, dcsBrace, dcsParen];
 
+/// Parses a `--doc-comments` value such as `slash,brace` or `all`.
+///
+/// @param AValue Comma-separated, case-insensitive style names.
+/// @param AStyles Receives the parsed set on success; emptied on failure so a
+///   rejected value cannot leave partial styles behind.
+/// @returns True when every name is recognized.
 function TryParseDocumentationCommentStyles(const AValue: string;
   out AStyles: TDocumentationCommentStyles): Boolean;
+/// Formats a style set as stable `--doc-comments` text.
+///
+/// @returns Comma-separated names in the fixed order `slash,brace,paren`.
 function DocumentationCommentStylesText(
   AStyles: TDocumentationCommentStyles): string;
+/// Extracts the documentation group directly above a declaration.
+///
+/// Ordinary `//` comments are never documentation. A blank line, a disabled
+/// comment form, a compiler directive, or another source token ends the
+/// association. Raw text keeps the original delimiters; the Markdown text has
+/// them removed and structured directives stripped.
+///
+/// @param ASourceText Full source text of the unit.
+/// @param ADeclarationLine 1-based line of the declaration to attach to.
+/// @param AStyles Comment forms to consider.
+/// @param ARawDocumentation Receives the original comment text.
+/// @param AMarkdownDocumentation Receives the normalized documentation body.
+/// @param ADirectives Receives owned `TDocDirective` objects parsed from the
+///   group; caller frees them with the list.
 procedure ParseDocumentationComment(const ASourceText: string;
   ADeclarationLine: Integer; AStyles: TDocumentationCommentStyles;
   out ARawDocumentation, AMarkdownDocumentation: string;
