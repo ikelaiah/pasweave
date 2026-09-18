@@ -94,7 +94,9 @@ begin
     DrainPipe(Process.Output, OutStream);
     DrainPipe(Process.Stderr, ErrStream);
     Process.WaitOnExit;
-    Result := Process.ExitStatus;
+    { ExitCode applies the platform wait-status decoding (wexitstatus on
+      Unix); ExitStatus would return the raw wait status there. }
+    Result := Process.ExitCode;
     AStdOut := StreamText(OutStream);
     AStdErr := StreamText(ErrStream);
   finally
