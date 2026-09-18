@@ -10,7 +10,7 @@ implementation
 
 uses
   Classes, SysUtils, PasWeave.Hashing, PasWeave.Incremental,
-  PasWeave.Compiler, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Compiler, PasWeave.Model,   PasWeave.Model.JSON, PasWeave.Output, PasWeave.Parser,
   PasWeave.Render.Markdown, PasWeave.Render.HTML, PasWeave.TestSupport;
 
 function AssembleManifest(AProject: TDocProject; const AOutputDirectory,

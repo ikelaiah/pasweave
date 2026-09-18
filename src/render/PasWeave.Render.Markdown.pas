@@ -20,7 +20,7 @@ implementation
 
 uses
   Classes, SysUtils, PasWeave.Diagnostics, PasWeave.Render.Support,
-  PasWeave.Render.Links, PasWeave.SourceLinks, PasWeave.Incremental;
+  PasWeave.Render.Links, PasWeave.SourceLinks, PasWeave.Output;
 
 function EscapeTableCell(const AText: string): UTF8String;
 begin
