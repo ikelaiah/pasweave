@@ -8,8 +8,13 @@ uses
   Classes, SysUtils, PasWeave.Model, PasWeave.Comments, PasWeave.Compiler;
 
 type
+  /// Raised when the requested input or options cannot form a valid build.
   EPasWeaveInputError = class(Exception);
 
+  /// Controls recursive directory discovery and include/exclude globs.
+  ///
+  /// Patterns are matched case-insensitively against `/`-separated paths
+  /// relative to the source root. Exclusions always win over inclusions.
   TSourceDiscoveryOptions = class
   private
     FExcludePatterns: TStringList;
@@ -19,30 +24,55 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    /// Adds an exclusion glob; absolute paths and parent traversal are
+    /// rejected with @link(EPasWeaveInputError).
     procedure AddExcludePattern(const APattern: string);
+    /// Adds an inclusion glob; absolute paths and parent traversal are
+    /// rejected with @link(EPasWeaveInputError).
     procedure AddIncludePattern(const APattern: string);
+    /// True when an exclude pattern matches the root-relative path.
     function IsExcluded(const ARelativePath: string): Boolean;
+    /// True when no include patterns exist or one matches the path, unless
+    /// the path is excluded first.
     function IsIncluded(const ARelativePath: string): Boolean;
     property ExcludePatterns: TStringList read FExcludePatterns;
     property IncludePatterns: TStringList read FIncludePatterns;
+    /// True when `--recursive`, `--include`, or `--exclude` was supplied.
     property HasExplicitSettings: Boolean read GetHasExplicitSettings;
     property Recursive: Boolean read FRecursive write FRecursive;
   end;
 
+/// Builds a project from `ASourcePath` with default comment styles and
+/// discovery options.
 function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer): TDocProject; overload;
+/// Builds a project from `ASourcePath` with explicit comment styles.
 function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer;
   ACommentStyles: TDocumentationCommentStyles): TDocProject; overload;
+/// Builds a project from `ASourcePath` with explicit discovery options.
 function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer;
   ACommentStyles: TDocumentationCommentStyles;
   ADiscoveryOptions: TSourceDiscoveryOptions): TDocProject; overload;
+/// Builds a project from `ASourcePath` with explicit comment styles,
+/// discovery options, and compiler settings.
+///
+/// @param ASourcePath A `.pas`/`.pp` unit, a source directory, or a Lazarus
+///   `.lpi`/`.lpk` input.
+/// @param AProjectName Display name; the input stem is used when empty.
+/// @param AAttemptedFileCount Receives the number of parsed unit files,
+///   including units that failed to parse.
+/// @param ADiscoveryOptions Recursion and glob rules; may be nil.
+/// @param ACompilerOptions Unit/include paths, defines, and target; may be nil.
+/// @returns An owned project model; callers free it.
 function BuildProject(const ASourcePath, AProjectName: string;
   out AAttemptedFileCount: Integer;
   ACommentStyles: TDocumentationCommentStyles;
   ADiscoveryOptions: TSourceDiscoveryOptions;
   ACompilerOptions: TCompilerOptions): TDocProject; overload;
+/// Builds a project from an explicit file list, as imported from a Lazarus
+/// project or package.
 function BuildProjectFromFiles(const ASourceRoot, AProjectName: string;
   AFiles: TStrings; out AAttemptedFileCount: Integer;
   ACommentStyles: TDocumentationCommentStyles;

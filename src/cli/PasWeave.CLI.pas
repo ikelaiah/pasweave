@@ -11,7 +11,9 @@ interface
 
 /// Runs PasWeave with the process command line.
 ///
-/// @returns Process exit code (`0` for success, `1` for diagnostics failures).
+/// @returns Process exit code: `0` success, `1` build diagnostics at or above
+///   the `--fail-on` severity, `2` invalid command line or configuration,
+///   `3` an unexpected internal error.
 function RunPasWeave: Integer;
 
 implementation
