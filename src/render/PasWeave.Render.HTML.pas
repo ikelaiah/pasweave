@@ -8,16 +8,28 @@ interface
 uses
   PasWeave.Model;
 
+/// Route-relative filename of a unit page, for example `Demo.Core.html`.
 function HTMLUnitFilename(AUnit: TDocUnit): string;
+/// Fixed filename of the symbol index page.
 function HTMLSymbolIndexFilename: string;
+/// Stable anchor of a symbol on its unit page.
 function HTMLSymbolAnchor(ASymbol: TDocSymbol): string;
+/// Mermaid source for the unit dependency graph.
 function RenderMermaidDependencyGraph(AProject: TDocProject): UTF8String;
+/// Mermaid source for the class/interface relationship graph; empty when the
+/// project has no relationships.
 function RenderMermaidTypeRelationshipGraph(
   AProject: TDocProject): UTF8String;
+/// Renders the project index page (summary, Browse API, units, diagrams).
 function RenderHTMLIndex(AProject: TDocProject): UTF8String;
+/// Renders the A-Z/# symbol index page.
 function RenderHTMLSymbolIndex(AProject: TDocProject): UTF8String;
+/// Renders one unit page with symbols, anchors, and source links.
 function RenderHTMLUnit(AProject: TDocProject; AUnit: TDocUnit): UTF8String;
+/// Renders the offline search index as a JavaScript asset.
 function RenderHTMLSearchIndex(AProject: TDocProject): UTF8String;
+/// Writes the complete HTML site, including offline assets, under
+/// `AOutputDirectory`.
 procedure WriteHTMLDocumentation(AProject: TDocProject;
   const AOutputDirectory: string);
 
