@@ -35,8 +35,8 @@ the index.
 - Regenerated both examples' checked-in HTML outputs and bumped version
   metadata, portable-build default, README badge, and changelog to v0.5.6.
 
-See [the HTML renderer guide](html-renderer.md) and
-[navigation and source traceability](navigation-and-source-traceability.md)
+See [the HTML renderer guide](../html-renderer.md) and
+[navigation and source traceability](../navigation-and-source-traceability.md)
 for the surrounding discovery and theme behavior.
 
 ## Compatibility

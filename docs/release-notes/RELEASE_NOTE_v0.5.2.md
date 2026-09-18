@@ -39,8 +39,8 @@ symbols, 2,657 A–Z index entries, 175 identical generated files with audit
 digest `98B9DAB763AD46D83E71A607E30211F05B7CB1DCDDF1903A9E273809BAD88F9B`, and
 zero errors; all 50 unit pages carry the theme control.
 
-See [navigation and source traceability](docs/navigation-and-source-traceability.md)
-and the [HTML renderer guide](docs/html-renderer.md) for behavior, fallback,
+See [navigation and source traceability](../navigation-and-source-traceability.md)
+and the [HTML renderer guide](../html-renderer.md) for behavior, fallback,
 and limitations. The public GitHub Pages smoke check is the final post-merge
 release gate because the deployed showcase cannot contain this branch before
 it reaches `main`.

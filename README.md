@@ -6,7 +6,7 @@
 [![Free Pascal](https://img.shields.io/badge/Free%20Pascal-3.2.2%2B-14b8a6)](docs/parser-integration.md)
 [![Lazarus](https://img.shields.io/badge/Lazarus-.lpi%20%7C%20.lpk-7c3aed)](docs/lazarus-projects.md)
 [![Windows](https://img.shields.io/badge/platform-Windows%20x86--64-2563eb)](docs/releasing.md)
-[![Version](https://img.shields.io/badge/version-0.6.0-635bff)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.7.0-635bff)](CHANGELOG.md)
 [![Runtime dependencies: none](https://img.shields.io/badge/runtime%20dependencies-none-10b981)](https://github.com/ikelaiah/pasweave/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/ikelaiah/pasweave/pages.yml?branch=main&label=tests)](https://github.com/ikelaiah/pasweave/actions/workflows/pages.yml)
 [![Documentation](https://img.shields.io/badge/docs-live-0ea5e9)](https://ikelaiah.github.io/pasweave/)
@@ -25,7 +25,7 @@ network connection, or registry changes.
 
 [View the live showcase](https://ikelaiah.github.io/pasweave/) ·
 [Download for Windows](https://github.com/ikelaiah/pasweave/releases) ·
-[Read the v0.6.0 release notes](docs/RELEASE_NOTE_v0.6.0.md)
+[Read the v0.7.0 release notes](docs/release-notes/RELEASE_NOTE_v0.7.0.md)
 
 > **Project status:** PasWeave is pre-release software. It targets Free Pascal
 > and `{$mode objfpc}` first; see [scope and limitations](#scope-and-limitations)
@@ -232,11 +232,13 @@ the cache key, invalidation rules, and interruption recovery.
 
 ## 📖 Documentation
 
-Start with [documentation comments](docs/documentation-comments.md) and
+Every guide is indexed in [docs/README.md](docs/README.md). Start with
+[documentation comments](docs/documentation-comments.md) and
 [generated output](docs/generated-output.md); follow task links from there.
 
 | Guide | What it covers |
 |---|---|
+| [Documentation index](docs/README.md) | Grouped links to every guide, ADR, and release note |
 | [Documentation comments](docs/documentation-comments.md) | Comment forms, association, and directives |
 | [Generated output](docs/generated-output.md) | HTML, Markdown, JSON, diagnostics, and exit codes |
 | [Source discovery](docs/source-discovery.md) | Recursion, include/exclude globs, and safety |
@@ -261,8 +263,10 @@ Start with [documentation comments](docs/documentation-comments.md) and
 | `pasweave build --help` | Show all build options |
 | `pasweave --version` | Print version |
 | `make` | Compile `build/bin/pasweave` from source |
-| `make test` | Compile and run the full FPC test suite |
+| `make test` | Compile and run the CLI and FPC test suites |
+| `make test-cli` | Run only the compiled-CLI contract suite |
 | `.\scripts\build-portable-windows.ps1` | Build portable Windows `dist\pasweave.exe` + checksum |
+| `pwsh -File scripts\check-docs-links.ps1` | Verify relative documentation links |
 
 ## 🧱 Architecture
 
@@ -271,22 +275,25 @@ src/cli/          Command-line pipeline (pasweave build)
 src/parser/       fcl-passrc adapter, comments, Lazarus, compiler options
 src/model/        Renderer-independent documentation model + JSON
 src/validation/   Authoring diagnostics and coverage gates
-src/render/       HTML, Markdown, links, offline assets
+src/render/       HTML, Markdown, links, shared helpers, offline assets
 src/diagnostics/  Stable diagnostic codes and severities
 src/incremental/  Fingerprints, manifest.json, atomic writes
-tests/            Fixtures + focused regression suites
+tests/            Fixtures, shared assertions, CLI + focused regression suites
 examples/         Minimal documented-api first, rich scientific-api second
 ```
 
 Design rules: reuse `fcl-passrc` (no second parser), keep parser types out
-of the model, keep renderers model-driven, prefer explicit unresolved data
-over guessed links. See [ADR-0001](docs/decisions/0001-model-driven-authoring-validation.md)
-and [ADR-0002](docs/decisions/0002-repository-relative-source-links.md).
+of the model, keep renderers model-driven, keep shared model helpers in one
+place (`PasWeave.Render.Support`), prefer explicit unresolved data over
+guessed links. See [ADR-0001](docs/decisions/0001-model-driven-authoring-validation.md),
+[ADR-0002](docs/decisions/0002-repository-relative-source-links.md), and
+[ADR-0003](docs/decisions/0003-golden-output-and-cli-tests.md).
 
-Supported platforms: portable release targets Windows x86-64 (see
-[download integrity](#-download-integrity)); source builds are tested on
-Windows with FPC 3.2.2, with Linux validation planned in
-[roadmap v0.8.0](ROADMAP.md).
+Supported platforms: portable releases target Windows x86-64 (see
+[download integrity](#-download-integrity)). Source builds are compiled and
+tested with FPC 3.2.2 on Windows and Ubuntu; the full fixture suite and the CLI
+suite run on both hosts in CI. Broader compiler-version and platform coverage
+is tracked in [roadmap v0.9.0](ROADMAP.md).
 
 ## 🆘 Troubleshooting
 
@@ -300,6 +307,8 @@ Windows with FPC 3.2.2, with Linux validation planned in
   [authoring feedback](docs/authoring-feedback.md) (`--fail-on`, `--min-documentation-coverage`).
 - Windows runner issues — see
   [Windows CI troubleshooting](docs/windows-ci-troubleshooting.md).
+
+<a id="scope-and-limitations"></a>
 
 ## 🛎️ Scope and limitations
 
@@ -350,6 +359,8 @@ make test
 ~~~
 
 Run tests from the repository root so fixtures resolve. See
+[CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow, test rules, golden
+output policy, and how to add a CLI option; see
 [building from source](docs/building-from-source.md) for direct FPC and
 portable Windows build commands.
 

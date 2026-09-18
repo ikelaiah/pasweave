@@ -28,8 +28,8 @@ branding tokens are unchanged.
 - The label is validated by focused fixtures and pinned in both examples'
   regenerated golden output.
 
-See [the HTML renderer guide](html-renderer.md) and
-[navigation and source traceability](navigation-and-source-traceability.md)
+See [the HTML renderer guide](../html-renderer.md) and
+[navigation and source traceability](../navigation-and-source-traceability.md)
 for the surrounding discovery and theme behavior.
 
 ## Compatibility

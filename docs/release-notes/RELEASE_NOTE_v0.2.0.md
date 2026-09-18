@@ -29,7 +29,7 @@ pasweave build src --recursive \
   --target-cpu=aarch64
 ```
 
-See [compiler-aware parsing](docs/compiler-aware-parsing.md) for supported
+See [compiler-aware parsing](../compiler-aware-parsing.md) for supported
 targets, aliases, path rules, precedence, diagnostics, and limitations.
 
 ## Precedence

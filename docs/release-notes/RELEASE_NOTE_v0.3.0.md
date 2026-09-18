@@ -19,7 +19,7 @@ Highlights:
 - preserves direct file/directory inputs and the existing renderer/model
   contracts.
 
-See [the Lazarus project and package guide](docs/lazarus-projects.md) for the
+See [the Lazarus project and package guide](../lazarus-projects.md) for the
 supported XML subset, precedence rules, diagnostics, and limitations.
 
 Validation includes the complete FPC 3.2.2 fixture suite, a checked-in

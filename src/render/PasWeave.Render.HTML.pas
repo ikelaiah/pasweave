@@ -30,8 +30,6 @@ uses
   PasWeave.Incremental;
 
 type
-  TSymbolKinds = set of TSymbolKind;
-
   TRelationshipDiagramEdge = class
   public
     SourceUnit: TDocUnit;
@@ -49,30 +47,6 @@ type
     constructor Create(ASymbol: TDocSymbol; AUnitModel: TDocUnit);
   end;
 
-const
-  TypeKinds: TSymbolKinds = [
-    skClass, skInterface, skRecord, skEnumeration, skTypeAlias
-  ];
-  RoutineKinds: TSymbolKinds = [skRoutine];
-  MemberKinds: TSymbolKinds = [
-    skMethod, skConstructor, skDestructor, skProperty, skField
-  ];
-  ValueKinds: TSymbolKinds = [skConstant, skVariable];
-  AllKinds: TSymbolKinds = [
-    skUnit, skClass, skInterface, skRecord, skEnumeration, skTypeAlias,
-    skRoutine, skMethod, skConstructor, skDestructor, skProperty, skField,
-    skConstant, skVariable
-  ];
-  SymbolIndexTypeKinds: TSymbolKinds = [
-    skClass, skInterface, skRecord, skEnumeration, skTypeAlias
-  ];
-  SymbolIndexRoutineKinds: TSymbolKinds = [skRoutine];
-  SymbolIndexMemberKinds: TSymbolKinds = [
-    skMethod, skConstructor, skDestructor, skProperty, skField
-  ];
-  SymbolIndexConstantKinds: TSymbolKinds = [skConstant];
-  SymbolIndexVariableKinds: TSymbolKinds = [skVariable];
-
 constructor TIndexedSymbolEntry.Create(ASymbol: TDocSymbol;
   AUnitModel: TDocUnit);
 begin
@@ -81,14 +55,9 @@ begin
   UnitModel := AUnitModel;
 end;
 
-procedure AppendLine(var AOutput: UTF8String; const ALine: UTF8String = '');
-begin
-  AOutput := AOutput + ALine + #10;
-end;
-
 function HTMLUnitFilename(AUnit: TDocUnit): string;
 begin
-  Result := AUnit.Name + '.html';
+  Result := SafeFileNameBase(AUnit.Name) + '.html';
 end;
 
 function HTMLSymbolIndexFilename: string;
@@ -99,41 +68,6 @@ end;
 function HTMLSymbolAnchor(ASymbol: TDocSymbol): string;
 begin
   Result := DocumentationSymbolAnchor(ASymbol);
-end;
-
-function SortedUnits(AProject: TDocProject): TStringList;
-var
-  I: Integer;
-  UnitModel: TDocUnit;
-begin
-  Result := TOrdinalStringList.Create;
-  Result.Sorted := True;
-  Result.CaseSensitive := True;
-  Result.Duplicates := dupAccept;
-  for I := 0 to AProject.Units.Count - 1 do
-  begin
-    UnitModel := TDocUnit(AProject.Units[I]);
-    Result.AddObject(UnitModel.Name + DocumentationSortSeparator +
-      UnitModel.SourceFilename, UnitModel);
-  end;
-end;
-
-function FindUnitByName(AProject: TDocProject; const AName: string): TDocUnit;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AProject.Units.Count - 1 do
-    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
-      Exit(TDocUnit(AProject.Units[I]));
-end;
-
-function SortedUnitIndex(AUnits: TStringList; AUnit: TDocUnit): Integer;
-begin
-  for Result := 0 to AUnits.Count - 1 do
-    if AUnits.Objects[Result] = AUnit then
-      Exit;
-  Result := -1;
 end;
 
 function MermaidNodeID(AIndex: Integer): string;
@@ -181,7 +115,7 @@ begin
           UnitModel.InterfaceDependencies[J]);
         if not Assigned(DependencyUnit) then
           Continue;
-        DependencyIndex := SortedUnitIndex(Units, DependencyUnit);
+        DependencyIndex := IndexOfObject(Units, DependencyUnit);
         if DependencyIndex >= 0 then
           AppendLine(Result, '  ' + MermaidNodeID(I) + ' --> ' +
             MermaidNodeID(DependencyIndex));
@@ -198,35 +132,6 @@ begin
   finally
     Units.Free;
   end;
-end;
-
-function IsDirectlyRenderable(ASymbol: TDocSymbol): Boolean;
-begin
-  Result := not (ASymbol.Visibility in [svPrivate, svStrictPrivate]);
-end;
-
-function IsEffectivelyRenderable(AUnit: TDocUnit;
-  ASymbol: TDocSymbol): Boolean;
-var
-  ParentSymbol: TDocSymbol;
-begin
-  Result := IsDirectlyRenderable(ASymbol);
-  ParentSymbol := ASymbol;
-  while Result and (ParentSymbol.ParentSymbolID <> '') do
-  begin
-    ParentSymbol := FindSymbolByID(AUnit, ParentSymbol.ParentSymbolID);
-    if not Assigned(ParentSymbol) then
-      Break;
-    Result := IsDirectlyRenderable(ParentSymbol);
-  end;
-end;
-
-function IndexOfObject(AList: TStringList; AObject: TObject): Integer;
-begin
-  for Result := 0 to AList.Count - 1 do
-    if AList.Objects[Result] = AObject then
-      Exit;
-  Result := -1;
 end;
 
 procedure AddRelationshipNode(ANodes: TStringList; ASymbol: TDocSymbol);
@@ -399,64 +304,6 @@ begin
   end;
 end;
 
-function SortedSymbols(AUnit: TDocUnit; AKinds: TSymbolKinds): TStringList;
-var
-  I: Integer;
-  Symbol: TDocSymbol;
-begin
-  Result := TOrdinalStringList.Create;
-  Result.Sorted := True;
-  Result.CaseSensitive := True;
-  Result.Duplicates := dupAccept;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-  begin
-    Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if (Symbol.Kind in AKinds) and IsEffectivelyRenderable(AUnit, Symbol) then
-      Result.AddObject(DocumentationSymbolSortKey(Symbol), Symbol);
-  end;
-end;
-
-function UnitSymbol(AUnit: TDocUnit): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if TDocSymbol(AUnit.Symbols[I]).Kind = skUnit then
-      Exit(TDocSymbol(AUnit.Symbols[I]));
-end;
-
-function IndexedSymbolCount(AUnit: TDocUnit): Integer;
-var
-  I: Integer;
-  Symbol: TDocSymbol;
-begin
-  Result := 0;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-  begin
-    Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if IsIndexedAPIKind(Symbol.Kind) and
-      IsEffectivelyRenderable(AUnit, Symbol) then
-      Inc(Result);
-  end;
-end;
-
-function DocumentedIndexedSymbolCount(AUnit: TDocUnit): Integer;
-var
-  I: Integer;
-  Symbol: TDocSymbol;
-begin
-  Result := 0;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-  begin
-    Symbol := TDocSymbol(AUnit.Symbols[I]);
-    if IsIndexedAPIKind(Symbol.Kind) and
-      IsEffectivelyRenderable(AUnit, Symbol) and
-      (Trim(Symbol.MarkdownDocumentation) <> '') then
-      Inc(Result);
-  end;
-end;
-
 function RenderSourceLocation(AProject: TDocProject;
   const ASourceFilename: string; ASourceLine, ASourceColumn: Integer): UTF8String;
 var
@@ -489,17 +336,6 @@ begin
   else
     Result := '<a class="source-link" href="' + EscapeHTML(URL) +
       '"><code>' + EscapeHTML(ASourceFilename) + '</code></a>';
-end;
-
-function DiagnosticLocation(ADiagnostic: TDiagnostic): string;
-begin
-  Result := ADiagnostic.SourceFilename;
-  if ADiagnostic.SourceLine > 0 then
-  begin
-    Result := Result + ':' + IntToStr(ADiagnostic.SourceLine);
-    if ADiagnostic.SourceColumn > 0 then
-      Result := Result + ':' + IntToStr(ADiagnostic.SourceColumn);
-  end;
 end;
 
 procedure RenderDirectives(var AOutput: UTF8String; AProject: TDocProject;
@@ -1238,15 +1074,15 @@ end;
 
 function SymbolIndexGroupName(AKind: TSymbolKind): string;
 begin
-  if AKind in SymbolIndexTypeKinds then
+  if AKind in TypeKinds then
     Exit('types');
-  if AKind in SymbolIndexRoutineKinds then
+  if AKind in RoutineKinds then
     Exit('routines');
-  if AKind in SymbolIndexMemberKinds then
+  if AKind in MemberKinds then
     Exit('members');
-  if AKind in SymbolIndexConstantKinds then
+  if AKind in ConstantKinds then
     Exit('constants');
-  if AKind in SymbolIndexVariableKinds then
+  if AKind in VariableKinds then
     Exit('variables');
   Result := '';
 end;
@@ -1281,11 +1117,11 @@ end;
 
 function TotalIndexedSymbolCount(AProject: TDocProject): Integer;
 begin
-  Result := CountIndexedSymbols(AProject, SymbolIndexTypeKinds) +
-    CountIndexedSymbols(AProject, SymbolIndexRoutineKinds) +
-    CountIndexedSymbols(AProject, SymbolIndexMemberKinds) +
-    CountIndexedSymbols(AProject, SymbolIndexConstantKinds) +
-    CountIndexedSymbols(AProject, SymbolIndexVariableKinds);
+  Result := CountIndexedSymbols(AProject, TypeKinds) +
+    CountIndexedSymbols(AProject, RoutineKinds) +
+    CountIndexedSymbols(AProject, MemberKinds) +
+    CountIndexedSymbols(AProject, ConstantKinds) +
+    CountIndexedSymbols(AProject, VariableKinds);
 end;
 
 function TotalDocumentedIndexedSymbolCount(AProject: TDocProject): Integer;
@@ -1313,23 +1149,23 @@ begin
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '#types"><strong>Types</strong><span>' +
     UTF8String(IntToStr(CountIndexedSymbols(AProject,
-    SymbolIndexTypeKinds))) + ' symbols</span></a>');
+    TypeKinds))) + ' symbols</span></a>');
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '#routines"><strong>Routines</strong><span>' +
     UTF8String(IntToStr(CountIndexedSymbols(AProject,
-    SymbolIndexRoutineKinds))) + ' symbols</span></a>');
+    RoutineKinds))) + ' symbols</span></a>');
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '#members"><strong>Members</strong><span>' +
     UTF8String(IntToStr(CountIndexedSymbols(AProject,
-    SymbolIndexMemberKinds))) + ' symbols</span></a>');
+    MemberKinds))) + ' symbols</span></a>');
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '#constants"><strong>Constants</strong><span>' +
     UTF8String(IntToStr(CountIndexedSymbols(AProject,
-    SymbolIndexConstantKinds))) + ' symbols</span></a>');
+    ConstantKinds))) + ' symbols</span></a>');
   AppendLine(AOutput, '<a class="browse-card" href="' +
     HTMLSymbolIndexFilename + '#variables"><strong>Variables</strong><span>' +
     UTF8String(IntToStr(CountIndexedSymbols(AProject,
-    SymbolIndexVariableKinds))) + ' symbols</span></a>');
+    VariableKinds))) + ' symbols</span></a>');
   AppendLine(AOutput, '</section>');
 end;
 
@@ -1736,11 +1572,6 @@ begin
   end;
 end;
 
-procedure WriteUTF8File(const AFileName: string; const AData: UTF8String);
-begin
-  WriteOutputFile(AFileName, AData);
-end;
-
 procedure WriteHTMLDocumentation(AProject: TDocProject;
   const AOutputDirectory: string);
 var
@@ -1760,19 +1591,19 @@ begin
       [AssetsDirectory]);
 
   WriteThirdPartyAssets(AssetsDirectory);
-  WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.html',
+  WriteOutputFile(IncludeTrailingPathDelimiter(AOutputDirectory) + 'index.html',
     RenderHTMLIndex(AProject));
-  WriteUTF8File(IncludeTrailingPathDelimiter(AOutputDirectory) +
+  WriteOutputFile(IncludeTrailingPathDelimiter(AOutputDirectory) +
     HTMLSymbolIndexFilename, RenderHTMLSymbolIndex(AProject));
-  WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'site.css',
+  WriteOutputFile(IncludeTrailingPathDelimiter(AssetsDirectory) + 'site.css',
     HTMLStylesheet(AProject));
-  WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'app.js',
+  WriteOutputFile(IncludeTrailingPathDelimiter(AssetsDirectory) + 'app.js',
     HTMLApplicationScript);
-  WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'math.js',
+  WriteOutputFile(IncludeTrailingPathDelimiter(AssetsDirectory) + 'math.js',
     HTMLMathScript);
-  WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) + 'diagram.js',
+  WriteOutputFile(IncludeTrailingPathDelimiter(AssetsDirectory) + 'diagram.js',
     HTMLDiagramScript);
-  WriteUTF8File(IncludeTrailingPathDelimiter(AssetsDirectory) +
+  WriteOutputFile(IncludeTrailingPathDelimiter(AssetsDirectory) +
     'search-index.js', RenderHTMLSearchIndex(AProject));
 
   Units := SortedUnits(AProject);
@@ -1780,7 +1611,7 @@ begin
     for I := 0 to Units.Count - 1 do
     begin
       UnitModel := TDocUnit(Units.Objects[I]);
-      WriteUTF8File(IncludeTrailingPathDelimiter(UnitsDirectory) +
+      WriteOutputFile(IncludeTrailingPathDelimiter(UnitsDirectory) +
         HTMLUnitFilename(UnitModel), RenderHTMLUnit(AProject, UnitModel));
     end;
   finally

@@ -11,13 +11,7 @@ implementation
 uses
   SysUtils, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.HTML, PasWeave.Render.HTML.Assets,
-  PasWeave.Render.Markdown, PasWeave.SourceLinks;
-
-procedure Check(ACondition: Boolean; const AMessage: string);
-begin
-  if not ACondition then
-    raise Exception.Create('test failed: ' + AMessage);
-end;
+  PasWeave.Render.Markdown, PasWeave.SourceLinks, PasWeave.TestSupport;
 
 procedure CheckRejected(const ARepositoryURL, ATemplate,
   ADescription: string);
@@ -108,24 +102,9 @@ begin
     'src/{path}#L{line}-{timestamp}', 'a template with an unknown placeholder');
 end;
 
-function FindSymbol(AUnit: TDocUnit; const AName: string): TDocSymbol;
-var
-  I: Integer;
-begin
-  Result := nil;
-  for I := 0 to AUnit.Symbols.Count - 1 do
-    if SameText(TDocSymbol(AUnit.Symbols[I]).Name, AName) then
-      Exit(TDocSymbol(AUnit.Symbols[I]));
-end;
-
 function FindUnit(AProject: TDocProject; const AName: string): TDocUnit;
-var
-  I: Integer;
 begin
-  Result := nil;
-  for I := 0 to AProject.Units.Count - 1 do
-    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
-      Exit(TDocUnit(AProject.Units[I]));
+  Result := FindUnitModel(AProject, AName);
 end;
 
 procedure CheckRenderedSourceLinks;
@@ -399,7 +378,6 @@ begin
   Check(Pos('unitSwitcher.open = false', string(Script)) > 0,
     'Escape should close the unit switcher');
 
-  Stylesheet := HTMLStylesheet(Project);
   Check(Pos(':focus-visible', string(Stylesheet)) > 0,
     'interactive search and navigation controls should have visible focus');
   Check(Pos('@media (max-width: 480px)', string(Stylesheet)) > 0,
@@ -432,13 +410,50 @@ begin
     'the switcher panel should stay within a phone viewport');
 end;
 
+procedure CheckOutputFileNames;
+var
+  UnitModel: TDocUnit;
+begin
+  UnitModel := TDocUnit.Create;
+  try
+    UnitModel.Name := 'System.SysUtils';
+    Check(HTMLUnitFilename(UnitModel) = 'System.SysUtils.html',
+      'dotted unit names should keep their namespace separators');
+    Check(MarkdownUnitFilename(UnitModel) = 'System.SysUtils.md',
+      'Markdown unit pages should share the HTML page name');
+
+    UnitModel.Name := '..\escape';
+    Check(HTMLUnitFilename(UnitModel) = '.._escape.html',
+      'path separators in unit names should be neutralized');
+    Check(MarkdownUnitFilename(UnitModel) = '.._escape.md',
+      'Markdown pages should not escape their unit directory');
+
+    UnitModel.Name := 'CON';
+    Check(HTMLUnitFilename(UnitModel) = '_CON.html',
+      'Windows device names should be prefixed in output file names');
+
+    UnitModel.Name := '';
+    Check(HTMLUnitFilename(UnitModel) = 'unit.html',
+      'empty unit names should fall back to a safe base name');
+  finally
+    UnitModel.Free;
+  end;
+end;
+
 procedure RunNavigationTests;
 begin
+  BeginTest('source-link configuration');
   CheckSourceLinkConfiguration;
+  BeginTest('rendered source links');
   CheckRenderedSourceLinks;
+  BeginTest('relationship navigation');
   CheckRelationshipNavigation;
+  BeginTest('unit page navigation');
   CheckUnitPageNavigation;
+  BeginTest('search contracts');
   CheckSearchContracts;
+  BeginTest('output file names');
+  CheckOutputFileNames;
 end;
 
 end.

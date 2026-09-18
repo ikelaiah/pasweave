@@ -11,127 +11,7 @@ implementation
 uses
   Classes, SysUtils, PasWeave.Hashing, PasWeave.Incremental,
   PasWeave.Compiler, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
-  PasWeave.Render.Markdown, PasWeave.Render.HTML;
-
-procedure Check(ACondition: Boolean; const AMessage: string);
-begin
-  if not ACondition then
-    raise Exception.Create('incremental test failed: ' + AMessage);
-end;
-
-function ReadUTF8File(const AFilename: string): UTF8String;
-var
-  InputStream: TFileStream;
-begin
-  InputStream := TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite);
-  try
-    SetLength(Result, InputStream.Size);
-    if Length(Result) > 0 then
-      InputStream.ReadBuffer(Result[1], Length(Result));
-  finally
-    InputStream.Free;
-  end;
-end;
-
-procedure WriteTextFile(const AFilename, AContent: string);
-var
-  OutputStream: TFileStream;
-begin
-  ForceDirectories(ExtractFileDir(AFilename));
-  OutputStream := TFileStream.Create(AFilename, fmCreate);
-  try
-    if Length(AContent) > 0 then
-      OutputStream.WriteBuffer(AContent[1], Length(AContent));
-  finally
-    OutputStream.Free;
-  end;
-end;
-
-procedure CollectTree(const ADirectory, ARelative: string;
-  AEntries: TStringList);
-var
-  Search: TSearchRec;
-  Relative: string;
-begin
-  if FindFirst(IncludeTrailingPathDelimiter(ADirectory) + '*', faAnyFile,
-    Search) <> 0 then
-    Exit;
-  try
-    repeat
-      if (Search.Name = '.') or (Search.Name = '..') then
-        Continue;
-      if ARelative = '' then
-        Relative := Search.Name
-      else
-        Relative := ARelative + '/' + Search.Name;
-      if (Search.Attr and faDirectory) <> 0 then
-        CollectTree(IncludeTrailingPathDelimiter(ADirectory) + Search.Name,
-          Relative, AEntries)
-      else
-        AEntries.Add(Relative);
-    until FindNext(Search) <> 0;
-  finally
-    FindClose(Search);
-  end;
-end;
-
-function DirectoryTreesMatch(const ALeft, ARight: string): Boolean;
-var
-  LeftEntries: TStringList;
-  RightEntries: TStringList;
-  I: Integer;
-begin
-  Result := False;
-  LeftEntries := TStringList.Create;
-  RightEntries := TStringList.Create;
-  try
-    LeftEntries.Sorted := True;
-    RightEntries.Sorted := True;
-    CollectTree(ALeft, '', LeftEntries);
-    CollectTree(ARight, '', RightEntries);
-    if LeftEntries.Count <> RightEntries.Count then
-      Exit;
-    for I := 0 to LeftEntries.Count - 1 do
-    begin
-      if LeftEntries[I] <> RightEntries[I] then
-        Exit;
-      if ReadUTF8File(IncludeTrailingPathDelimiter(ALeft) +
-        StringReplace(LeftEntries[I], '/', PathDelim, [rfReplaceAll])) <>
-        ReadUTF8File(IncludeTrailingPathDelimiter(ARight) +
-        StringReplace(RightEntries[I], '/', PathDelim, [rfReplaceAll])) then
-        Exit;
-    end;
-    Result := True;
-  finally
-    RightEntries.Free;
-    LeftEntries.Free;
-  end;
-end;
-
-procedure DeleteTree(const ADirectory: string);
-var
-  Search: TSearchRec;
-  FullPath: string;
-begin
-  if not DirectoryExists(ADirectory) then
-    Exit;
-  if FindFirst(IncludeTrailingPathDelimiter(ADirectory) + '*', faAnyFile,
-    Search) = 0 then
-  try
-    repeat
-      if (Search.Name = '.') or (Search.Name = '..') then
-        Continue;
-      FullPath := IncludeTrailingPathDelimiter(ADirectory) + Search.Name;
-      if (Search.Attr and faDirectory) <> 0 then
-        DeleteTree(FullPath)
-      else
-        DeleteFile(FullPath);
-    until FindNext(Search) <> 0;
-  finally
-    FindClose(Search);
-  end;
-  RemoveDir(ADirectory);
-end;
+  PasWeave.Render.Markdown, PasWeave.Render.HTML, PasWeave.TestSupport;
 
 function AssembleManifest(AProject: TDocProject; const AOutputDirectory,
   AInputFingerprint: string): TManifest;
@@ -169,6 +49,15 @@ begin
   end;
 end;
 
+procedure CheckRejectedManifest(const AName, AManifestJSON: string);
+const
+  ManifestCheckDirectory = 'build/incremental-manifest-checks';
+begin
+  WriteTextFile(ManifestCheckDirectory + '/manifest.json', AManifestJSON);
+  Check(not Assigned(ReadManifest(ManifestCheckDirectory)),
+    AName + ' should be rejected as a manifest');
+end;
+
 procedure RunIncrementalTests;
 var
   Project: TDocProject;
@@ -188,7 +77,10 @@ var
   OldManifest: TManifest;
   NewPaths: TStringList;
   StaleDirectory: string;
+  AtomicDirectory: string;
+  ValidSHA: string;
 begin
+  BeginTest('incremental builds');
   Check(SHA256HexString('') =
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
     'SHA-256 of the empty string should match the NIST vector');
@@ -372,10 +264,65 @@ begin
   Check(not Assigned(ReadManifest(StaleDirectory)),
     'a corrupted manifest should be recoverable rather than fatal');
 
+  ValidSHA := StringOfChar('a', 64);
+  CheckRejectedManifest('a root that is not an object', '[1, 2, 3]');
+  CheckRejectedManifest('a future schema version',
+    '{"schemaVersion": 2, "outputs": []}');
+  CheckRejectedManifest('a parent-traversal output path',
+    '{"schemaVersion": 1, "outputs": [{"path": "../escape.md", "sha256": "' +
+    ValidSHA + '", "size": 1}]}');
+  CheckRejectedManifest('an absolute output path',
+    '{"schemaVersion": 1, "outputs": [{"path": "C:/abs.md", "sha256": "' +
+    ValidSHA + '", "size": 1}]}');
+  CheckRejectedManifest('a backslash output path',
+    '{"schemaVersion": 1, "outputs": [{"path": "a\\b.md", "sha256": "' +
+    ValidSHA + '", "size": 1}]}');
+  CheckRejectedManifest('a truncated digest',
+    '{"schemaVersion": 1, "outputs": [{"path": "ok.md", "sha256": "abc", ' +
+    '"size": 1}]}');
+  CheckRejectedManifest('a negative size',
+    '{"schemaVersion": 1, "outputs": [{"path": "ok.md", "sha256": "' +
+    ValidSHA + '", "size": -1}]}');
+  CheckRejectedManifest('a non-object output entry',
+    '{"schemaVersion": 1, "outputs": [42]}');
+  CheckRejectedManifest('an empty output path',
+    '{"schemaVersion": 1, "outputs": [{"path": "", "sha256": "' +
+    ValidSHA + '", "size": 1}]}');
+  WriteTextFile('build/incremental-manifest-checks/manifest.json',
+    '{"schemaVersion": 1, "outputs": [{"path": "ok.md", "sha256": "' +
+    ValidSHA + '", "size": 1}]}');
+  ReadBack := ReadManifest('build/incremental-manifest-checks');
+  try
+    Check(Assigned(ReadBack) and (Length(ReadBack.Entries) = 1),
+      'a well-formed manifest should still be accepted');
+  finally
+    ReadBack.Free;
+  end;
+
+  AtomicDirectory := 'build/incremental-atomic-docs';
+  DeleteTree(AtomicDirectory);
+  WriteTextFile(AtomicDirectory + '/source.txt', 'copied content');
+  BeginOutputLedger;
+  WriteOutputFile(AtomicDirectory + '/page.html', 'first version');
+  WriteOutputFile(AtomicDirectory + '/page.html', 'second version');
+  Check(ReadUTF8File(AtomicDirectory + '/page.html') = 'second version',
+    'atomic writes should replace existing output content');
+  WriteOutputCopy(AtomicDirectory + '/source.txt', AtomicDirectory +
+    '/asset.css');
+  WriteOutputCopy(AtomicDirectory + '/source.txt', AtomicDirectory +
+    '/asset.css');
+  Check(ReadUTF8File(AtomicDirectory + '/asset.css') = 'copied content',
+    'atomic copies should replace existing output content');
+  Check(not FileExists(AtomicDirectory + '/page.html.pasweave-tmp') and
+    not FileExists(AtomicDirectory + '/asset.css.pasweave-tmp'),
+    'atomic writes should not leave temporary files behind');
+
   DeleteTree('build/incremental-test-input');
   DeleteTree(OutputDirectory);
   DeleteTree(SecondOutputDirectory);
   DeleteTree(StaleDirectory);
+  DeleteTree(AtomicDirectory);
+  DeleteTree('build/incremental-manifest-checks');
 end;
 
 end.

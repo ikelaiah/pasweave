@@ -54,9 +54,9 @@ roadmap scope is included.
   Dependency and type-relationship diagrams remain unchanged, and individual
   declarations were not added to the project graphs.
 
-See [the HTML renderer guide](html-renderer.md),
-[navigation and source traceability](navigation-and-source-traceability.md),
-and the [v0.5.1 release note](../RELEASE_NOTE_v0.5.1.md) for the detailed
+See [the HTML renderer guide](../html-renderer.md),
+[navigation and source traceability](../navigation-and-source-traceability.md),
+and the [v0.5.1 release note](../release-notes/RELEASE_NOTE_v0.5.1.md) for the detailed
 behavior, fallback, and rationale.
 
 ## Compatibility

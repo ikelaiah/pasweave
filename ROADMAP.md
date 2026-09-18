@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave has shipped `v0.6.0` and is preparing `v0.7.0`. The parser-to-site
+PasWeave has shipped `v0.7.0` and is preparing `v0.8.0`. The parser-to-site
 pipeline works; the path to `v1.0.0` is about making that pipeline understand
 real project builds, improving author feedback and navigation, scaling it
 safely, and then freezing the public contracts.
@@ -281,7 +281,7 @@ to **Symbols Index** in the page header, the `symbols.html` heading and
 breadcrumb, and the project-index Browse API card. Routes, stable anchors,
 filters, reader themes, and generated-site behavior were preserved. Evidence is
 recorded in the [changelog](CHANGELOG.md), the [v0.5.3 release
-note](RELEASE_NOTE_v0.5.3.md), and the [HTML renderer
+note](docs/release-notes/RELEASE_NOTE_v0.5.3.md), and the [HTML renderer
 guide](docs/html-renderer.md).
 
 Exit criteria:
@@ -300,7 +300,7 @@ totals were aligned with the renderable non-unit symbol-index population in
 both HTML and Markdown. The CI coverage metric behind
 `--min-documentation-coverage` was intentionally unchanged. Evidence is
 recorded in the [changelog](CHANGELOG.md), the [v0.5.4 release
-note](RELEASE_NOTE_v0.5.4.md), and the [HTML renderer
+note](docs/release-notes/RELEASE_NOTE_v0.5.4.md), and the [HTML renderer
 guide](docs/html-renderer.md).
 
 Exit criteria:
@@ -319,7 +319,7 @@ using the A–Z symbol index, explore individual units, or search the complete
 public API reference." This records the wording shipped in v0.5.5; v0.5.6
 later refined the terminology. Evidence is recorded in the
 [changelog](CHANGELOG.md) and the [v0.5.5 release
-note](RELEASE_NOTE_v0.5.5.md).
+note](docs/release-notes/RELEASE_NOTE_v0.5.5.md).
 
 Exit criteria:
 
@@ -337,8 +337,8 @@ tests, living documentation, and generated examples were updated to use
 as appearing under the `#` section. Routes, stable anchors, sorting, filters,
 and category links were preserved. Evidence is recorded in the
 [changelog](CHANGELOG.md), the [v0.5.6 release
-note](RELEASE_NOTE_v0.5.6.md), the [HTML renderer guide](docs/html-renderer.md),
-and the [v0.5.6 PR note](docs/PR_NOTE_v0.5.6.md).
+note](docs/release-notes/RELEASE_NOTE_v0.5.6.md), the [HTML renderer guide](docs/html-renderer.md),
+and the [v0.5.6 PR note](docs/pr-notes/PR_NOTE_v0.5.6.md).
 
 Exit criteria:
 
@@ -356,9 +356,12 @@ determinism or deleting files PasWeave does not own.
 
 Status: completed on 2026-08-17. The manifest contract, input fingerprint,
 stale-output ownership rules, interrupted-build recovery, clean-build parity,
-timing and peak-heap baselines, and cache-invalidation diagnostics are recorded
-in [safe incremental builds](docs/incremental-builds.md), the
-[changelog](CHANGELOG.md), and the v0.6.0 release note.
+and cache-invalidation diagnostics are recorded in
+[safe incremental builds](docs/incremental-builds.md), the
+[changelog](CHANGELOG.md), and the
+[v0.6.0 release note](docs/release-notes/RELEASE_NOTE_v0.6.0.md). Timing and
+peak-heap baselines are recorded in the
+[incremental-builds guide](docs/incremental-builds.md).
 
 Exit criteria:
 
@@ -376,7 +379,34 @@ Exit criteria:
 - Document cache invalidation and make corrupted cache state a recoverable
   diagnostic rather than a fatal mystery.
 
-## `v0.7.0` — Reproducible project configuration
+## `v0.7.0` — Quality, security, and documentation hardening
+
+**Outcome:** the pre-release pipeline is safe to adopt and pleasant to learn
+from: generated pages cannot smuggle active content, output replacement cannot
+destroy the previous build, the CLI contract is covered by automated tests, and
+the documentation is accurate, indexed, and link-checked.
+
+Status: completed on 2026-09-17. The security and correctness fixes, CLI test
+suite, shared render helpers, documentation overhaul, and verification strategy
+are recorded in [CHANGELOG.md](CHANGELOG.md),
+[ADR-0003](docs/decisions/0003-golden-output-and-cli-tests.md), and the
+[v0.7.0 release note](docs/release-notes/RELEASE_NOTE_v0.7.0.md).
+
+Exit criteria:
+
+- Reject every link target outside the documented allow-list, including
+  control-character scheme obfuscation.
+- Replace output files atomically and never leave temporary files behind.
+- Sanitize model-derived output file names and validate renderer-interpolated
+  theme tokens.
+- Cover the compiled CLI contract (exit codes, option parsing, incremental
+  parity, coverage policy) with an automated suite that runs in CI.
+- Give every test suite a named case and a shared assertion helper.
+- Fix every broken relative documentation link and add a CI link check.
+- Add a documentation index, a contributing guide, and an ADR for the
+  verification strategy.
+
+## `v0.8.0` — Reproducible project configuration
 
 **Outcome:** a project can commit one reviewable PasWeave configuration and
 reproduce a build without restating stable options on every command line.
@@ -395,7 +425,7 @@ Exit criteria:
 - Include the effective normalized configuration in diagnostics or model
   metadata so a build can be reproduced.
 
-## `v0.8.0` — Portability and ecosystem validation
+## `v0.9.0` — Portability and ecosystem validation
 
 **Outcome:** PasWeave has an evidence-backed support matrix and is tested
 outside its original Windows development path.
@@ -415,7 +445,7 @@ Exit criteria:
   a maintained compatibility document.
 - Verify offline assets and third-party notices in every packaged artifact.
 
-## `v0.9.0` — Contract freeze and release candidates
+## `v0.10.0` — Contract freeze and release candidates
 
 **Outcome:** the CLI, configuration, model schema, URLs, and renderer behavior
 are ready to become supported `v1.0.0` contracts.

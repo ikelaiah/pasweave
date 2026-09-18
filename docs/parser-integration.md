@@ -90,8 +90,9 @@ explicitly unresolved.
 - With no compiler settings, host OS/CPU defaults and the original two parser
   arguments are retained exactly. Explicit include paths and defines are
   repeatable; explicit OS/CPU values are normalized before adapter use.
-- Lazarus `.lpi` and `.lpk` files are not read yet. Their compiler settings
-  must be supplied explicitly on the command line.
+- Lazarus `.lpi` and `.lpk` files are read and converted into compiler
+  settings; see the [Lazarus project and package guide](lazarus-projects.md).
+  Explicit command-line settings still take precedence.
 - Configured unit paths resolve source files only. Compiled `.ppu` dependencies
   remain external and unresolved in the documentation model.
 - FPC 3.2.2 reports a missing include and an include it cannot open through the

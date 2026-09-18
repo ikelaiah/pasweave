@@ -283,6 +283,8 @@ begin
     begin
       if ParamStr(I) = '--output' then
         OutputPath := RequireOptionValue(I, '--output')
+      else if Pos('--output=', ParamStr(I)) = 1 then
+        OutputPath := Copy(ParamStr(I), Length('--output=') + 1, MaxInt)
       else if ParamStr(I) = '--project-name' then
       begin
         ProjectName := RequireOptionValue(I, '--project-name');
@@ -499,7 +501,11 @@ begin
 
     if SourcePath = '' then
       raise EPasWeaveInputError.Create('missing unit or source directory');
-
+    { Validate before fingerprinting so a typo reports a clean input error
+      instead of an unhandled file-open failure. }
+    if not FileExists(SourcePath) and not DirectoryExists(SourcePath) then
+      raise EPasWeaveInputError.CreateFmt('source path does not exist: %s',
+        [SourcePath]);
     IsLazarusInput := SameText(ExtractFileExt(SourcePath), '.lpi') or
       SameText(ExtractFileExt(SourcePath), '.lpk');
     if IsLazarusInput then
@@ -617,35 +623,21 @@ begin
           CommentStyles, DiscoveryOptions, CompilerOptions);
       SamplePeakHeap;
     end;
-  finally
-    LazarusConfiguration.Free;
-    PackagePaths.Free;
-    CompilerOptions.Free;
-    DiscoveryOptions.Free;
-  end;
 
-  if SkipBuild then
-  begin
-    OldManifest.Free;
-    Exit;
-  end;
+    if SkipBuild then
+      Exit;
 
-  if not TryConfigureSourceLinks(Project, RepositoryURL, SourceLinkTemplate,
-    SourceLinkError) then
-  begin
-    OldManifest.Free;
-    Project.Free;
-    raise EPasWeaveInputError.Create(SourceLinkError);
-  end;
-  if HasProjectMark then
-    Project.ProjectMark := ProjectMark;
-  if HasThemeAccent then
-    Project.ThemeAccent := ThemeAccent;
-  if HasThemeAccentAlt then
-    Project.ThemeAccentAlt := ThemeAccentAlt;
-  if HasThemeFont then
-    Project.ThemeFont := ThemeFont;
-  try
+    if not TryConfigureSourceLinks(Project, RepositoryURL, SourceLinkTemplate,
+      SourceLinkError) then
+      raise EPasWeaveInputError.Create(SourceLinkError);
+    if HasProjectMark then
+      Project.ProjectMark := ProjectMark;
+    if HasThemeAccent then
+      Project.ThemeAccent := ThemeAccent;
+    if HasThemeAccentAlt then
+      Project.ThemeAccentAlt := ThemeAccentAlt;
+    if HasThemeFont then
+      Project.ThemeFont := ThemeFont;
     if HasMinimumCoverage then
       AddDocumentationCoverageDiagnostic(Project, MinimumCoverage);
     OutputFile := IncludeTrailingPathDelimiter(OutputPath) + 'api-model.json';
@@ -714,6 +706,10 @@ begin
   finally
     Project.Free;
     OldManifest.Free;
+    LazarusConfiguration.Free;
+    PackagePaths.Free;
+    CompilerOptions.Free;
+    DiscoveryOptions.Free;
   end;
 end;
 

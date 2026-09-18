@@ -11,22 +11,11 @@ implementation
 uses
   SysUtils, PasWeave.Model, PasWeave.Model.JSON, PasWeave.Parser,
   PasWeave.Render.HTML, PasWeave.Render.HTML.Assets,
-  PasWeave.Render.Support;
-
-procedure Check(ACondition: Boolean; const AMessage: string);
-begin
-  if not ACondition then
-    raise Exception.Create('discovery test failed: ' + AMessage);
-end;
+  PasWeave.Render.Support, PasWeave.TestSupport;
 
 function FindUnit(AProject: TDocProject; const AName: string): TDocUnit;
-var
-  I: Integer;
 begin
-  Result := nil;
-  for I := 0 to AProject.Units.Count - 1 do
-    if SameText(TDocUnit(AProject.Units[I]).Name, AName) then
-      Exit(TDocUnit(AProject.Units[I]));
+  Result := FindUnitModel(AProject, AName);
 end;
 
 procedure CheckSymbolIndexContracts;
@@ -268,9 +257,11 @@ begin
       'the header should link the symbol-index destination on the index');
     Check(Pos('href="../symbols.html"', string(UnitHTML)) > 0,
       'the header should link the symbol-index destination on unit pages');
-    Check(Pos('data-theme', string(IndexHTML)) > 0,
+    Check(Pos('setAttribute("data-theme", theme)',
+      string(IndexHTML)) > 0,
       'the theme bootstrap should be embedded in the project index');
-    Check(Pos('data-theme', string(UnitHTML)) > 0,
+    Check(Pos('setAttribute("data-theme", theme)',
+      string(UnitHTML)) > 0,
       'the theme bootstrap should be embedded in every unit page');
 
     Stylesheet := HTMLStylesheet(Project);
@@ -318,6 +309,21 @@ begin
     Check(Pos('"themeFont" : "Avenir Next"',
       string(ProjectToJSON(Project))) > 0,
       'JSON should expose the configured typography token');
+
+    Project.ThemeAccent := '#123456; } body { background: red; }';
+    Project.ThemeAccentAlt := 'not-a-color';
+    Project.ThemeFont := 'x"; } body { color: red; }';
+    Stylesheet := HTMLStylesheet(Project);
+    Check(Pos('background: red', string(Stylesheet)) = 0,
+      'invalid accent tokens should not be injected into the stylesheet');
+    Check(Pos('color: red', string(Stylesheet)) = 0,
+      'invalid font tokens should not be injected into the stylesheet');
+    Check(Pos('--accent: #5b4ee6;', string(Stylesheet)) > 0,
+      'invalid accent tokens should fall back to the default accent');
+    Check(Pos('--accent-2: #0e8f81;', string(Stylesheet)) > 0,
+      'invalid secondary accents should fall back to the default');
+    Check(Pos('--font-family: "Inter";', string(Stylesheet)) > 0,
+      'invalid font tokens should fall back to the default font');
   finally
     Project.Free;
   end;
@@ -430,9 +436,13 @@ end;
 
 procedure RunSymbolIndexAndThemeTests;
 begin
+  BeginTest('symbol index contracts');
   CheckSymbolIndexContracts;
+  BeginTest('non-letter symbols');
   CheckNonLetterSymbols;
+  BeginTest('theme contracts');
   CheckThemeContracts;
+  BeginTest('branding validation');
   CheckBrandingValidation;
 end;
 

@@ -66,9 +66,9 @@ incremental-build work or later roadmap scope is included.
 - The implementation uses only existing Pascal, CSS, and local JavaScript
   facilities and introduces no dependency or remote runtime.
 
-See [the HTML renderer guide](html-renderer.md),
-[navigation and source traceability](navigation-and-source-traceability.md),
-and the [v0.5.2 release note](../RELEASE_NOTE_v0.5.2.md) for the detailed
+See [the HTML renderer guide](../html-renderer.md),
+[navigation and source traceability](../navigation-and-source-traceability.md),
+and the [v0.5.2 release note](../release-notes/RELEASE_NOTE_v0.5.2.md) for the detailed
 behavior, fallback, and rationale.
 
 ## Compatibility

@@ -398,29 +398,43 @@ begin
           AddConfiguredPath(OptionValue, ABaseDirectory, ACompilerOptions,
             False);
       end
-      else if (Length(Token) >= 3) and
+      else if (Length(Token) >= 2) and
         (LowerCase(Copy(Token, 1, 2)) = '-t') then
       begin
         OptionValue := Copy(Token, 3, MaxInt);
-        if OptionValue <> '' then
-          try
-            ACompilerOptions.SetTargetOS(OptionValue);
-          except
-            on E: ECompilerConfigurationError do
-              raise ELazarusConfigurationError.Create(E.Message);
-          end;
+        if OptionValue = '' then
+        begin
+          Inc(I);
+          if I >= Values.Count then
+            raise ELazarusConfigurationError.Create(
+              'Lazarus -T option is missing its target OS');
+          OptionValue := Values[I];
+        end;
+        try
+          ACompilerOptions.SetTargetOS(OptionValue);
+        except
+          on E: ECompilerConfigurationError do
+            raise ELazarusConfigurationError.Create(E.Message);
+        end;
       end
-      else if (Length(Token) >= 3) and
+      else if (Length(Token) >= 2) and
         (LowerCase(Copy(Token, 1, 2)) = '-p') then
       begin
         OptionValue := Copy(Token, 3, MaxInt);
-        if OptionValue <> '' then
-          try
-            ACompilerOptions.SetTargetCPU(OptionValue);
-          except
-            on E: ECompilerConfigurationError do
-              raise ELazarusConfigurationError.Create(E.Message);
-          end;
+        if OptionValue = '' then
+        begin
+          Inc(I);
+          if I >= Values.Count then
+            raise ELazarusConfigurationError.Create(
+              'Lazarus -P option is missing its target CPU');
+          OptionValue := Values[I];
+        end;
+        try
+          ACompilerOptions.SetTargetCPU(OptionValue);
+        except
+          on E: ECompilerConfigurationError do
+            raise ELazarusConfigurationError.Create(E.Message);
+        end;
       end
       else
       begin
@@ -848,7 +862,7 @@ begin
 end;
 
 procedure VisitPackage(const APackageFilename: string;
-  AConfiguration: TLazarusConfiguration; AIndexedFiles, APackagePaths,
+  AConfiguration: TLazarusConfiguration; AIndexedFiles,
   AVisiting, AVisited: TStrings; const AExpectedName: string);
 var
   Document: TXMLDocument;
@@ -892,7 +906,7 @@ begin
           'referenced Lazarus package file does not exist: %s',
           [NormalisePath(DependencyFilename)]);
       VisitPackage(DependencyFilename, AConfiguration, AIndexedFiles,
-        APackagePaths, AVisiting, AVisited, Required.Name);
+        AVisiting, AVisited, Required.Name);
     end;
     AVisited.Add(APackageFilename);
   finally
@@ -998,7 +1012,7 @@ begin
     begin
       { The package was read above only to validate its XML. Re-read it into
         the normal graph path so its files and dependencies are imported. }
-      VisitPackage(InputFilename, Result, IndexedFiles, PackagePaths,
+      VisitPackage(InputFilename, Result, IndexedFiles,
         Visiting, Visited, '');
     end
     else
@@ -1014,7 +1028,7 @@ begin
           raise ELazarusConfigurationError.CreateFmt(
             'referenced Lazarus package file does not exist: %s',
             [NormalisePath(PackageFilename)]);
-        VisitPackage(PackageFilename, Result, IndexedFiles, PackagePaths,
+        VisitPackage(PackageFilename, Result, IndexedFiles,
           Visiting, Visited, Required.Name);
       end;
       if Result.SourceFiles.Count = 0 then

@@ -7,8 +7,53 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-17
+
+### Added
+
+- End-to-end CLI test suite (`tests/test_cli.pas`, `make test-cli`) that runs
+  the compiled executable and checks option parsing, exit codes, incremental
+  parity, manifest recovery, coverage policy, and source-link configuration.
+- Shared test support unit (`tests/PasWeave.TestSupport.pas`) with one
+  assertion entry point, named test cases, fixture finders, and golden
+  comparison helpers.
+- Documentation link checker (`scripts/check-docs-links.ps1`) wired into CI.
+- `CONTRIBUTING.md`, a pull request template, and a bug-report issue template
+  with a minimal reproducer prompt.
+- Grouped documentation index at `docs/README.md`.
+- ADR-0003 records the golden-output and compiled-CLI verification strategy.
+- Focused regression fixtures: separate-token Lazarus `-T`/`-P` targets,
+  manifest hardening cases, and `PW407`/`PW409`/`PW410` model diagnostics.
+
+### Changed
+
+- Extracted the duplicated model-derived render helpers (ordering,
+  renderability, anchors, indexed counts, diagnostic locations, kind sets)
+  into `PasWeave.Render.Support`; HTML, Markdown, and validation now share one
+  definition.
+- Split the monolithic test program into named feature cases that report the
+  behavior under test and continue after a failure.
+- Documentation navigation, the architecture tree, and the command table now
+  cover the CLI suite, the link check, and the decisions index.
+
 ### Fixed
 
+- Documentation links are now an allow-list: only `http:`, `https:`,
+  `mailto:`, fragment, and relative targets become links. Control characters
+  are stripped before the scheme check, closing the `java<TAB>script:` bypass
+  in generated pages.
+- Output replacement is atomic on Windows through `MoveFileEx`; a failed write
+  no longer deletes the previous output, and temporary files are cleaned up on
+  failure.
+- A missing source path is reported as a clean input error (exit code 2)
+  instead of an internal error, and the CLI now accepts `--output=DIR`.
+- Renderer-side theme tokens are validated before interpolation, so a
+  programmatically built model cannot inject CSS through accent or font
+  values.
+- Unit names are sanitized before becoming output file names, preventing path
+  traversal and Windows device-name collisions.
+- Symbol identifiers lowercase ASCII only, so generated IDs do not depend on
+  the host code page.
 - Hardened incremental manifest path handling against unsafe and
   stale-output paths, including absolute paths, drive-letter paths,
   backslash paths, `..` traversal segments, and paths resolving outside
@@ -24,12 +69,15 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Robust output-ledger entry parsing using guarded separators and
   `TryStrToInt64`, including rejection of negative sizes and
   separator-less entries.
+- Removed an unused `Project` read after free in the navigation suite and
+  bounded parent-symbol walks against malformed cyclic models.
 
 ### Documentation
 
 - Improved README onboarding for portable Windows versus source builds,
   with prerequisites and a suggested learning order.
-- Corrected the release-note link to `docs/RELEASE_NOTE_v0.6.0.md`.
+- Corrected the release-note link to
+  `docs/release-notes/RELEASE_NOTE_v0.6.0.md`.
 - Improved command copy/paste portability across PowerShell and bash.
 - Expanded command, architecture, guide, support, and troubleshooting
   navigation in the README.
@@ -38,6 +86,12 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Corrected the example expected documentation counts to the reported
   index totals (8 of 8 and 28 of 28 public API symbols documented).
 - Updated the roadmap to show v0.6.0 shipped and v0.7.0 being prepared.
+- Moved per-release and per-PR notes into `docs/release-notes/` and
+  `docs/pr-notes/`, and fixed every relative link in the repository.
+- Removed stale documentation that still described Lazarus `.lpi`/`.lpk`
+  inputs as unsupported and refreshed the `mathlib-fp` audit totals.
+- Corrected the sample-output regeneration commands so they reproduce the
+  checked-in snapshots.
 
 ## [0.6.0] - 2026-08-17
 
@@ -470,7 +524,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/ikelaiah/pasweave/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/ikelaiah/pasweave/compare/v0.5.6...v0.6.0
 [0.5.6]: https://github.com/ikelaiah/pasweave/compare/v0.5.5...v0.5.6
 [0.5.5]: https://github.com/ikelaiah/pasweave/compare/v0.5.4...v0.5.5

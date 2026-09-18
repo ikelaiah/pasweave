@@ -89,9 +89,9 @@ Markdown or HTML.
 
 ## Real-project audit
 
-The checked-out `mathlib-fp` validation corpus was rebuilt from its 45-unit
-`src` tree with the default error-only policy. PasWeave produced 2,338 symbols
-and 45 Markdown and HTML unit pages with zero errors and 2,676 `PW401`
+The checked-out `mathlib-fp` validation corpus was rebuilt from its 50-unit
+`src` tree with the default error-only policy. PasWeave produced 2,978 symbols
+and 50 Markdown and HTML unit pages with zero errors and 2,846 `PW401`
 warnings. Those warnings identify routine parameters without matching
 structured documentation; the command correctly exited 0 under the useful
 local default. Projects that want those findings to block CI can opt into

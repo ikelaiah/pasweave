@@ -48,8 +48,8 @@ contract, direct-file input, and default `///` workflow remain intact. No
 - GitHub Pages pull-request runs build and validate the generated site without
   configuring or publishing Pages. Trusted `main` and manual runs can deploy.
 
-See [ADR-0002](docs/decisions/0002-repository-relative-source-links.md) and
-[navigation and source traceability](docs/navigation-and-source-traceability.md)
+See [ADR-0002](../decisions/0002-repository-relative-source-links.md) and
+[navigation and source traceability](../navigation-and-source-traceability.md)
 for the detailed contracts and alternatives.
 
 ## Compatibility

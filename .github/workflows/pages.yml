@@ -35,6 +35,9 @@ jobs:
           make test
           make
 
+      - name: Check documentation links
+        run: pwsh -NoProfile -File scripts/check-docs-links.ps1
+
       - name: Generate the scientific API showcase
         run: |
           build/bin/pasweave build examples/scientific-api \

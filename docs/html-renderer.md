@@ -48,16 +48,14 @@ rules for `file://` URLs do not disable search.
   category filters for types, routines, members, constants, and variables.
 - Every page header exposes a persistent **Symbols Index** destination alongside
   the units destination, and a keyboard-accessible reader theme control.
-- Unit pages render public, protected, published, automated, and
-  strict-protected API. Private and strict-private symbols, including members
-  beneath private parents, remain JSON-only.
 - HTML and Markdown use the same stable symbol anchors.
 - Resolved dependency, parent, `@see`, inheritance, and implementation targets
   use model identities and those same anchors; unresolved targets remain
   visible as plain text rather than becoming guessed links.
 - Declarations and documentation text are HTML-escaped.
-- Documentation links reject active `javascript:`, `data:`, and `vbscript:`
-  schemes.
+- Documentation links are limited to `http:`, `https:`, `mailto:`, fragment,
+  and relative targets; active schemes such as `javascript:`, `data:`, and
+  `vbscript:` never become clickable links.
 - Build diagnostics survive partial parsing and appear on the project index.
 - The index maps every parsed unit and every project-local interface
   dependency into a linked flowchart. Dependencies outside the documented

@@ -246,7 +246,12 @@ begin
     end
     else
     begin
-      Result := Result + LowerCase(C);
+      { Lowercase ASCII only. LowerCase(Char) is codepage-dependent, so
+        non-ASCII bytes would otherwise change symbol IDs between hosts. }
+      if (C >= 'A') and (C <= 'Z') then
+        Result := Result + Chr(Ord(C) + 32)
+      else
+        Result := Result + C;
       InWhitespace := False;
     end;
   end;
@@ -710,7 +715,7 @@ begin
 end;
 
 procedure AddElementSymbols(AElement: TPasElement; AUnit: TDocUnit;
-  AEngine: TPasWeaveTreeContainer; const ASourceRoot, ADefaultFilename,
+  const ASourceRoot, ADefaultFilename,
   ADefaultSourceFile, AParentSymbolID, AParentQualifiedName: string;
   ASourceTexts: TSourceTextCache;
   ACommentStyles: TDocumentationCommentStyles;
@@ -729,7 +734,7 @@ begin
   begin
     for I := 0 to TPasOverloadedProc(AElement).Overloads.Count - 1 do
       AddElementSymbols(TPasElement(TPasOverloadedProc(AElement).Overloads[I]),
-        AUnit, AEngine, ASourceRoot, ADefaultFilename, ADefaultSourceFile,
+        AUnit, ASourceRoot, ADefaultFilename, ADefaultSourceFile,
         AParentSymbolID, AParentQualifiedName, ASourceTexts,
         ACommentStyles, AReadIncludeDocumentation);
     Exit;
@@ -789,14 +794,14 @@ begin
   begin
     Members := TPasMembersType(AElement).Members;
     for I := 0 to Members.Count - 1 do
-      AddElementSymbols(TPasElement(Members[I]), AUnit, AEngine, ASourceRoot,
+      AddElementSymbols(TPasElement(Members[I]), AUnit, ASourceRoot,
         ADefaultFilename, ADefaultSourceFile, Symbol.ID,
         Symbol.QualifiedName, ASourceTexts, ACommentStyles,
         AReadIncludeDocumentation);
   end;
 end;
 
-function ConvertModule(AModule: TPasModule; AEngine: TPasWeaveTreeContainer;
+function ConvertModule(AModule: TPasModule;
   const AFileName, ASourceRoot, ASourceText: string;
   ACommentStyles: TDocumentationCommentStyles;
   AReadIncludeDocumentation: Boolean): TDocUnit;
@@ -824,7 +829,7 @@ begin
               AModule.InterfaceSection.UsesClause[I].Name);
       end;
 
-      AddElementSymbols(AModule, Result, AEngine, ASourceRoot,
+      AddElementSymbols(AModule, Result, ASourceRoot,
         DefaultFilename, AFileName, '', '', SourceTexts, ACommentStyles,
         AReadIncludeDocumentation);
       UnitSymbol := TDocSymbol(Result.Symbols[Result.Symbols.Count - 1]);
@@ -833,7 +838,7 @@ begin
         for I := 0 to AModule.InterfaceSection.Declarations.Count - 1 do
           AddElementSymbols(
             TPasElement(AModule.InterfaceSection.Declarations[I]),
-            Result, AEngine, ASourceRoot, DefaultFilename,
+            Result, ASourceRoot, DefaultFilename,
             AFileName, UnitSymbol.ID, AModule.Name, SourceTexts,
             ACommentStyles, AReadIncludeDocumentation);
     except
@@ -897,7 +902,7 @@ begin
           ModuleClassName);
         Exit;
       end;
-      AUnit := ConvertModule(Module, Engine, AFileName, ASourceRoot,
+      AUnit := ConvertModule(Module, AFileName, ASourceRoot,
         SourceText, ACommentStyles,
         ACompilerOptions.IncludePaths.Count > 0);
       Result := True;

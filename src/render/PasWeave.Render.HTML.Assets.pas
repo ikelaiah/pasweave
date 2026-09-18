@@ -44,26 +44,43 @@ end;
 
 function HTMLStylesheet(AProject: TDocProject): UTF8String;
 var
+  Accent: string;
+  AccentAlt: string;
+  FontFamily: string;
   AccentDark: string;
   AccentAltDark: string;
 begin
   Result := '';
-  if AProject.ThemeAccent = DefaultThemeAccent then
+  { The CLI validates these tokens, but the model is public API: fall back to
+    the documented defaults so a programmatic caller cannot inject CSS. }
+  if IsValidThemeColor(AProject.ThemeAccent) then
+    Accent := AProject.ThemeAccent
+  else
+    Accent := DefaultThemeAccent;
+  if IsValidThemeColor(AProject.ThemeAccentAlt) then
+    AccentAlt := AProject.ThemeAccentAlt
+  else
+    AccentAlt := DefaultThemeAccentAlt;
+  if IsValidThemeFont(AProject.ThemeFont) then
+    FontFamily := AProject.ThemeFont
+  else
+    FontFamily := DefaultThemeFont;
+  if Accent = DefaultThemeAccent then
     AccentDark := '#a99eff'
   else
-    AccentDark := LightenThemeColor(AProject.ThemeAccent, 40);
-  if AProject.ThemeAccentAlt = DefaultThemeAccentAlt then
+    AccentDark := LightenThemeColor(Accent, 40);
+  if AccentAlt = DefaultThemeAccentAlt then
     AccentAltDark := '#63d7ca'
   else
-    AccentAltDark := LightenThemeColor(AProject.ThemeAccentAlt, 40);
+    AccentAltDark := LightenThemeColor(AccentAlt, 40);
   AppendLine(Result, ':root, :root[data-theme="system"] {');
   AppendLine(Result, '  color-scheme: light;');
   AppendLine(Result, '  --scheme: light;');
   AppendLine(Result, '  --bg: #f7f8fc; --surface: #ffffff; --surface-2: #eef1f8;');
   AppendLine(Result, '  --text: #172033; --muted: #667085; --line: #dbe1ec;');
-  AppendLine(Result, '  --accent: ' + AProject.ThemeAccent + '; --accent-2: ' +
-    AProject.ThemeAccentAlt + '; --code: #182034;');
-  AppendLine(Result, '  --font-family: "' + AProject.ThemeFont + '";');
+  AppendLine(Result, '  --accent: ' + Accent + '; --accent-2: ' +
+    AccentAlt + '; --code: #182034;');
+  AppendLine(Result, '  --font-family: "' + FontFamily + '";');
   AppendLine(Result, '  --warning-bg: #fff8e6; --warning-line: #e5a923; ' +
     '--warning-text: #5e460e;');
   AppendLine(Result, '  --danger-bg: #fff0f3; --danger-line: #d13f61; ' +
@@ -1350,11 +1367,6 @@ begin
   {$ENDIF}
 end;
 
-procedure CopyFileBytes(const ASourceFilename, ADestinationFilename: string);
-begin
-  WriteOutputCopy(ASourceFilename, ADestinationFilename);
-end;
-
 procedure CopyFontFiles(const ASourceDirectory, ADestinationDirectory: string);
 var
   Search: TSearchRec;
@@ -1378,7 +1390,7 @@ begin
       FindClose(Search);
     end;
     for I := 0 to Filenames.Count - 1 do
-      CopyFileBytes(IncludeTrailingPathDelimiter(ASourceDirectory) +
+      WriteOutputCopy(IncludeTrailingPathDelimiter(ASourceDirectory) +
         Filenames[I], IncludeTrailingPathDelimiter(ADestinationDirectory) +
         Filenames[I]);
   finally
@@ -1397,11 +1409,11 @@ begin
   if not ForceDirectories(DestinationDirectory) then
     raise EFCreateError.CreateFmt('cannot create KaTeX asset directory: %s',
       [DestinationDirectory]);
-  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'katex.min.js',
+  WriteOutputCopy(IncludeTrailingPathDelimiter(SourceDirectory) + 'katex.min.js',
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'katex.min.js');
-  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'katex.min.css',
+  WriteOutputCopy(IncludeTrailingPathDelimiter(SourceDirectory) + 'katex.min.css',
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'katex.min.css');
-  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'LICENSE',
+  WriteOutputCopy(IncludeTrailingPathDelimiter(SourceDirectory) + 'LICENSE',
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'LICENSE');
   CopyFontFiles(IncludeTrailingPathDelimiter(SourceDirectory) + 'fonts',
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'fonts');
@@ -1418,10 +1430,10 @@ begin
   if not ForceDirectories(DestinationDirectory) then
     raise EFCreateError.CreateFmt('cannot create Mermaid asset directory: %s',
       [DestinationDirectory]);
-  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) +
+  WriteOutputCopy(IncludeTrailingPathDelimiter(SourceDirectory) +
     'mermaid.tiny.js', IncludeTrailingPathDelimiter(DestinationDirectory) +
     'mermaid.tiny.js');
-  CopyFileBytes(IncludeTrailingPathDelimiter(SourceDirectory) + 'LICENSE',
+  WriteOutputCopy(IncludeTrailingPathDelimiter(SourceDirectory) + 'LICENSE',
     IncludeTrailingPathDelimiter(DestinationDirectory) + 'LICENSE');
 end;
 
