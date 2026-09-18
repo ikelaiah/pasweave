@@ -28,6 +28,9 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   source-file detection, readability, symlink checks, and whole-file reads.
   Directory walkers remain specialized where their pruning and filtering
   semantics differ.
+- Replaced the repeated `--name` / `--name=value` option branches with a
+  shared `MatchValueOption` helper, roughly halving `ParseCommandLine` and
+  centralizing separated-versus-equals value handling.
 
 ## [0.7.0] - 2026-09-17
 
