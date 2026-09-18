@@ -1,0 +1,760 @@
+/// Converts fcl-passrc elements into the renderer-independent model.
+///
+/// Kept separate from the parser adapter so the adapter unit only owns tree
+/// construction and diagnostics.
+unit PasWeave.FPCAdapter.Symbols;
+
+{$mode objfpc}{$H+}
+
+interface
+
+uses
+  Classes, PasTree, PasWeave.Comments, PasWeave.Model;
+
+type
+
+  TElementSourceInfo = class
+  public
+    Column: Integer;
+    constructor Create(AColumn: Integer);
+  end;
+
+  TSourceTextCache = class
+  private
+    FFileNames: TStringList;
+    FSourceTexts: TStringList;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Add(const AFileName, ASourceText: string);
+    function TextFor(const AFileName: string): string;
+  end;
+
+function NormalisePath(const APath: string): string;
+function RelativeSourceFilename(const AFileName, ASourceRoot: string): string;
+function ReadSourceText(const AFileName: string): string;
+function ConvertModule(AModule: TPasModule;
+  const AFileName, ASourceRoot, ASourceText: string;
+  ACommentStyles: TDocumentationCommentStyles;
+  AReadIncludeDocumentation: Boolean): TDocUnit;
+
+implementation
+
+uses
+  SysUtils;
+
+constructor TElementSourceInfo.Create(AColumn: Integer);
+begin
+  inherited Create;
+  Column := AColumn;
+end;
+
+
+function NormalisePath(const APath: string): string;
+begin
+  Result := StringReplace(APath, '\', '/', [rfReplaceAll]);
+end;
+
+function RelativeSourceFilename(const AFileName, ASourceRoot: string): string;
+var
+  RootPath: string;
+begin
+  if AFileName = '' then
+    Exit('');
+  RootPath := IncludeTrailingPathDelimiter(ExpandFileName(ASourceRoot));
+  Result := ExtractRelativePath(RootPath, ExpandFileName(AFileName));
+  Result := NormalisePath(Result);
+end;
+
+function ReadSourceText(const AFileName: string): string;
+var
+  SourceStream: TFileStream;
+begin
+  SourceStream := TFileStream.Create(AFileName, fmOpenRead or fmShareDenyWrite);
+  try
+    SetLength(Result, SourceStream.Size);
+    if SourceStream.Size > 0 then
+      SourceStream.ReadBuffer(Result[1], SourceStream.Size);
+  finally
+    SourceStream.Free;
+  end;
+end;
+
+constructor TSourceTextCache.Create;
+begin
+  inherited Create;
+  FFileNames := TStringList.Create;
+  FSourceTexts := TStringList.Create;
+  FFileNames.CaseSensitive := False;
+end;
+
+destructor TSourceTextCache.Destroy;
+begin
+  FSourceTexts.Free;
+  FFileNames.Free;
+  inherited Destroy;
+end;
+
+procedure TSourceTextCache.Add(const AFileName, ASourceText: string);
+var
+  FileName: string;
+  Index: Integer;
+begin
+  FileName := ExpandFileName(AFileName);
+  Index := FFileNames.IndexOf(FileName);
+  if Index < 0 then
+  begin
+    FFileNames.Add(FileName);
+    FSourceTexts.Add(ASourceText);
+  end
+  else
+    FSourceTexts[Index] := ASourceText;
+end;
+
+function TSourceTextCache.TextFor(const AFileName: string): string;
+var
+  FileName: string;
+  Index: Integer;
+begin
+  FileName := ExpandFileName(AFileName);
+  Index := FFileNames.IndexOf(FileName);
+  if Index < 0 then
+  begin
+    Result := ReadSourceText(FileName);
+    Add(FileName, Result);
+  end
+  else
+    Result := FSourceTexts[Index];
+end;
+
+function ElementColumn(AElement: TPasElement): Integer;
+begin
+  Result := 0;
+  if Assigned(AElement) and (AElement.CustomData is TElementSourceInfo) then
+    Result := TElementSourceInfo(AElement.CustomData).Column;
+end;
+
+function CanonicalText(const AText: string): string;
+var
+  I: Integer;
+  InWhitespace: Boolean;
+  C: Char;
+begin
+  Result := '';
+  InWhitespace := False;
+  for I := 1 to Length(AText) do
+  begin
+    C := AText[I];
+    if C in [' ', #9, #10, #13] then
+    begin
+      if (Result <> '') and not InWhitespace then
+        Result := Result + ' ';
+      InWhitespace := True;
+    end
+    else
+    begin
+      { Lowercase ASCII only. LowerCase(Char) is codepage-dependent, so
+        non-ASCII bytes would otherwise change symbol IDs between hosts. }
+      if (C >= 'A') and (C <= 'Z') then
+        Result := Result + Chr(Ord(C) + 32)
+      else
+        Result := Result + C;
+      InWhitespace := False;
+    end;
+  end;
+  Result := Trim(Result);
+end;
+
+function NormaliseDeclaration(const ADeclaration: string): string;
+begin
+  Result := StringReplace(ADeclaration, #13#10, #10, [rfReplaceAll]);
+  Result := StringReplace(Result, #13, #10, [rfReplaceAll]);
+  Result := Trim(Result);
+end;
+
+function SpecializeTypeText(ASpecialize: TPasSpecializeType;
+  AIncludeAliasName: Boolean): string; forward;
+
+function TypeReferenceText(AType: TPasType): string;
+begin
+  if not Assigned(AType) then
+    Exit('');
+  if AType is TPasSpecializeType then
+    Result := SpecializeTypeText(TPasSpecializeType(AType), False)
+  else if AType.Name <> '' then
+    Result := AType.SafeName
+  else
+    Result := AType.GetDeclaration(False);
+end;
+
+function TypeLookupName(AType: TPasType): string;
+begin
+  if not Assigned(AType) then
+    Exit('');
+  if AType is TPasSpecializeType then
+    Result := TypeLookupName(TPasSpecializeType(AType).DestType)
+  else if AType.Name <> '' then
+    Result := AType.SafeName
+  else
+    Result := AType.GetDeclaration(False);
+end;
+
+procedure AddTypeRelationship(ASymbol: TDocSymbol;
+  AKind: TTypeRelationshipKind; AType: TPasType);
+var
+  DisplayName: string;
+  TargetName: string;
+begin
+  TargetName := Trim(TypeLookupName(AType));
+  DisplayName := Trim(TypeReferenceText(AType));
+  if TargetName = '' then
+    TargetName := DisplayName;
+  if DisplayName = '' then
+    DisplayName := TargetName;
+  if TargetName <> '' then
+    ASymbol.TypeRelationships.Add(TDocTypeRelationship.Create(AKind,
+      TargetName, DisplayName));
+end;
+
+procedure AddClassTypeRelationships(AClass: TPasClassType;
+  ASymbol: TDocSymbol);
+var
+  I: Integer;
+  RelationshipKind: TTypeRelationshipKind;
+begin
+  if AClass.ObjKind in okAllHelpers then
+    Exit;
+
+  AddTypeRelationship(ASymbol, trkInheritance, AClass.AncestorType);
+  if ASymbol.Kind = skInterface then
+    RelationshipKind := trkInheritance
+  else
+    RelationshipKind := trkImplementation;
+  for I := 0 to AClass.Interfaces.Count - 1 do
+    AddTypeRelationship(ASymbol, RelationshipKind,
+      TPasType(AClass.Interfaces[I]));
+end;
+
+function ClassDeclaration(AClass: TPasClassType): string;
+var
+  TypeName: string;
+  Parents: TStringList;
+  I: Integer;
+  ReferenceText: string;
+begin
+  TypeName := AClass.SafeName;
+  if Assigned(AClass.GenericTemplateTypes) and
+    (AClass.GenericTemplateTypes.Count > 0) then
+    TypeName := TypeName +
+      GenericTemplateTypesAsString(AClass.GenericTemplateTypes);
+
+  Result := TypeName + ' = ' + ObjKindNames[AClass.ObjKind];
+  if AClass.ObjKind in okAllHelpers then
+  begin
+    ReferenceText := TypeReferenceText(AClass.HelperForType);
+    if ReferenceText <> '' then
+      Result := Result + ' for ' + ReferenceText;
+  end
+  else
+  begin
+    Parents := TStringList.Create;
+    try
+      ReferenceText := TypeReferenceText(AClass.AncestorType);
+      if ReferenceText <> '' then
+        Parents.Add(ReferenceText);
+      for I := 0 to AClass.Interfaces.Count - 1 do
+      begin
+        ReferenceText := TypeReferenceText(
+          TPasType(AClass.Interfaces[I]));
+        if ReferenceText <> '' then
+          Parents.Add(ReferenceText);
+      end;
+      if Parents.Count > 0 then
+      begin
+        Result := Result + '(';
+        for I := 0 to Parents.Count - 1 do
+        begin
+          if I > 0 then
+            Result := Result + ', ';
+          Result := Result + Parents[I];
+        end;
+        Result := Result + ')';
+      end;
+    finally
+      Parents.Free;
+    end;
+  end;
+  Result := Result + #10 + 'end';
+end;
+
+function RecordDeclaration(ARecord: TPasRecordType): string;
+var
+  TypeName: string;
+  RecordKeyword: string;
+begin
+  TypeName := ARecord.SafeName;
+  if Assigned(ARecord.GenericTemplateTypes) and
+    (ARecord.GenericTemplateTypes.Count > 0) then
+    TypeName := TypeName +
+      GenericTemplateTypesAsString(ARecord.GenericTemplateTypes);
+  RecordKeyword := 'record';
+  if ARecord.IsPacked then
+    if ARecord.IsBitPacked then
+      RecordKeyword := 'bitpacked record'
+    else
+      RecordKeyword := 'packed record';
+  Result := TypeName + ' = ' + RecordKeyword + #10 + 'end';
+end;
+
+function SpecializeTypeText(ASpecialize: TPasSpecializeType;
+  AIncludeAliasName: Boolean): string;
+var
+  I: Integer;
+  Parameter: TPasElement;
+  ParameterText: string;
+begin
+  Result := 'specialize ' + TypeReferenceText(ASpecialize.DestType) + '<';
+  for I := 0 to ASpecialize.Params.Count - 1 do
+  begin
+    if I > 0 then
+      Result := Result + ', ';
+    Parameter := TPasElement(ASpecialize.Params[I]);
+    if Parameter is TPasType then
+      ParameterText := TypeReferenceText(TPasType(Parameter))
+    else
+      ParameterText := Parameter.GetDeclaration(False);
+    Result := Result + ParameterText;
+  end;
+  Result := Result + '>';
+  if AIncludeAliasName and (ASpecialize.Name <> '') then
+    Result := ASpecialize.SafeName + ' = ' + Result;
+end;
+
+function ArgumentDeclaration(AArgument: TPasArgument): string;
+var
+  ValueText: string;
+begin
+  Result := AccessNames[AArgument.Access];
+  if AArgument.Name <> '' then
+    Result := Result + AArgument.SafeName;
+  if Assigned(AArgument.ArgType) then
+    Result := Result + ': ' + TypeReferenceText(AArgument.ArgType);
+  ValueText := AArgument.Value;
+  if ValueText <> '' then
+    Result := Result + ' = ' + ValueText;
+end;
+
+function ProcedureNameText(AProcedure: TPasProcedure): string;
+var
+  I: Integer;
+  NamePart: TProcedureNamePart;
+begin
+  Result := '';
+  if Assigned(AProcedure.NameParts) then
+  begin
+    for I := 0 to AProcedure.NameParts.Count - 1 do
+    begin
+      if I > 0 then
+        Result := Result + '.';
+      NamePart := TProcedureNamePart(AProcedure.NameParts[I]);
+      Result := Result + NamePart.Name;
+      if Assigned(NamePart.Templates) and (NamePart.Templates.Count > 0) then
+        Result := Result + GenericTemplateTypesAsString(NamePart.Templates);
+    end;
+  end
+  else
+    Result := AProcedure.SafeName;
+end;
+
+function ProcedureDeclaration(AProcedure: TPasProcedure): string;
+const
+  PreferredDeclarationWidth = 80;
+var
+  I: Integer;
+  Modifier: TProcedureModifier;
+  ProcTypeModifier: TProcTypeModifier;
+  ArgumentsText: string;
+  HeadText: string;
+  SingleLineText: string;
+  SuffixText: string;
+  ResultType: TPasType;
+begin
+  if AProcedure is TPasOperator then
+    HeadText := TPasOperator(AProcedure).GetOperatorDeclaration(False)
+  else
+  begin
+    HeadText := AProcedure.TypeName;
+    if AProcedure.Name <> '' then
+      HeadText := HeadText + ' ' + ProcedureNameText(AProcedure);
+  end;
+
+  ArgumentsText := '';
+  if Assigned(AProcedure.ProcType) and
+    (AProcedure.ProcType.Args.Count > 0) then
+    for I := 0 to AProcedure.ProcType.Args.Count - 1 do
+    begin
+      if I > 0 then
+        ArgumentsText := ArgumentsText + '; ';
+      ArgumentsText := ArgumentsText + ArgumentDeclaration(
+        TPasArgument(AProcedure.ProcType.Args[I]));
+    end;
+
+  SuffixText := '';
+  if AProcedure is TPasFunction then
+  begin
+    ResultType := nil;
+    if Assigned(TPasFunction(AProcedure).FuncType) and
+      Assigned(TPasFunction(AProcedure).FuncType.ResultEl) then
+      ResultType := TPasFunction(AProcedure).FuncType.ResultEl.ResultType;
+    if Assigned(ResultType) then
+      SuffixText := SuffixText + ': ' + TypeReferenceText(ResultType);
+  end;
+
+  if AProcedure.CallingConvention <> ccDefault then
+    SuffixText := SuffixText + '; ' +
+      LowerCase(cCallingConventions[AProcedure.CallingConvention]);
+  if Assigned(AProcedure.ProcType) then
+    for ProcTypeModifier := Low(TProcTypeModifier) to
+      High(TProcTypeModifier) do
+      if ProcTypeModifier in AProcedure.ProcType.Modifiers then
+        SuffixText := SuffixText + '; ' +
+          LowerCase(ProcTypeModifiers[ProcTypeModifier]);
+  for Modifier := Low(TProcedureModifier) to High(TProcedureModifier) do
+    if Modifier in AProcedure.Modifiers then
+      SuffixText := SuffixText + '; ' + ModifierNames[Modifier];
+
+  SingleLineText := HeadText;
+  if ArgumentsText <> '' then
+    SingleLineText := SingleLineText + '(' + ArgumentsText + ')';
+  SingleLineText := SingleLineText + SuffixText;
+  if (ArgumentsText = '') or
+    (Length(SingleLineText) <= PreferredDeclarationWidth) then
+    Exit(SingleLineText);
+
+  Result := HeadText + '(' + #10;
+  for I := 0 to AProcedure.ProcType.Args.Count - 1 do
+  begin
+    Result := Result + '  ' + ArgumentDeclaration(
+      TPasArgument(AProcedure.ProcType.Args[I]));
+    if I < AProcedure.ProcType.Args.Count - 1 then
+      Result := Result + ';';
+    Result := Result + #10;
+  end;
+  Result := Result + ')' + SuffixText;
+end;
+
+function PropertyDeclaration(AProperty: TPasProperty): string;
+var
+  I: Integer;
+begin
+  if AProperty.IsClass then
+    Result := 'class property '
+  else
+    Result := 'property ';
+  Result := Result + AProperty.SafeName;
+  if Assigned(AProperty.Args) and (AProperty.Args.Count > 0) then
+  begin
+    Result := Result + '[';
+    for I := 0 to AProperty.Args.Count - 1 do
+    begin
+      if I > 0 then
+        Result := Result + '; ';
+      Result := Result + ArgumentDeclaration(
+        TPasArgument(AProperty.Args[I]));
+    end;
+    Result := Result + ']';
+  end;
+  if Assigned(AProperty.VarType) then
+    Result := Result + ': ' + TypeReferenceText(AProperty.VarType);
+  if AProperty.ReadAccessorName <> '' then
+    Result := Result + ' read ' + AProperty.ReadAccessorName;
+  if AProperty.WriteAccessorName <> '' then
+    Result := Result + ' write ' + AProperty.WriteAccessorName;
+  if AProperty.IsDefault then
+    Result := Result + '; default';
+end;
+
+function AngleBracketsBalanced(const AText: string): Boolean;
+var
+  I: Integer;
+  Balance: Integer;
+begin
+  Balance := 0;
+  for I := 1 to Length(AText) do
+    if AText[I] = '<' then
+      Inc(Balance)
+    else if AText[I] = '>' then
+      Dec(Balance);
+  Result := Balance = 0;
+end;
+
+function VisibilityOf(AElement: TPasElement): TSymbolVisibility;
+var
+  Ancestor: TPasElement;
+begin
+  case AElement.Visibility of
+    visPrivate: Result := svPrivate;
+    visProtected: Result := svProtected;
+    visPublic: Result := svPublic;
+    visPublished: Result := svPublished;
+    visAutomated: Result := svAutomated;
+    visStrictPrivate: Result := svStrictPrivate;
+    visStrictProtected: Result := svStrictProtected;
+  else
+  begin
+    Ancestor := AElement.Parent;
+    while Assigned(Ancestor) and not (Ancestor is TInterfaceSection) and
+      not (Ancestor is TPasMembersType) do
+      Ancestor := Ancestor.Parent;
+    if (Ancestor is TInterfaceSection) or
+       ((Ancestor is TPasClassType) and
+        (TPasClassType(Ancestor).ObjKind = okInterface)) then
+      Result := svPublic
+    else
+      Result := svDefault;
+  end;
+end;
+end;
+
+function KindOf(AElement: TPasElement; out AKind: TSymbolKind): Boolean;
+begin
+  Result := True;
+  if AElement is TPasModule then
+    AKind := skUnit
+  else if AElement is TPasConstructor then
+    AKind := skConstructor
+  else if AElement is TPasDestructor then
+    AKind := skDestructor
+  else if AElement is TPasProcedure then
+  begin
+    if AElement.Parent is TPasMembersType then
+      AKind := skMethod
+    else
+      AKind := skRoutine;
+  end
+  else if AElement is TPasProperty then
+    AKind := skProperty
+  else if AElement is TPasConst then
+    AKind := skConstant
+  else if AElement is TPasVariable then
+  begin
+    if AElement.Parent is TPasMembersType then
+      AKind := skField
+    else
+      AKind := skVariable;
+  end
+  else if AElement is TPasEnumType then
+    AKind := skEnumeration
+  else if AElement is TPasRecordType then
+    AKind := skRecord
+  else if AElement is TPasClassType then
+  begin
+    if TPasClassType(AElement).ObjKind in [okInterface, okDispInterface] then
+      AKind := skInterface
+    else
+      AKind := skClass;
+  end
+  else if AElement is TPasType then
+    AKind := skTypeAlias
+  else
+    Result := False;
+end;
+
+function StableSymbolID(AKind: TSymbolKind; const AQualifiedName,
+  ADeclaration: string): string;
+begin
+  Result := SymbolKindName(AKind) + ':' + LowerCase(AQualifiedName);
+  if AKind in [skRoutine, skMethod, skConstructor, skDestructor, skProperty] then
+    Result := Result + '#' + CanonicalText(ADeclaration);
+end;
+
+function ElementDeclaration(AElement: TPasElement): string;
+var
+  ParserDeclaration: string;
+begin
+  try
+    if AElement is TPasClassType then
+      Result := NormaliseDeclaration(
+        ClassDeclaration(TPasClassType(AElement)))
+    else if AElement is TPasRecordType then
+      Result := NormaliseDeclaration(
+        RecordDeclaration(TPasRecordType(AElement)))
+    else if AElement is TPasSpecializeType then
+      Result := NormaliseDeclaration(
+        SpecializeTypeText(TPasSpecializeType(AElement), True))
+    else if AElement is TPasProcedure then
+      Result := NormaliseDeclaration(
+        ProcedureDeclaration(TPasProcedure(AElement)))
+    else
+    begin
+      ParserDeclaration := NormaliseDeclaration(
+        AElement.GetDeclaration(True));
+      if not AngleBracketsBalanced(ParserDeclaration) and
+        (AElement is TPasProperty) then
+        Result := NormaliseDeclaration(
+          PropertyDeclaration(TPasProperty(AElement)))
+      else
+        Result := ParserDeclaration;
+    end;
+  except
+    Result := '';
+  end;
+end;
+
+procedure PopulateRoutineSignature(AElement: TPasElement; ASymbol: TDocSymbol);
+var
+  ProcedureElement: TPasProcedure;
+  I: Integer;
+  Argument: TPasArgument;
+begin
+  if not (AElement is TPasProcedure) then
+    Exit;
+  ProcedureElement := TPasProcedure(AElement);
+  ASymbol.HasReturnValue := AElement is TPasFunction;
+  if not Assigned(ProcedureElement.ProcType) then
+    Exit;
+  for I := 0 to ProcedureElement.ProcType.Args.Count - 1 do
+  begin
+    Argument := TPasArgument(ProcedureElement.ProcType.Args[I]);
+    if Argument.Name <> '' then
+      ASymbol.ParameterNames.Add(Argument.SafeName);
+  end;
+end;
+
+procedure AddElementSymbols(AElement: TPasElement; AUnit: TDocUnit;
+  const ASourceRoot, ADefaultFilename,
+  ADefaultSourceFile, AParentSymbolID, AParentQualifiedName: string;
+  ASourceTexts: TSourceTextCache;
+  ACommentStyles: TDocumentationCommentStyles;
+  AReadIncludeDocumentation: Boolean);
+var
+  Kind: TSymbolKind;
+  Symbol: TDocSymbol;
+  QualifiedName: string;
+  DeclarationText: string;
+  ElementSourceFile: string;
+  ElementSourceText: string;
+  I: Integer;
+  Members: TFPList;
+begin
+  if AElement is TPasOverloadedProc then
+  begin
+    for I := 0 to TPasOverloadedProc(AElement).Overloads.Count - 1 do
+      AddElementSymbols(TPasElement(TPasOverloadedProc(AElement).Overloads[I]),
+        AUnit, ASourceRoot, ADefaultFilename, ADefaultSourceFile,
+        AParentSymbolID, AParentQualifiedName, ASourceTexts,
+        ACommentStyles, AReadIncludeDocumentation);
+    Exit;
+  end;
+
+  if not KindOf(AElement, Kind) then
+    Exit;
+
+  if AParentQualifiedName = '' then
+    QualifiedName := AElement.Name
+  else if Kind = skUnit then
+    QualifiedName := AElement.Name
+  else
+    QualifiedName := AParentQualifiedName + '.' + AElement.Name;
+
+  DeclarationText := ElementDeclaration(AElement);
+  Symbol := TDocSymbol.Create;
+  try
+    Symbol.Name := AElement.Name;
+    Symbol.QualifiedName := QualifiedName;
+    Symbol.Kind := Kind;
+    Symbol.Visibility := VisibilityOf(AElement);
+    Symbol.DeclarationText := DeclarationText;
+    PopulateRoutineSignature(AElement, Symbol);
+    if AElement.SourceFilename <> '' then
+    begin
+      ElementSourceFile := AElement.SourceFilename;
+      Symbol.SourceFilename := RelativeSourceFilename(
+        ElementSourceFile, ASourceRoot)
+    end
+    else
+    begin
+      ElementSourceFile := ADefaultSourceFile;
+      Symbol.SourceFilename := ADefaultFilename;
+    end;
+    Symbol.SourceLine := AElement.SourceLinenumber;
+    Symbol.SourceColumn := ElementColumn(AElement);
+    if SameText(Symbol.SourceFilename, ADefaultFilename) or
+      AReadIncludeDocumentation then
+    begin
+      ElementSourceText := ASourceTexts.TextFor(ElementSourceFile);
+      ParseDocumentationComment(ElementSourceText, AElement.SourceLinenumber,
+        ACommentStyles, Symbol.RawDocumentation,
+        Symbol.MarkdownDocumentation, Symbol.Directives);
+    end;
+    Symbol.ParentSymbolID := AParentSymbolID;
+    Symbol.ID := StableSymbolID(Kind, QualifiedName, DeclarationText);
+    if AElement is TPasClassType then
+      AddClassTypeRelationships(TPasClassType(AElement), Symbol);
+    AUnit.Symbols.Add(Symbol);
+  except
+    Symbol.Free;
+    raise;
+  end;
+
+  if AElement is TPasMembersType then
+  begin
+    Members := TPasMembersType(AElement).Members;
+    for I := 0 to Members.Count - 1 do
+      AddElementSymbols(TPasElement(Members[I]), AUnit, ASourceRoot,
+        ADefaultFilename, ADefaultSourceFile, Symbol.ID,
+        Symbol.QualifiedName, ASourceTexts, ACommentStyles,
+        AReadIncludeDocumentation);
+  end;
+end;
+
+function ConvertModule(AModule: TPasModule;
+  const AFileName, ASourceRoot, ASourceText: string;
+  ACommentStyles: TDocumentationCommentStyles;
+  AReadIncludeDocumentation: Boolean): TDocUnit;
+var
+  I: Integer;
+  UnitSymbol: TDocSymbol;
+  DefaultFilename: string;
+  SourceTexts: TSourceTextCache;
+begin
+  Result := TDocUnit.Create;
+  SourceTexts := TSourceTextCache.Create;
+  try
+    try
+      Result.Name := AModule.Name;
+      DefaultFilename := RelativeSourceFilename(AFileName, ASourceRoot);
+      Result.SourceFilename := DefaultFilename;
+      SourceTexts.Add(AFileName, ASourceText);
+
+      if Assigned(AModule.InterfaceSection) then
+      begin
+        for I := 0 to Length(AModule.InterfaceSection.UsesClause) - 1 do
+          if not SameText(AModule.InterfaceSection.UsesClause[I].Name,
+            'System') then
+            Result.InterfaceDependencies.Add(
+              AModule.InterfaceSection.UsesClause[I].Name);
+      end;
+
+      AddElementSymbols(AModule, Result, ASourceRoot,
+        DefaultFilename, AFileName, '', '', SourceTexts, ACommentStyles,
+        AReadIncludeDocumentation);
+      UnitSymbol := TDocSymbol(Result.Symbols[Result.Symbols.Count - 1]);
+
+      if Assigned(AModule.InterfaceSection) then
+        for I := 0 to AModule.InterfaceSection.Declarations.Count - 1 do
+          AddElementSymbols(
+            TPasElement(AModule.InterfaceSection.Declarations[I]),
+            Result, ASourceRoot, DefaultFilename,
+            AFileName, UnitSymbol.ID, AModule.Name, SourceTexts,
+            ACommentStyles, AReadIncludeDocumentation);
+    except
+      Result.Free;
+      raise;
+    end;
+  finally
+    SourceTexts.Free;
+  end;
+end;
+
+end.
