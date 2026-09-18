@@ -20,6 +20,9 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   macro expansion, custom-option parsing) into
   `PasWeave.Lazarus.Support`; `PasWeave.Lazarus` now focuses on project and
   package graph assembly.
+- Split the CLI build pipeline into named `ParseCommandLine`,
+  `ExecuteBuild`, and `RenderAndReport` phases, leaving `RunBuild` as a short
+  orchestrator with one owner for option objects and build state.
 
 ## [0.7.0] - 2026-09-17
 

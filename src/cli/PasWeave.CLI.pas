@@ -168,6 +168,7 @@ var
   OldManifest: TManifest;
   NewManifest: TManifest;
   NewPaths: TStringList;
+  ParseHandled: Boolean;
 
   procedure AppendConfigLine(const ALine: string);
   begin
@@ -248,37 +249,8 @@ var
     end;
   end;
 
-begin
-  SourcePath := '';
-  OutputPath := 'build/docs';
-  ProjectName := '';
-  ProjectNameExplicit := False;
-  BuildMode := '';
-  Verbose := False;
-  FailureSeverity := dsError;
-  HasMinimumCoverage := False;
-  MinimumCoverage := 0;
-  RepositoryURL := '';
-  SourceLinkTemplate := '';
-  ProjectMark := '';
-  ThemeAccent := '';
-  ThemeAccentAlt := '';
-  ThemeFont := '';
-  HasProjectMark := False;
-  HasThemeAccent := False;
-  HasThemeAccentAlt := False;
-  HasThemeFont := False;
-  CleanBuild := False;
-  SkipBuild := False;
-  Project := nil;
-  OldManifest := nil;
-  StartTick := MonotonicMilliseconds;
-  CommentStyles := DefaultDocumentationCommentStyles;
-  DiscoveryOptions := TSourceDiscoveryOptions.Create;
-  CompilerOptions := TCompilerOptions.Create;
-  PackagePaths := TStringList.Create;
-  LazarusConfiguration := nil;
-  try
+  procedure ParseCommandLine;
+  begin
     I := 2;
     while I <= ParamCount do
     begin
@@ -489,7 +461,8 @@ begin
       else if (ParamStr(I) = '--help') or (ParamStr(I) = '-h') then
       begin
         PrintUsage;
-        Exit(0);
+        ParseHandled := True;
+        Exit;
       end
       else if (Length(ParamStr(I)) > 0) and (ParamStr(I)[1] = '-') then
         raise EPasWeaveInputError.CreateFmt('unknown option: %s', [ParamStr(I)])
@@ -499,7 +472,12 @@ begin
         raise EPasWeaveInputError.Create('only one source path may be supplied');
       Inc(I);
     end;
+  end;
 
+  procedure ExecuteBuild;
+  var
+    I: Integer;
+  begin
     if SourcePath = '' then
       raise EPasWeaveInputError.Create('missing unit or source directory');
     { Validate before fingerprinting so a typo reports a clean input error
@@ -624,10 +602,12 @@ begin
           CommentStyles, DiscoveryOptions, CompilerOptions);
       SamplePeakHeap;
     end;
+  end;
 
-    if SkipBuild then
-      Exit;
-
+  function RenderAndReport: Integer;
+  var
+    I: Integer;
+  begin
     if not TryConfigureSourceLinks(Project, RepositoryURL, SourceLinkTemplate,
       SourceLinkError) then
       raise EPasWeaveInputError.Create(SourceLinkError);
@@ -704,6 +684,47 @@ begin
       Result := 1
     else
       Result := 0;
+  end;
+
+begin
+  SourcePath := '';
+  OutputPath := 'build/docs';
+  ProjectName := '';
+  ProjectNameExplicit := False;
+  BuildMode := '';
+  Verbose := False;
+  FailureSeverity := dsError;
+  HasMinimumCoverage := False;
+  MinimumCoverage := 0;
+  RepositoryURL := '';
+  SourceLinkTemplate := '';
+  ProjectMark := '';
+  ThemeAccent := '';
+  ThemeAccentAlt := '';
+  ThemeFont := '';
+  HasProjectMark := False;
+  HasThemeAccent := False;
+  HasThemeAccentAlt := False;
+  HasThemeFont := False;
+  CleanBuild := False;
+  SkipBuild := False;
+  Project := nil;
+  OldManifest := nil;
+  StartTick := MonotonicMilliseconds;
+  CommentStyles := DefaultDocumentationCommentStyles;
+  DiscoveryOptions := TSourceDiscoveryOptions.Create;
+  CompilerOptions := TCompilerOptions.Create;
+  PackagePaths := TStringList.Create;
+  LazarusConfiguration := nil;
+  ParseHandled := False;
+  try
+    ParseCommandLine;
+    if ParseHandled then
+      Exit(0);
+    ExecuteBuild;
+    if SkipBuild then
+      Exit;
+    Result := RenderAndReport;
   finally
     Project.Free;
     OldManifest.Free;
@@ -719,10 +740,10 @@ begin
   try
     if (ParamCount = 0) or (ParamStr(1) = '--help') or
        (ParamStr(1) = '-h') then
-    begin
-      PrintUsage;
-      Exit(0);
-    end;
+      begin
+        PrintUsage;
+        Exit(0);
+      end;
     if ParamStr(1) = '--version' then
     begin
       WriteLn('PasWeave ', PasWeaveVersion);
