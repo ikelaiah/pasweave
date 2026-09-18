@@ -8,6 +8,7 @@ uses
   Classes, Contnrs, PasWeave.Diagnostics;
 
 type
+  /// The declaration kind attached to a documented symbol.
   TSymbolKind = (
     skUnit,
     skClass,
@@ -25,6 +26,7 @@ type
     skVariable
   );
 
+  /// Source visibility; `svDefault` covers declarations outside a section.
   TSymbolVisibility = (
     svDefault,
     svPrivate,
@@ -36,96 +38,143 @@ type
     svStrictProtected
   );
 
+  /// How a type relates to another type.
   TTypeRelationshipKind = (
     trkInheritance,
     trkImplementation
   );
 
+  /// One structured documentation directive from a comment group.
   TDocDirective = class
   public
+    /// Directive name without the `@`, for example `param` or `returns`.
     Name: string;
+    /// Subject such as a parameter name; empty for `@returns` and `@since`.
     Subject: string;
+    /// Directive body text with the name and subject removed.
     Text: string;
+    /// Resolved symbol target for reference directives such as `@see`.
     TargetSymbolID: string;
     constructor Create(const AName, ASubject, AText: string);
   end;
 
+  /// A resolved or unresolved inheritance/implementation relationship.
   TDocTypeRelationship = class
   public
     Kind: TTypeRelationshipKind;
+    /// As written in the source, for example `TBase` or a specialization.
     TargetName: string;
+    /// Display text when the source spelling differs from `TargetName`.
     DisplayName: string;
+    /// Resolved target symbol ID; empty when unresolved.
     TargetSymbolID: string;
     constructor Create(AKind: TTypeRelationshipKind;
       const ATargetName, ADisplayName: string);
   end;
 
+  /// One renderable declaration in a unit.
   TDocSymbol = class
   public
+    /// Stable identity derived from kind, qualified name, and declaration.
     ID: string;
     Name: string;
     QualifiedName: string;
     Kind: TSymbolKind;
     Visibility: TSymbolVisibility;
+    /// Canonical, optionally wrapped declaration text.
     DeclarationText: string;
+    /// Unit-relative source path.
     SourceFilename: string;
     SourceLine: Integer;
     SourceColumn: Integer;
+    /// Original comment text including delimiters.
     RawDocumentation: string;
+    /// Normalized documentation body with directives removed.
     MarkdownDocumentation: string;
+    /// Owned `TDocDirective` objects.
     Directives: TObjectList;
+    /// Declared parameter names for routines.
     ParameterNames: TStringList;
+    /// True when a routine declares a return type.
     HasReturnValue: Boolean;
+    /// Owned `TDocTypeRelationship` objects.
     TypeRelationships: TObjectList;
+    /// Owning symbol ID for members; empty for top-level declarations.
     ParentSymbolID: string;
+    /// Sorted, deduplicated related symbol IDs.
     RelatedSymbolIDs: TStringList;
     constructor Create;
     destructor Destroy; override;
   end;
 
+  /// One parsed source unit.
   TDocUnit = class
   public
     Name: string;
+    /// Unit-relative source path.
     SourceFilename: string;
+    /// Sorted, case-insensitive names of interface `uses` dependencies.
     InterfaceDependencies: TStringList;
+    /// Owned `TDocSymbol` objects in declaration order.
     Symbols: TObjectList;
     constructor Create;
     destructor Destroy; override;
   end;
 
+  /// The complete documentation model for a build.
   TDocProject = class
   public
     Name: string;
     SourceRoot: string;
     RepositoryURL: string;
     SourceLinkTemplate: string;
+    /// Header brand mark; see @link(IsValidProjectMark).
     ProjectMark: string;
+    /// Primary accent color; see @link(IsValidThemeColor).
     ThemeAccent: string;
+    /// Secondary accent color.
     ThemeAccentAlt: string;
+    /// Body font family; see @link(IsValidThemeFont).
     ThemeFont: string;
+    /// Owned `TDocUnit` objects in discovery order.
     Units: TObjectList;
+    /// Owned warnings (`TDiagnostic`).
     Warnings: TObjectList;
+    /// Owned errors (`TDiagnostic`).
     Errors: TObjectList;
     constructor Create;
     destructor Destroy; override;
+    /// Total declaration count across all units, including unit symbols.
     function SymbolCount: Integer;
   end;
 
 const
+  /// Brand mark used when none is configured.
   DefaultProjectMark = 'PW';
   DefaultThemeAccent = '#5b4ee6';
   DefaultThemeAccentAlt = '#0e8f81';
   DefaultThemeFont = 'Inter';
 
+/// Stable lowercase name for a symbol kind, used in JSON and diagnostics.
 function SymbolKindName(AKind: TSymbolKind): string;
+/// Stable lowercase name for a visibility, used in JSON and diagnostics.
 function SymbolVisibilityName(AVisibility: TSymbolVisibility): string;
+/// Stable relationship verb (`inherits` or `implements`).
 function TypeRelationshipKindName(AKind: TTypeRelationshipKind): string;
+/// Deterministic, human-readable, overload-safe anchor for a symbol.
 function DocumentationSymbolAnchor(ASymbol: TDocSymbol): string;
+/// Finds a symbol by exact ID inside one unit.
 function FindSymbolByID(AUnit: TDocUnit; const AID: string): TDocSymbol;
+/// Finds a symbol by exact ID across a project.
+///
+/// @param AUnit Receives the owning unit, or nil when not found.
 function FindProjectSymbolByID(AProject: TDocProject; const AID: string;
   out AUnit: TDocUnit): TDocSymbol;
+/// True for a 1-4 character alphanumeric branding mark.
 function IsValidProjectMark(const AValue: string): Boolean;
+/// True for a `#RGB`, `#RRGGBB`, or `#RRGGBBAA` color value.
 function IsValidThemeColor(const AValue: string): Boolean;
+/// True for a safe CSS font family name.
 function IsValidThemeFont(const AValue: string): Boolean;
 
 implementation
