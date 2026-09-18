@@ -51,12 +51,8 @@ function BuildProjectFromFiles(const ASourceRoot, AProjectName: string;
 implementation
 
 uses
-  PasWeave.Diagnostics, PasWeave.FPCAdapter, PasWeave.Validation;
+  PasWeave.Diagnostics, PasWeave.FPCAdapter, PasWeave.FS, PasWeave.Validation;
 
-function NormalisePath(const APath: string): string;
-begin
-  Result := StringReplace(APath, '\', '/', [rfReplaceAll]);
-end;
 
 procedure SplitPath(const APath: string; AParts: TStrings);
 var
@@ -262,18 +258,11 @@ begin
     MatchesAnyDiscoveryPattern(FIncludePatterns, ARelativePath);
 end;
 
-function IsPascalUnitFilename(const AFilename: string): Boolean;
-var
-  Extension: string;
-begin
-  Extension := ExtractFileExt(AFilename);
-  Result := SameText(Extension, '.pas') or SameText(Extension, '.pp');
-end;
 
 function ShouldIncludeDiscoveredFile(const ARelativePath: string;
   AOptions: TSourceDiscoveryOptions): Boolean;
 begin
-  Result := IsPascalUnitFilename(ARelativePath);
+  Result := IsPascalSourceFile(ARelativePath);
   if not Result or not Assigned(AOptions) then
     Exit;
   if MatchesAnyDiscoveryPattern(AOptions.FExcludePatterns,
@@ -290,14 +279,6 @@ begin
     MatchesAnyDiscoveryPattern(AOptions.FExcludePatterns, ARelativePath);
 end;
 
-function IsSymbolicLink(AAttributes: LongInt): Boolean;
-begin
-  {$IFDEF UNIX}
-  Result := (AAttributes and faSymLink) <> 0;
-  {$ELSE}
-  Result := False;
-  {$ENDIF}
-end;
 
 procedure DiscoverDirectoryFiles(const ARootDirectory,
   ARelativeDirectory: string; AOptions: TSourceDiscoveryOptions;

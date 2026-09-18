@@ -16,7 +16,7 @@ implementation
 
 uses
   Classes, Contnrs, SysUtils, PParser, PScanner, PasTree,
-  PasWeave.FPCAdapter.Symbols;
+  PasWeave.FPCAdapter.Symbols, PasWeave.FS;
 
 type
 

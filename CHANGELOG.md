@@ -23,6 +23,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Split the CLI build pipeline into named `ParseCommandLine`,
   `ExecuteBuild`, and `RenderAndReport` phases, leaving `RunBuild` as a short
   orchestrator with one owner for option objects and build state.
+- Added a leaf `PasWeave.FS` unit for shared path and file helpers; discovery,
+  Lazarus, and output code now share one definition of path normalization,
+  source-file detection, readability, symlink checks, and whole-file reads.
+  Directory walkers remain specialized where their pruning and filtering
+  semantics differ.
 
 ## [0.7.0] - 2026-09-17
 

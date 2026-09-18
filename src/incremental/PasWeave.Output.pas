@@ -11,8 +11,7 @@ interface
 uses
   Classes;
 
-/// Normalises path separators to `/` for deterministic comparisons.
-function NormalisePath(const APath: string): string;
+
 
 const
   /// Expected `schemaVersion` inside `manifest.json`.
@@ -130,7 +129,7 @@ procedure RemoveStaleOutputs(const AOutputDirectory: string;
 implementation
 
 uses
-  SysUtils, FPJSON, JSONParser, PasWeave.Hashing;
+  SysUtils, FPJSON, JSONParser, PasWeave.FS, PasWeave.Hashing;
 
 var
   GLedger: TStringList;
@@ -148,10 +147,6 @@ function MoveFileExA(lpExistingFileName, lpNewFileName: PAnsiChar;
   dwFlags: DWORD): LongBool; stdcall; external 'kernel32' name 'MoveFileExA';
 {$ENDIF}
 
-function NormalisePath(const APath: string): string;
-begin
-  Result := StringReplace(APath, '\', '/', [rfReplaceAll]);
-end;
 
 /// Returns True when a manifest-relative path is safe to resolve inside the
 /// output directory (no absolute paths, drive letters, or parent traversal).
@@ -232,19 +227,6 @@ begin
   Result.Size := AObject.Get('size', Int64(0));
 end;
 
-function ReadFileToString(const AFilename: string): string;
-var
-  Stream: TFileStream;
-begin
-  Stream := TFileStream.Create(AFilename, fmOpenRead or fmShareDenyWrite);
-  try
-    SetLength(Result, Stream.Size);
-    if Stream.Size > 0 then
-      Stream.ReadBuffer(Result[1], Stream.Size);
-  finally
-    Stream.Free;
-  end;
-end;
 
 function ReadManifest(const AOutputDirectory: string): TManifest;
 var

@@ -5,7 +5,7 @@ unit PasWeave.Compiler;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, PasWeave.FS;
 
 type
   ECompilerConfigurationError = class(Exception);
@@ -128,15 +128,7 @@ begin
     ANormalised := '';
 end;
 
-function DirectoryIsReadable(const APath: string): Boolean;
-var
-  Search: TSearchRec;
-begin
-  Result := FindFirst(IncludeTrailingPathDelimiter(APath) + '*',
-    faAnyFile, Search) = 0;
-  if Result then
-    FindClose(Search);
-end;
+
 
 function NormaliseDirectoryPath(const AValue, AOptionName: string): string;
 begin
