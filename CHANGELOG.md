@@ -16,6 +16,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   and the fcl-passrc element-to-symbol conversion
   (`FPCAdapter.Symbols`). Renderers and the model no longer link the parser
   or compiler layers.
+- Extracted the shared Lazarus configuration helpers (XML access, path and
+  macro expansion, custom-option parsing) into
+  `PasWeave.Lazarus.Support`; `PasWeave.Lazarus` now focuses on project and
+  package graph assembly.
 
 ## [0.7.0] - 2026-09-17
 

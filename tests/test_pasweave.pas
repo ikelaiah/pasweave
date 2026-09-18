@@ -5,7 +5,8 @@ program test_pasweave;
 uses
   Classes, SysUtils, FPJSON, JSONParser,
   PasWeave.Comments, PasWeave.Compiler, PasWeave.Diagnostics, PasWeave.Model,
-  PasWeave.Lazarus, PasWeave.Model.JSON, PasWeave.Parser,
+  PasWeave.Lazarus, PasWeave.Lazarus.Support, PasWeave.Model.JSON,
+  PasWeave.Parser,
   PasWeave.SourceLinks,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
