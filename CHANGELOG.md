@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-19
+
 ### Added
 
 - Versioned `pasweave.json` project configuration (`--config`) covering
@@ -567,7 +569,8 @@ pipeline and a portable Windows release.
 - Verified the portable executable in isolation, including all 67 extracted
   third-party assets byte-for-byte.
 
-[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/ikelaiah/pasweave/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/ikelaiah/pasweave/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/ikelaiah/pasweave/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/ikelaiah/pasweave/compare/v0.5.6...v0.6.0
 [0.5.6]: https://github.com/ikelaiah/pasweave/compare/v0.5.5...v0.5.6
