@@ -1,6 +1,6 @@
 program ScientificDemo;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 uses
   SysUtils, Scientific.Core, Scientific.Analysis;

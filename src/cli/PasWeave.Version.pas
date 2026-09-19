@@ -1,6 +1,6 @@
 unit PasWeave.Version;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

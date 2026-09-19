@@ -1,6 +1,6 @@
 unit PasWeave.Lazarus;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

@@ -6,7 +6,7 @@
 /// `build/bin/pasweave` (`.exe` on Windows) relative to the repository root.
 program test_cli;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 uses
   Classes, SysUtils, Pipes, Process, PasWeave.TestSupport, PasWeave.Version;

@@ -1,6 +1,6 @@
 unit FeedbackBrace;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

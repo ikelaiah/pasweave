@@ -1,5 +1,7 @@
 unit CoreUnit;
 
+{$mode objfpc}{$H+}{$J+}
+
 interface
 
 uses

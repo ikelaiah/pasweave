@@ -5,7 +5,7 @@
 /// for safe incremental rebuilds.
 unit PasWeave.CLI;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

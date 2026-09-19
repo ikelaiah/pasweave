@@ -1,5 +1,7 @@
 unit LazarusProject;
 
+{$mode objfpc}{$H+}{$J+}
+
 interface
 
 uses
