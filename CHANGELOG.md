@@ -7,32 +7,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
-### Changed
-
-- Decomposed the largest source units into focused units with their public
-  APIs preserved and no output changes: HTML diagrams
-  (`Render.HTML.Diagrams`), stylesheet and scripts (`Render.HTML.CSS`,
-  `Render.HTML.Scripts`), output writes/ledger/manifest (`PasWeave.Output`),
-  and the fcl-passrc element-to-symbol conversion
-  (`FPCAdapter.Symbols`). Renderers and the model no longer link the parser
-  or compiler layers.
-- Extracted the shared Lazarus configuration helpers (XML access, path and
-  macro expansion, custom-option parsing) into
-  `PasWeave.Lazarus.Support`; `PasWeave.Lazarus` now focuses on project and
-  package graph assembly.
-- Split the CLI build pipeline into named `ParseCommandLine`,
-  `ExecuteBuild`, and `RenderAndReport` phases, leaving `RunBuild` as a short
-  orchestrator with one owner for option objects and build state.
-- Added a leaf `PasWeave.FS` unit for shared path and file helpers; discovery,
-  Lazarus, and output code now share one definition of path normalization,
-  source-file detection, readability, symlink checks, and whole-file reads.
-  Directory walkers remain specialized where their pruning and filtering
-  semantics differ.
-- Replaced the repeated `--name` / `--name=value` option branches with a
-  shared `MatchValueOption` helper, roughly halving `ParseCommandLine` and
-  centralizing separated-versus-equals value handling.
-
-## [0.7.0] - 2026-09-17
+## [0.7.0] - 2026-09-19
 
 ### Added
 
@@ -60,6 +35,27 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   behavior under test and continue after a failure.
 - Documentation navigation, the architecture tree, and the command table now
   cover the CLI suite, the link check, and the decisions index.
+- Decomposed the largest source units into focused units with their public
+  APIs preserved and no output changes: HTML diagrams
+  (`Render.HTML.Diagrams`), stylesheet and scripts (`Render.HTML.CSS`,
+  `Render.HTML.Scripts`), output writes/ledger/manifest (`PasWeave.Output`),
+  and the fcl-passrc element-to-symbol conversion (`FPCAdapter.Symbols`).
+  Renderers and the model no longer link the parser or compiler layers.
+- Extracted the shared Lazarus configuration helpers (XML access, path and
+  macro expansion, custom-option parsing) into `PasWeave.Lazarus.Support`;
+  `PasWeave.Lazarus` now focuses on project and package graph assembly.
+- Split the CLI build pipeline into named `ParseCommandLine`, `ExecuteBuild`,
+  and `RenderAndReport` phases, leaving `RunBuild` as a short orchestrator
+  with one owner for option objects and build state.
+- Added a leaf `PasWeave.FS` unit for shared path and file helpers; discovery,
+  Lazarus, and output code now share one definition of path normalization,
+  source-file detection, readability, symlink checks, and whole-file reads.
+  Directory walkers remain specialized where their pruning and filtering
+  semantics differ.
+- Replaced the repeated `--name` / `--name=value` option branches with a
+  shared `MatchValueOption` helper, roughly halving `ParseCommandLine` and
+  centralizing separated-versus-equals value handling.
+- Every Pascal source now declares `{$mode objfpc}{$H+}{$J+}` explicitly.
 
 ### Fixed
 
@@ -117,6 +113,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   inputs as unsupported and refreshed the `mathlib-fp` audit totals.
 - Corrected the sample-output regeneration commands so they reproduce the
   checked-in snapshots.
+- Added XMLDoc comments across the public API of the parser, CLI, model,
+  comments, compiler options, and the HTML and Markdown renderers.
 
 ## [0.6.0] - 2026-08-17
 

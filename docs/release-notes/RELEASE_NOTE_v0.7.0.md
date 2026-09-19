@@ -33,7 +33,16 @@ Highlights:
 - **documentation overhaul**: version notes moved to
   `docs/release-notes/` and `docs/pr-notes/`, every relative link fixed, a
   grouped index at `docs/README.md`, `CONTRIBUTING.md`, PR and issue templates,
-  ADR-0003, and a CI link check.
+  ADR-0003, and a CI link check;
+- **documented public API**: XMLDoc comments now cover the parser, CLI,
+  comments, compiler options, model, and both renderers, so PasWeave can
+  document itself;
+- **maintainable internals**: the largest units were decomposed into focused
+  modules (HTML diagrams, CSS, scripts, `PasWeave.Output`,
+  `FPCAdapter.Symbols`, `Lazarus.Support`, shared `PasWeave.FS` helpers, and
+  named CLI build phases), and every Pascal source declares
+  `{$mode objfpc}{$H+}{$J+}` explicitly. Public APIs and generated output are
+  unchanged.
 
 Validation includes the complete FPC 3.2.2 suite on Windows and Ubuntu: the
 CLI suite, the named model/renderer/parser cases, manifest-hardening cases,

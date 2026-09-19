@@ -24,10 +24,13 @@ make
 make test
 ```
 
-Run the generated test executable from the repository root so it can find its
-fixture:
+`make test` builds and runs both suites: the compiled-CLI contract suite
+(`tests/test_cli.pas`, also available alone as `make test-cli`) and the
+model/renderer/parser suite (`tests/test_pasweave.pas`). Run both from the
+repository root so they can find their fixtures:
 
 ```text
+build/tests/test_cli
 build/tests/test_pasweave
 ```
 
@@ -48,9 +51,13 @@ New-Item -ItemType Directory -Force build/bin, build/tests, build/units
 Compile the CLI and tests from the repository root:
 
 ```text
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/incremental -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/bin src/pasweave.lpr
-fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/incremental -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/validation -FUbuild/units -FEbuild/tests tests/test_pasweave.pas
+fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/incremental -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/support -Fusrc/validation -FUbuild/units -FEbuild/bin src/pasweave.lpr
+fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/incremental -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/support -Fusrc/validation -FUbuild/units -FEbuild/tests tests/test_pasweave.pas
+fpc -Mobjfpc -Sh -Fusrc/cli -Fusrc/diagnostics -Fusrc/incremental -Fusrc/model -Fusrc/parser -Fusrc/render -Fusrc/support -Fusrc/validation -FUbuild/units -FEbuild/tests tests/test_cli.pas
 ```
+
+The CLI suite starts `build/bin/pasweave`, so compile the CLI before running
+`build/tests/test_cli`. Set `PASWEAVE_BIN` to test another executable.
 
 ## Build the portable Windows executable
 
