@@ -1,6 +1,6 @@
 # PasWeave roadmap
 
-PasWeave has shipped `v0.7.0` and is preparing `v0.8.0`. The parser-to-site
+PasWeave has shipped `v0.8.0` and is preparing `v0.9.0`. The parser-to-site
 pipeline works; the path to `v1.0.0` is about making that pipeline understand
 real project builds, improving author feedback and navigation, scaling it
 safely, and then freezing the public contracts.
@@ -410,6 +410,13 @@ Exit criteria:
 
 **Outcome:** a project can commit one reviewable PasWeave configuration and
 reproduce a build without restating stable options on every command line.
+
+Status: completed on 2026-09-19. The versioned `pasweave.json` contract,
+precedence rules, path validation, visibility policy, and reproducibility
+fields are recorded in the
+[project configuration guide](docs/project-configuration.md),
+[CHANGELOG.md](CHANGELOG.md), and the
+[v0.8.0 release note](docs/release-notes/RELEASE_NOTE_v0.8.0.md).
 
 Exit criteria:
 

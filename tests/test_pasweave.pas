@@ -892,7 +892,7 @@ var
   StyleProject: TDocProject;
   TypeRelationship: TDocTypeRelationship;
 begin
-  Check(PasWeaveVersion = '0.7.0',
+  Check(PasWeaveVersion = '0.8.0',
     'the tested application version should be explicit');
   Check(TryParseDocumentationCommentStyles('slash, brace,paren',
     CommentStyles), 'combined documentation comment styles should parse');

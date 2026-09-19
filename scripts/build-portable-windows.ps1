@@ -3,7 +3,7 @@ param(
   [string]$Fpc = 'fpc',
   [string]$FpcRes = 'fpcres',
   [string]$Windres = 'windres',
-  [string]$ExpectedVersion = '0.7.0'
+  [string]$ExpectedVersion = '0.8.0'
 )
 
 $ErrorActionPreference = 'Stop'
