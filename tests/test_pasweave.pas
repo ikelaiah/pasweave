@@ -11,7 +11,7 @@ uses
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
   PasWeave.Render.HTML.Markdown, PasWeave.Render.HTML.Assets,
   PasWeave.NavigationTests, PasWeave.SymbolIndexAndThemeTests,
-  PasWeave.ValidationTests, PasWeave.IncrementalTests,
+  PasWeave.ValidationTests, PasWeave.IncrementalTests, PasWeave.ConfigTests,
   PasWeave.TestSupport, PasWeave.Version;
 
 procedure CheckDocumentedExampleGoldens;
@@ -1657,6 +1657,7 @@ begin
   RunCase('mathematics', @CheckMathematics);
   RunCase('comment dialects', @CheckCommentDialects);
   RunCase('source discovery', @CheckSourceDiscovery);
+  RunCase('project configuration', @RunConfigTests);
   RunCase('partial failure', @CheckPartialFailure);
   if Failures > 0 then
   begin
