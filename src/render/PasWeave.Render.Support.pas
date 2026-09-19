@@ -48,6 +48,13 @@ function FindUnitByName(AProject: TDocProject; const AName: string): TDocUnit;
 function IsDirectlyRenderable(ASymbol: TDocSymbol): Boolean;
 function IsEffectivelyRenderable(AUnit: TDocUnit;
   ASymbol: TDocSymbol): Boolean;
+/// Selects which declarations renderers and validation treat as documented.
+///
+/// Defaults to the public API policy; the CLI applies the effective project
+/// configuration before any rendering or validation runs.
+procedure SetRenderVisibilityPolicy(APolicy: TRenderVisibilityPolicy);
+/// Returns the active visibility policy.
+function RenderVisibilityPolicy: TRenderVisibilityPolicy;
 function SortedSymbols(AUnit: TDocUnit; AKinds: TSymbolKinds): TStringList;
 function UnitSymbol(AUnit: TDocUnit): TDocSymbol;
 function IndexedSymbolCount(AUnit: TDocUnit): Integer;
@@ -59,6 +66,9 @@ implementation
 
 uses
   SysUtils;
+
+var
+  GRenderVisibilityPolicy: TRenderVisibilityPolicy = rvpPublicAPI;
 
 procedure AppendLine(var AOutput: UTF8String; const ALine: UTF8String = '');
 begin
@@ -241,7 +251,18 @@ end;
 
 function IsDirectlyRenderable(ASymbol: TDocSymbol): Boolean;
 begin
-  Result := not (ASymbol.Visibility in [svPrivate, svStrictPrivate]);
+  Result := (GRenderVisibilityPolicy = rvpAllDeclarations) or
+    not (ASymbol.Visibility in [svPrivate, svStrictPrivate]);
+end;
+
+procedure SetRenderVisibilityPolicy(APolicy: TRenderVisibilityPolicy);
+begin
+  GRenderVisibilityPolicy := APolicy;
+end;
+
+function RenderVisibilityPolicy: TRenderVisibilityPolicy;
+begin
+  Result := GRenderVisibilityPolicy;
 end;
 
 function IsEffectivelyRenderable(AUnit: TDocUnit;

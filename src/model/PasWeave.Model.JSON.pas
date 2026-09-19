@@ -226,6 +226,8 @@ begin
     Root.Add('themeAccent', AProject.ThemeAccent);
     Root.Add('themeAccentAlt', AProject.ThemeAccentAlt);
     Root.Add('themeFont', AProject.ThemeFont);
+    Root.Add('configurationSource', AProject.ConfigurationSource);
+    Root.Add('configuration', AProject.ConfigurationText);
     Root.Add('units', UnitsToJSON(AProject.Units));
     Root.Add('warnings', DiagnosticListToJSON(AProject.Warnings));
     Root.Add('errors', DiagnosticListToJSON(AProject.Errors));

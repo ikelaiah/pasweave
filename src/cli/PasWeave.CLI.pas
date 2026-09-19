@@ -19,12 +19,13 @@ function RunPasWeave: Integer;
 implementation
 
 uses
-  Classes, SysUtils, PasWeave.Comments, PasWeave.Compiler,
+  Classes, SysUtils, PasWeave.Comments, PasWeave.Compiler, PasWeave.Config,
   PasWeave.Diagnostics, PasWeave.Incremental, PasWeave.Lazarus,
   PasWeave.Lazarus.Support, PasWeave.Model,
   PasWeave.Model.JSON, PasWeave.Output, PasWeave.Parser, PasWeave.SourceLinks,
   PasWeave.Render.Markdown, PasWeave.Render.HTML,
-  PasWeave.Render.HTML.Assets, PasWeave.Validation, PasWeave.Version;
+  PasWeave.Render.HTML.Assets, PasWeave.Render.Support, PasWeave.Validation,
+  PasWeave.Version;
 
 procedure PrintUsage;
 begin
@@ -32,9 +33,11 @@ begin
   WriteLn;
   WriteLn('Usage:');
   WriteLn('  pasweave --version');
-  WriteLn('  pasweave build <unit-or-directory> [--output <directory>]');
+  WriteLn('  pasweave build [<unit-or-directory>] [--output <directory>]');
+  WriteLn('                 [--config=<pasweave.json>] [--visibility=<public|all>]');
   WriteLn('                 [--project-name <name>] [--doc-comments=<styles>]');
-  WriteLn('                 [--recursive] [--include=<glob>] [--exclude=<glob>]');
+  WriteLn('                 [--recursive|--no-recursive] [--include=<glob>]');
+  WriteLn('                 [--exclude=<glob>]');
   WriteLn('                 [--unit-path=<directory>] [--include-path=<directory>]');
   WriteLn('                 [--define=<name>] [--target-os=<os>] [--target-cpu=<cpu>]');
   WriteLn('                 [--build-mode=<name>] [--package-path=<directory>]');
@@ -84,6 +87,14 @@ begin
   WriteLn('  --theme-font=<family name> sets the primary body font family');
   WriteLn('  defaults reproduce the built-in light and dark reader schemes');
   WriteLn;
+  WriteLn('Project configuration:');
+  WriteLn('  --config=<pasweave.json> loads a versioned project configuration');
+  WriteLn('  explicit command-line values override configuration values');
+  WriteLn('  relative file paths resolve from the configuration directory');
+  WriteLn('  --no-recursive disables recursion inherited from a configuration');
+  WriteLn('  --visibility=public (default) documents the public API only');
+  WriteLn('  --visibility=all also documents private declarations');
+  WriteLn;
   WriteLn('Documentation comment styles:');
   WriteLn('  slash = /// lines (PasWeave convention; plain // is ignored)');
   WriteLn('  brace = { ... }; paren = (* ... *)');
@@ -116,6 +127,17 @@ begin
   Result := Pos(Prefix, AParam) = 1;
   if Result then
     AValue := Copy(AParam, Length(Prefix) + 1, MaxInt);
+end;
+
+/// True when the command line asks for usage help before any build work.
+function HelpRequestedOnCommandLine: Boolean;
+var
+  Index: Integer;
+begin
+  Result := False;
+  for Index := 2 to ParamCount do
+    if (ParamStr(Index) = '--help') or (ParamStr(Index) = '-h') then
+      Exit(True);
 end;
 
 procedure PrintDiagnostic(ADiagnostic: TDiagnostic; AVerbose: Boolean);
@@ -188,6 +210,16 @@ var
   NewManifest: TManifest;
   NewPaths: TStringList;
   ParseHandled: Boolean;
+  ConfigFilename: string;
+  ConfigSource: string;
+  Config: TProjectConfig;
+  VisibilityPolicy: TRenderVisibilityPolicy;
+  IncludeExplicit: Boolean;
+  ExcludeExplicit: Boolean;
+  UnitPathExplicit: Boolean;
+  IncludePathExplicit: Boolean;
+  DefineExplicit: Boolean;
+  PackagePathExplicit: Boolean;
 
   procedure AppendConfigLine(const ALine: string);
   begin
@@ -268,6 +300,113 @@ var
     end;
   end;
 
+  { Reads --config before the main parse so configuration values are applied
+    before CLI overrides. }
+  procedure ScanConfigOption;
+  var
+    Index: Integer;
+    Value: string;
+    Seen: Boolean;
+  begin
+    Seen := False;
+    Index := 2;
+    while Index <= ParamCount do
+    begin
+      if MatchValueOption(ParamStr(Index), '--config', Index, Value) then
+      begin
+        if Seen then
+          raise EPasWeaveInputError.Create(
+            'only one --config option may be supplied');
+        ConfigFilename := Value;
+        Seen := True;
+      end;
+      Inc(Index);
+    end;
+  end;
+
+  { Resolves a validated configuration-relative path against the
+    configuration file's directory. }
+  function ResolveConfigPath(const AValue: string): string;
+  begin
+    Result := ExpandFileName(IncludeTrailingPathDelimiter(Config.Directory) +
+      AValue);
+  end;
+
+  { Fills the build options from the loaded configuration. Values are applied
+    before ParseCommandLine, so explicit CLI values win. }
+  procedure ApplyProjectConfig;
+  var
+    Index: Integer;
+  begin
+    ConfigSource := Config.Filename;
+    VisibilityPolicy := Config.Visibility;
+    if Config.OutputPath <> '' then
+      OutputPath := ResolveConfigPath(Config.OutputPath);
+    if Config.SourcePath <> '' then
+      SourcePath := ResolveConfigPath(Config.SourcePath);
+    if Config.ProjectName <> '' then
+    begin
+      ProjectName := Config.ProjectName;
+      ProjectNameExplicit := True;
+    end;
+    if Config.ProjectMark <> '' then
+    begin
+      ProjectMark := Config.ProjectMark;
+      HasProjectMark := True;
+    end;
+    if Config.RepositoryURL <> '' then
+      RepositoryURL := Config.RepositoryURL;
+    if Config.SourceLinkTemplate <> '' then
+      SourceLinkTemplate := Config.SourceLinkTemplate;
+    if Config.ThemeAccent <> '' then
+    begin
+      ThemeAccent := Config.ThemeAccent;
+      HasThemeAccent := True;
+    end;
+    if Config.ThemeAccentAlt <> '' then
+    begin
+      ThemeAccentAlt := Config.ThemeAccentAlt;
+      HasThemeAccentAlt := True;
+    end;
+    if Config.ThemeFont <> '' then
+    begin
+      ThemeFont := Config.ThemeFont;
+      HasThemeFont := True;
+    end;
+    if Config.HasComments then
+      CommentStyles := Config.Comments;
+    if Config.Recursive then
+      DiscoveryOptions.Recursive := True;
+    for Index := 0 to Config.IncludePatterns.Count - 1 do
+      DiscoveryOptions.AddIncludePattern(Config.IncludePatterns[Index]);
+    for Index := 0 to Config.ExcludePatterns.Count - 1 do
+      DiscoveryOptions.AddExcludePattern(Config.ExcludePatterns[Index]);
+    for Index := 0 to Config.UnitPaths.Count - 1 do
+      CompilerOptions.AddUnitPath(ResolveConfigPath(Config.UnitPaths[Index]));
+    for Index := 0 to Config.IncludePaths.Count - 1 do
+      CompilerOptions.AddIncludePath(
+        ResolveConfigPath(Config.IncludePaths[Index]));
+    for Index := 0 to Config.Defines.Count - 1 do
+      CompilerOptions.AddDefine(Config.Defines[Index]);
+    if Config.TargetOS <> '' then
+      CompilerOptions.SetTargetOS(Config.TargetOS);
+    if Config.TargetCPU <> '' then
+      CompilerOptions.SetTargetCPU(Config.TargetCPU);
+    if Config.BuildMode <> '' then
+      BuildMode := Config.BuildMode;
+    for Index := 0 to Config.PackagePaths.Count - 1 do
+      PackagePaths.Add(ResolveConfigPath(Config.PackagePaths[Index]));
+    if Config.HasMinimumCoverage then
+    begin
+      MinimumCoverage := Config.MinimumCoverage;
+      HasMinimumCoverage := True;
+    end;
+    if (Config.FailOn <> '') and
+      not TryParseDiagnosticSeverity(Config.FailOn, FailureSeverity) then
+      raise EPasWeaveInputError.Create(
+        'configuration coverage.failOn is invalid');
+  end;
+
   procedure ParseCommandLine;
   var
     OptionValue: string;
@@ -291,18 +430,71 @@ var
             'a comma-separated combination, or all)',
             [OptionValue]);
       end
+      else if MatchValueOption(ParamStr(I), '--config', I, OptionValue) then
+      begin
+        { Already read by ScanConfigOption; keep the parser total. }
+        if ConfigFilename = '' then
+          ConfigFilename := OptionValue;
+      end
+      else if MatchValueOption(ParamStr(I), '--visibility', I, OptionValue) then
+      begin
+        if SameText(OptionValue, 'public') then
+          VisibilityPolicy := rvpPublicAPI
+        else if SameText(OptionValue, 'all') then
+          VisibilityPolicy := rvpAllDeclarations
+        else
+          raise EPasWeaveInputError.Create(
+            '--visibility must be public or all');
+      end
       else if ParamStr(I) = '--recursive' then
         DiscoveryOptions.Recursive := True
+      else if ParamStr(I) = '--no-recursive' then
+        DiscoveryOptions.Recursive := False
       else if MatchValueOption(ParamStr(I), '--include', I, OptionValue) then
-        DiscoveryOptions.AddIncludePattern(OptionValue)
+      begin
+        if not IncludeExplicit then
+        begin
+          DiscoveryOptions.IncludePatterns.Clear;
+          IncludeExplicit := True;
+        end;
+        DiscoveryOptions.AddIncludePattern(OptionValue);
+      end
       else if MatchValueOption(ParamStr(I), '--exclude', I, OptionValue) then
-        DiscoveryOptions.AddExcludePattern(OptionValue)
+      begin
+        if not ExcludeExplicit then
+        begin
+          DiscoveryOptions.ExcludePatterns.Clear;
+          ExcludeExplicit := True;
+        end;
+        DiscoveryOptions.AddExcludePattern(OptionValue);
+      end
       else if MatchValueOption(ParamStr(I), '--unit-path', I, OptionValue) then
-        CompilerOptions.AddUnitPath(OptionValue)
+      begin
+        if not UnitPathExplicit then
+        begin
+          CompilerOptions.UnitPaths.Clear;
+          UnitPathExplicit := True;
+        end;
+        CompilerOptions.AddUnitPath(OptionValue);
+      end
       else if MatchValueOption(ParamStr(I), '--include-path', I, OptionValue) then
-        CompilerOptions.AddIncludePath(OptionValue)
+      begin
+        if not IncludePathExplicit then
+        begin
+          CompilerOptions.IncludePaths.Clear;
+          IncludePathExplicit := True;
+        end;
+        CompilerOptions.AddIncludePath(OptionValue);
+      end
       else if MatchValueOption(ParamStr(I), '--define', I, OptionValue) then
-        CompilerOptions.AddDefine(OptionValue)
+      begin
+        if not DefineExplicit then
+        begin
+          CompilerOptions.Defines.Clear;
+          DefineExplicit := True;
+        end;
+        CompilerOptions.AddDefine(OptionValue);
+      end
       else if MatchValueOption(ParamStr(I), '--target-os', I, OptionValue) then
         CompilerOptions.SetTargetOS(OptionValue)
       else if MatchValueOption(ParamStr(I), '--target-cpu', I, OptionValue) then
@@ -310,7 +502,14 @@ var
       else if MatchValueOption(ParamStr(I), '--build-mode', I, OptionValue) then
         BuildMode := OptionValue
       else if MatchValueOption(ParamStr(I), '--package-path', I, OptionValue) then
-        PackagePaths.Add(OptionValue)
+      begin
+        if not PackagePathExplicit then
+        begin
+          PackagePaths.Clear;
+          PackagePathExplicit := True;
+        end;
+        PackagePaths.Add(OptionValue);
+      end
       else if MatchValueOption(ParamStr(I), '--repository-url', I, OptionValue) then
         RepositoryURL := OptionValue
       else if MatchValueOption(ParamStr(I), '--source-link-template', I, OptionValue) then
@@ -385,6 +584,7 @@ var
   var
     I: Integer;
   begin
+    SetRenderVisibilityPolicy(VisibilityPolicy);
     if SourcePath = '' then
       raise EPasWeaveInputError.Create('missing unit or source directory');
     { Validate before fingerprinting so a typo reports a clean input error
@@ -458,6 +658,10 @@ var
     AppendConfigValue('fail-on', DiagnosticSeverityName(FailureSeverity));
     AppendConfigValue('output',
       StringReplace(OutputPath, '\', '/', [rfReplaceAll]));
+    AppendConfigValue('visibility', VisibilityPolicyName(VisibilityPolicy));
+    if ConfigSource <> '' then
+      AppendConfigValue('config', StringReplace(ConfigSource, '\', '/',
+        [rfReplaceAll]));
 
     if IsLazarusInput then
       InputFiles := EnumerateInputFiles(SourcePath, True, nil, CompilerOptions,
@@ -465,6 +669,8 @@ var
     else
       InputFiles := EnumerateInputFiles(SourcePath, False, DiscoveryOptions,
         CompilerOptions, nil, nil);
+    if ConfigSource <> '' then
+      InputFiles.Add(StringReplace(ConfigSource, '\', '/', [rfReplaceAll]));
     try
       Fingerprint := ComputeBuildFingerprint(ConfigText, InputFiles,
         ThirdPartyAssetFingerprint);
@@ -526,6 +732,10 @@ var
       Project.ThemeAccentAlt := ThemeAccentAlt;
     if HasThemeFont then
       Project.ThemeFont := ThemeFont;
+    Project.ConfigurationSource := ConfigSource;
+    Project.ConfigurationText := ConfigText;
+    if ConfigSource <> '' then
+      WriteLn('Using configuration ', ConfigSource);
     if HasMinimumCoverage then
       AddDocumentationCoverageDiagnostic(Project, MinimumCoverage);
     OutputFile := IncludeTrailingPathDelimiter(OutputPath) + 'api-model.json';
@@ -625,6 +835,17 @@ begin
   LazarusConfiguration := nil;
   ParseHandled := False;
   try
+    ScanConfigOption;
+    if (ConfigFilename <> '') and not HelpRequestedOnCommandLine then
+    begin
+      Config := LoadProjectConfig(ConfigFilename);
+      try
+        ApplyProjectConfig;
+      finally
+        Config.Free;
+        Config := nil;
+      end;
+    end;
     ParseCommandLine;
     if ParseHandled then
       Exit(0);
@@ -661,6 +882,12 @@ begin
     Result := RunBuild;
   except
     on E: EPasWeaveInputError do
+    begin
+      WriteLn(StdErr, 'pasweave: ', E.Message);
+      WriteLn(StdErr, 'Run "pasweave --help" for usage.');
+      Result := 2;
+    end;
+    on E: EProjectConfigError do
     begin
       WriteLn(StdErr, 'pasweave: ', E.Message);
       WriteLn(StdErr, 'Run "pasweave --help" for usage.');

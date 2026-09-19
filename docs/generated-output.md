@@ -86,7 +86,10 @@ deliberately unresolved.
 When source links are configured, the top-level model records the normalized
 `repositoryUrl` and `sourceLinkTemplate`. The effective branding tokens
 (`projectMark`, `themeAccent`, `themeAccentAlt`, and `themeFont`) are recorded
-alongside them. These fields are additive schema-v1 changes.
+alongside them. `configurationSource` names the `pasweave.json` file used, and
+`configuration` records the effective normalized build options (the same text
+hashed into the incremental fingerprint). These fields are additive schema-v1
+changes. See the [project configuration guide](project-configuration.md).
 
 `diagnostics.json` contains the same stable diagnostic codes shown on the HTML
 and Markdown indexes, ready for CI systems to consume.

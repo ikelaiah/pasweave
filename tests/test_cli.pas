@@ -248,6 +248,94 @@ begin
     Pos('[error ', StdOut) > 0);
 end;
 
+procedure CheckProjectConfiguration;
+const
+  ProjectDirectory = 'build/cli-test/config-project';
+  ConfigFile = ProjectDirectory + '/pasweave.json';
+var
+  StdOut: string;
+  StdErr: string;
+  ExitCode: Integer;
+  ModelJSON: string;
+begin
+  DeleteTree(ProjectDirectory);
+  WriteTextFile(ProjectDirectory + '/src/ConfigUnit.pas',
+    'unit ConfigUnit;' + #10 +
+    '{$mode objfpc}{$H+}{$J+}' + #10 +
+    'interface' + #10 +
+    'type' + #10 +
+    '  TBox = class' + #10 +
+    '  private' + #10 +
+    '    FSecret: Integer;' + #10 +
+    '  public' + #10 +
+    '    function Value: Integer;' + #10 +
+    '  end;' + #10 +
+    'function Add(const A, B: Integer): Integer;' + #10 +
+    'implementation' + #10 +
+    'end.' + #10);
+  WriteTextFile(ConfigFile,
+    '{' +
+    '  "version": 1,' +
+    '  "source": "src",' +
+    '  "output": "docs",' +
+    '  "project": {"name": "Configured Project", "mark": "CFG"},' +
+    '  "comments": "slash",' +
+    '  "visibility": "public",' +
+    '  "coverage": {"minimum": 0, "failOn": "error"}' +
+    '}');
+
+  ExitCode := RunCli(['build', '--config=' + ConfigFile], StdOut, StdErr);
+  Expect('a configuration build should exit 0', ExitCode = 0);
+  Expect('a configuration build should name the config file',
+    Pos('Using configuration', StdOut) > 0);
+  Expect('config-relative output should be written',
+    FileExists(ProjectDirectory + '/docs/html/index.html'));
+  ModelJSON := string(ReadUTF8File(ProjectDirectory +
+    '/docs/api-model.json'));
+  Expect('the model should record the configuration source',
+    Pos('"configurationSource"', ModelJSON) > 0);
+  Expect('the model should record the effective configuration',
+    Pos('"configuration"', ModelJSON) > 0);
+  Expect('the configured project name should reach the model',
+    Pos('Configured Project', ModelJSON) > 0);
+  Expect('the default visibility policy should exclude private members',
+    Pos('FSecret', string(ReadUTF8File(ProjectDirectory +
+    '/docs/html/units/ConfigUnit.html'))) = 0);
+
+  ExitCode := RunCli(['build', '--config=' + ConfigFile, '--clean',
+    '--visibility=all'], StdOut, StdErr);
+  Expect('the all-declarations policy should exit 0', ExitCode = 0);
+  Expect('the all-declarations policy should render private members',
+    Pos('FSecret', string(ReadUTF8File(ProjectDirectory +
+    '/docs/html/units/ConfigUnit.html'))) > 0);
+
+  ExitCode := RunCli(['build', '--config=' + ConfigFile,
+    '--project-name', 'CLI Override'], StdOut, StdErr);
+  Expect('CLI overrides with a configuration should exit 0', ExitCode = 0);
+  ModelJSON := string(ReadUTF8File(ProjectDirectory +
+    '/docs/api-model.json'));
+  Expect('explicit CLI values should override the configuration',
+    Pos('CLI Override', ModelJSON) > 0);
+
+  WriteTextFile(ProjectDirectory + '/bad.json',
+    '{"version": 1, "unknownKey": true}');
+  ExitCode := RunCli(['build', '--config=' + ProjectDirectory + '/bad.json'],
+    StdOut, StdErr);
+  Expect('an unknown configuration key should exit 2', ExitCode = 2);
+  Expect('an unknown configuration key should be explained',
+    Pos('unknown configuration key', StdErr) > 0);
+
+  ExitCode := RunCli(['build', '--config=' + ProjectDirectory +
+    '/missing.json'], StdOut, StdErr);
+  Expect('a missing configuration file should exit 2', ExitCode = 2);
+
+  ExitCode := RunCli(['build', '--config=' + ConfigFile, '--visibility=none'],
+    StdOut, StdErr);
+  Expect('an invalid visibility option should exit 2', ExitCode = 2);
+
+  DeleteTree(ProjectDirectory);
+end;
+
 procedure CheckSourceLinkValidation;
 var
   StdOut: string;
@@ -269,6 +357,7 @@ begin
   RunCase('usage errors', @CheckUsageErrors);
   RunCase('build and incremental parity', @CheckBuildAndIncremental);
   RunCase('failure policies', @CheckFailurePolicies);
+  RunCase('project configuration', @CheckProjectConfiguration);
   RunCase('source link validation', @CheckSourceLinkValidation);
   DeleteTree('build/cli-test');
   if Failures > 0 then

@@ -44,6 +44,14 @@ type
     trkImplementation
   );
 
+  /// Which declarations become part of browseable documentation and coverage.
+  TRenderVisibilityPolicy = (
+    /// Public API only: private and strict-private stay JSON-only.
+    rvpPublicAPI,
+    /// Every declaration, including private and strict-private members.
+    rvpAllDeclarations
+  );
+
   /// One structured documentation directive from a comment group.
   TDocDirective = class
   public
@@ -136,6 +144,10 @@ type
     ThemeAccentAlt: string;
     /// Body font family; see @link(IsValidThemeFont).
     ThemeFont: string;
+    /// Path of the project configuration used, when any.
+    ConfigurationSource: string;
+    /// Normalized effective configuration text used for the build fingerprint.
+    ConfigurationText: string;
     /// Owned `TDocUnit` objects in discovery order.
     Units: TObjectList;
     /// Owned warnings (`TDiagnostic`).
