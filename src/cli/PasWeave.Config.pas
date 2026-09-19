@@ -24,12 +24,6 @@ type
   /// Raised for any invalid, unreadable, or unsupported configuration.
   EProjectConfigError = class(Exception);
 
-  /// Which declarations become part of browseable documentation.
-  TRenderVisibilityPolicy = (
-    rvpPublicAPI,
-    rvpAllDeclarations
-  );
-
   /// Parsed and validated `pasweave.json` contents.
   TProjectConfig = class
   public

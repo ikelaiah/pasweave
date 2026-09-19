@@ -9,7 +9,8 @@ procedure RunConfigTests;
 implementation
 
 uses
-  SysUtils, PasWeave.Comments, PasWeave.Config, PasWeave.TestSupport;
+  SysUtils, PasWeave.Comments, PasWeave.Config, PasWeave.Model,
+  PasWeave.TestSupport;
 
 const
   ConfigDirectory = 'build/config-test';
