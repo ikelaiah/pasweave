@@ -7,6 +7,26 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- Versioned `pasweave.json` project configuration (`--config`) covering
+  source, output, comment styles, visibility, project title and branding,
+  repository/source-link settings, discovery, compiler settings, and coverage
+  thresholds. Relative paths resolve from the configuration directory and
+  cannot escape it; unknown keys, wrong types, unsupported versions, and
+  invalid values are rejected with input errors (exit code 2).
+- `--visibility=public|all` selects whether private declarations are
+  documented, and `--no-recursive` disables recursion inherited from a
+  configuration.
+- The effective configuration is recorded in `api-model.json`
+  (`configuration`, `configurationSource`) and the configuration file is part
+  of the incremental build fingerprint.
+
+### Documentation
+
+- Added the [project configuration](docs/project-configuration.md) guide and
+  linked it from the README and documentation index.
+
 ## [0.7.0] - 2026-09-19
 
 ### Added

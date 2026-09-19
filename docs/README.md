@@ -16,6 +16,7 @@ page that matches your task.
 
 | Guide | What it covers |
 |---|---|
+| [Project configuration](project-configuration.md) | `pasweave.json` schema, precedence, path rules, visibility policy, and reproducibility |
 | [Source discovery](source-discovery.md) | Recursion, include/exclude globs, precedence, and safety |
 | [Compiler-aware parsing](compiler-aware-parsing.md) | Unit/include paths, defines, targets, and precedence |
 | [Lazarus projects and packages](lazarus-projects.md) | `.lpi`/`.lpk` inputs, build modes, package graphs, and diagnostics |

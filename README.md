@@ -230,6 +230,20 @@ PasWeave writes a deterministic `manifest.json` and only ever removes files it
 created before. See [safe incremental builds](docs/incremental-builds.md) for
 the cache key, invalidation rules, and interruption recovery.
 
+### Reproduce a build from a committed configuration
+
+Commit one `pasweave.json` and rebuild with a single flag; explicit
+command-line values still override it:
+
+~~~text
+pasweave build --config=pasweave.json
+pasweave build --config=pasweave.json --project-name "Nightly API"
+~~~
+
+See [project configuration](docs/project-configuration.md) for the schema,
+precedence rules, path validation, and the effective configuration recorded in
+`api-model.json`.
+
 ## 📖 Documentation
 
 Every guide is indexed in [docs/README.md](docs/README.md). Start with
@@ -239,6 +253,7 @@ Every guide is indexed in [docs/README.md](docs/README.md). Start with
 | Guide | What it covers |
 |---|---|
 | [Documentation index](docs/README.md) | Grouped links to every guide, ADR, and release note |
+| [Project configuration](docs/project-configuration.md) | One committed `pasweave.json`, precedence, and reproducibility |
 | [Documentation comments](docs/documentation-comments.md) | Comment forms, association, and directives |
 | [Generated output](docs/generated-output.md) | HTML, Markdown, JSON, diagnostics, and exit codes |
 | [Source discovery](docs/source-discovery.md) | Recursion, include/exclude globs, and safety |
