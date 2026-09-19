@@ -67,7 +67,7 @@ try {
 
   $unitPaths = @(
     '-Fusrc/cli', '-Fusrc/diagnostics', '-Fusrc/incremental', '-Fusrc/model',
-    '-Fusrc/parser', '-Fusrc/render', '-Fusrc/validation'
+    '-Fusrc/parser', '-Fusrc/render', '-Fusrc/support', '-Fusrc/validation'
   )
   $testCompilerArguments = @(
     '-Twin64', '-Px86_64', '-B', '-O2', '-Mobjfpc', '-Sh'

@@ -12,11 +12,11 @@ uses
 type
   ELazarusConfigurationError = class(Exception);
 
-function NormalisePath(const APath: string): string;
+
 function ChildNode(AParent: TDOMNode; const AName: string): TDOMNode;
 function AttributeValue(ANode: TDOMNode; const AName: string): string;
 function NodeValue(ANode: TDOMNode; const AName: string): string;
-function IsPascalSourceFile(const AFilename: string): Boolean;
+
 function IsTrueValue(const AValue: string): Boolean;
 function DefaultName(const AFilename: string): string;
 function ResolvePath(const ABaseDirectory, AValue: string): string;
@@ -24,7 +24,7 @@ function ExpandConfiguredValue(const AValue, ABaseDirectory: string;
   ACompilerOptions: TCompilerOptions; out AGenerated: Boolean): string;
 function ResolvePackageReference(const ABaseDirectory, AValue: string;
   ACompilerOptions: TCompilerOptions): string;
-function DirectoryIsReadable(const APath: string): Boolean;
+
 function NormalisePackagePath(const AValue: string): string;
 procedure AddConfiguredPath(const AValue, ABaseDirectory: string;
   ACompilerOptions: TCompilerOptions; AIncludePath: Boolean);
@@ -38,12 +38,7 @@ procedure ParseCompilerOptions(ANode: TDOMNode; const ABaseDirectory: string;
 implementation
 
 uses
-  Contnrs, XMLRead;
-
-function NormalisePath(const APath: string): string;
-begin
-  Result := StringReplace(APath, '\', '/', [rfReplaceAll]);
-end;
+  Contnrs, XMLRead, PasWeave.FS;
 
 function ChildNode(AParent: TDOMNode; const AName: string): TDOMNode;
 var
@@ -76,12 +71,6 @@ end;
 function NodeValue(ANode: TDOMNode; const AName: string): string;
 begin
   Result := AttributeValue(ChildNode(ANode, AName), 'Value');
-end;
-
-function IsPascalSourceFile(const AFilename: string): Boolean;
-begin
-  Result := SameText(ExtractFileExt(AFilename), '.pas') or
-    SameText(ExtractFileExt(AFilename), '.pp');
 end;
 
 function IsTrueValue(const AValue: string): Boolean;
@@ -125,16 +114,6 @@ begin
         'unsupported Lazarus macro in package reference: %s', [AValue]);
   end;
   Result := ResolvePath(ABaseDirectory, Expanded);
-end;
-
-function DirectoryIsReadable(const APath: string): Boolean;
-var
-  Search: TSearchRec;
-begin
-  Result := FindFirst(IncludeTrailingPathDelimiter(APath) + '*',
-    faAnyFile, Search) = 0;
-  if Result then
-    FindClose(Search);
 end;
 
 function NormalisePackagePath(const AValue: string): string;

@@ -11,7 +11,9 @@ interface
 
 /// Runs PasWeave with the process command line.
 ///
-/// @returns Process exit code (`0` for success, `1` for diagnostics failures).
+/// @returns Process exit code: `0` success, `1` build diagnostics at or above
+///   the `--fail-on` severity, `2` invalid command line or configuration,
+///   `3` an unexpected internal error.
 function RunPasWeave: Integer;
 
 implementation
@@ -97,6 +99,25 @@ begin
   Result := ParamStr(AIndex);
 end;
 
+/// Matches `--name value` or `--name=value`, advancing AIndex for the
+/// separated form. Returns False when the parameter is a different option.
+function MatchValueOption(const AParam, AName: string; var AIndex: Integer;
+  out AValue: string): Boolean;
+var
+  Prefix: string;
+begin
+  AValue := '';
+  if AParam = AName then
+  begin
+    AValue := RequireOptionValue(AIndex, AName);
+    Exit(True);
+  end;
+  Prefix := AName + '=';
+  Result := Pos(Prefix, AParam) = 1;
+  if Result then
+    AValue := Copy(AParam, Length(Prefix) + 1, MaxInt);
+end;
+
 procedure PrintDiagnostic(ADiagnostic: TDiagnostic; AVerbose: Boolean);
 var
   Location: string;
@@ -134,7 +155,6 @@ var
   DiagnosticOutputFile: string;
   MarkdownOutputPath: string;
   HTMLOutputPath: string;
-  CommentStyleValue: string;
   BuildMode: string;
   CommentStyles: TDocumentationCommentStyles;
   DiscoveryOptions: TSourceDiscoveryOptions;
@@ -146,7 +166,6 @@ var
   FailureSeverity: TDiagnosticSeverity;
   MinimumCoverage: Integer;
   HasMinimumCoverage: Boolean;
-  ThresholdValue: string;
   RepositoryURL: string;
   SourceLinkTemplate: string;
   SourceLinkError: string;
@@ -250,207 +269,95 @@ var
   end;
 
   procedure ParseCommandLine;
+  var
+    OptionValue: string;
   begin
     I := 2;
     while I <= ParamCount do
     begin
-      if ParamStr(I) = '--output' then
-        OutputPath := RequireOptionValue(I, '--output')
-      else if Pos('--output=', ParamStr(I)) = 1 then
-        OutputPath := Copy(ParamStr(I), Length('--output=') + 1, MaxInt)
-      else if ParamStr(I) = '--project-name' then
+      if MatchValueOption(ParamStr(I), '--output', I, OptionValue) then
+        OutputPath := OptionValue
+      else if MatchValueOption(ParamStr(I), '--project-name', I, OptionValue) then
       begin
-        ProjectName := RequireOptionValue(I, '--project-name');
+        ProjectName := OptionValue;
         ProjectNameExplicit := True;
       end
-      else if Pos('--project-name=', ParamStr(I)) = 1 then
+      else if MatchValueOption(ParamStr(I), '--doc-comments', I, OptionValue) then
       begin
-        ProjectName := Copy(ParamStr(I), Length('--project-name=') + 1,
-          MaxInt);
-        ProjectNameExplicit := True;
-      end
-      else if ParamStr(I) = '--doc-comments' then
-      begin
-        CommentStyleValue := RequireOptionValue(I, '--doc-comments');
-        if not TryParseDocumentationCommentStyles(CommentStyleValue,
-          CommentStyles) then
+        if not TryParseDocumentationCommentStyles(OptionValue, CommentStyles) then
           raise EPasWeaveInputError.CreateFmt(
             'invalid documentation comment styles: %s ' +
             '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
             'a comma-separated combination, or all)',
-            [CommentStyleValue]);
-      end
-      else if Pos('--doc-comments=', ParamStr(I)) = 1 then
-      begin
-        CommentStyleValue := Copy(ParamStr(I), Length('--doc-comments=') + 1,
-          MaxInt);
-        if not TryParseDocumentationCommentStyles(CommentStyleValue,
-          CommentStyles) then
-          raise EPasWeaveInputError.CreateFmt(
-            'invalid documentation comment styles: %s ' +
-            '(expected slash (///), brace ({ ... }), paren ((* ... *)), ' +
-            'a comma-separated combination, or all)',
-            [CommentStyleValue]);
+            [OptionValue]);
       end
       else if ParamStr(I) = '--recursive' then
         DiscoveryOptions.Recursive := True
-      else if ParamStr(I) = '--include' then
-        DiscoveryOptions.AddIncludePattern(
-          RequireOptionValue(I, '--include'))
-      else if Pos('--include=', ParamStr(I)) = 1 then
-        DiscoveryOptions.AddIncludePattern(Copy(ParamStr(I),
-          Length('--include=') + 1, MaxInt))
-      else if ParamStr(I) = '--exclude' then
-        DiscoveryOptions.AddExcludePattern(
-          RequireOptionValue(I, '--exclude'))
-      else if Pos('--exclude=', ParamStr(I)) = 1 then
-        DiscoveryOptions.AddExcludePattern(Copy(ParamStr(I),
-          Length('--exclude=') + 1, MaxInt))
-      else if ParamStr(I) = '--unit-path' then
-        CompilerOptions.AddUnitPath(
-          RequireOptionValue(I, '--unit-path'))
-      else if Pos('--unit-path=', ParamStr(I)) = 1 then
-        CompilerOptions.AddUnitPath(Copy(ParamStr(I),
-          Length('--unit-path=') + 1, MaxInt))
-      else if ParamStr(I) = '--include-path' then
-        CompilerOptions.AddIncludePath(
-          RequireOptionValue(I, '--include-path'))
-      else if Pos('--include-path=', ParamStr(I)) = 1 then
-        CompilerOptions.AddIncludePath(Copy(ParamStr(I),
-          Length('--include-path=') + 1, MaxInt))
-      else if ParamStr(I) = '--define' then
-        CompilerOptions.AddDefine(RequireOptionValue(I, '--define'))
-      else if Pos('--define=', ParamStr(I)) = 1 then
-        CompilerOptions.AddDefine(Copy(ParamStr(I),
-          Length('--define=') + 1, MaxInt))
-      else if ParamStr(I) = '--target-os' then
-        CompilerOptions.SetTargetOS(
-          RequireOptionValue(I, '--target-os'))
-      else if Pos('--target-os=', ParamStr(I)) = 1 then
-        CompilerOptions.SetTargetOS(Copy(ParamStr(I),
-          Length('--target-os=') + 1, MaxInt))
-      else if ParamStr(I) = '--target-cpu' then
-        CompilerOptions.SetTargetCPU(
-          RequireOptionValue(I, '--target-cpu'))
-      else if Pos('--target-cpu=', ParamStr(I)) = 1 then
-        CompilerOptions.SetTargetCPU(Copy(ParamStr(I),
-          Length('--target-cpu=') + 1, MaxInt))
-      else if ParamStr(I) = '--build-mode' then
-        BuildMode := RequireOptionValue(I, '--build-mode')
-      else if Pos('--build-mode=', ParamStr(I)) = 1 then
-        BuildMode := Copy(ParamStr(I), Length('--build-mode=') + 1, MaxInt)
-      else if ParamStr(I) = '--package-path' then
-        PackagePaths.Add(RequireOptionValue(I, '--package-path'))
-      else if Pos('--package-path=', ParamStr(I)) = 1 then
-        PackagePaths.Add(Copy(ParamStr(I), Length('--package-path=') + 1,
-          MaxInt))
-      else if ParamStr(I) = '--repository-url' then
-        RepositoryURL := RequireOptionValue(I, '--repository-url')
-      else if Pos('--repository-url=', ParamStr(I)) = 1 then
-        RepositoryURL := Copy(ParamStr(I), Length('--repository-url=') + 1,
-          MaxInt)
-      else if ParamStr(I) = '--source-link-template' then
-        SourceLinkTemplate := RequireOptionValue(I, '--source-link-template')
-      else if Pos('--source-link-template=', ParamStr(I)) = 1 then
-        SourceLinkTemplate := Copy(ParamStr(I),
-          Length('--source-link-template=') + 1, MaxInt)
-      else if ParamStr(I) = '--project-mark' then
+      else if MatchValueOption(ParamStr(I), '--include', I, OptionValue) then
+        DiscoveryOptions.AddIncludePattern(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--exclude', I, OptionValue) then
+        DiscoveryOptions.AddExcludePattern(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--unit-path', I, OptionValue) then
+        CompilerOptions.AddUnitPath(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--include-path', I, OptionValue) then
+        CompilerOptions.AddIncludePath(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--define', I, OptionValue) then
+        CompilerOptions.AddDefine(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--target-os', I, OptionValue) then
+        CompilerOptions.SetTargetOS(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--target-cpu', I, OptionValue) then
+        CompilerOptions.SetTargetCPU(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--build-mode', I, OptionValue) then
+        BuildMode := OptionValue
+      else if MatchValueOption(ParamStr(I), '--package-path', I, OptionValue) then
+        PackagePaths.Add(OptionValue)
+      else if MatchValueOption(ParamStr(I), '--repository-url', I, OptionValue) then
+        RepositoryURL := OptionValue
+      else if MatchValueOption(ParamStr(I), '--source-link-template', I, OptionValue) then
+        SourceLinkTemplate := OptionValue
+      else if MatchValueOption(ParamStr(I), '--project-mark', I, OptionValue) then
       begin
-        ProjectMark := RequireOptionValue(I, '--project-mark');
-        if not IsValidProjectMark(ProjectMark) then
+        if not IsValidProjectMark(OptionValue) then
           raise EPasWeaveInputError.Create(
             '--project-mark must be 1 to 4 alphanumeric characters');
+        ProjectMark := OptionValue;
         HasProjectMark := True;
       end
-      else if Pos('--project-mark=', ParamStr(I)) = 1 then
+      else if MatchValueOption(ParamStr(I), '--theme-accent', I, OptionValue) then
       begin
-        ProjectMark := Copy(ParamStr(I), Length('--project-mark=') + 1,
-          MaxInt);
-        if not IsValidProjectMark(ProjectMark) then
-          raise EPasWeaveInputError.Create(
-            '--project-mark must be 1 to 4 alphanumeric characters');
-        HasProjectMark := True;
-      end
-      else if ParamStr(I) = '--theme-accent' then
-      begin
-        ThemeAccent := RequireOptionValue(I, '--theme-accent');
-        if not IsValidThemeColor(ThemeAccent) then
+        if not IsValidThemeColor(OptionValue) then
           raise EPasWeaveInputError.Create(
             '--theme-accent must be a #RGB, #RRGGBB, or #RRGGBBAA color');
+        ThemeAccent := OptionValue;
         HasThemeAccent := True;
       end
-      else if Pos('--theme-accent=', ParamStr(I)) = 1 then
+      else if MatchValueOption(ParamStr(I), '--theme-accent-2', I, OptionValue) then
       begin
-        ThemeAccent := Copy(ParamStr(I), Length('--theme-accent=') + 1,
-          MaxInt);
-        if not IsValidThemeColor(ThemeAccent) then
-          raise EPasWeaveInputError.Create(
-            '--theme-accent must be a #RGB, #RRGGBB, or #RRGGBBAA color');
-        HasThemeAccent := True;
-      end
-      else if ParamStr(I) = '--theme-accent-2' then
-      begin
-        ThemeAccentAlt := RequireOptionValue(I, '--theme-accent-2');
-        if not IsValidThemeColor(ThemeAccentAlt) then
+        if not IsValidThemeColor(OptionValue) then
           raise EPasWeaveInputError.Create(
             '--theme-accent-2 must be a #RGB, #RRGGBB, or #RRGGBBAA color');
+        ThemeAccentAlt := OptionValue;
         HasThemeAccentAlt := True;
       end
-      else if Pos('--theme-accent-2=', ParamStr(I)) = 1 then
+      else if MatchValueOption(ParamStr(I), '--theme-font', I, OptionValue) then
       begin
-        ThemeAccentAlt := Copy(ParamStr(I), Length('--theme-accent-2=') + 1,
-          MaxInt);
-        if not IsValidThemeColor(ThemeAccentAlt) then
-          raise EPasWeaveInputError.Create(
-            '--theme-accent-2 must be a #RGB, #RRGGBB, or #RRGGBBAA color');
-        HasThemeAccentAlt := True;
-      end
-      else if ParamStr(I) = '--theme-font' then
-      begin
-        ThemeFont := RequireOptionValue(I, '--theme-font');
-        if not IsValidThemeFont(ThemeFont) then
+        if not IsValidThemeFont(OptionValue) then
           raise EPasWeaveInputError.Create(
             '--theme-font must be a safe font family name');
+        ThemeFont := OptionValue;
         HasThemeFont := True;
       end
-      else if Pos('--theme-font=', ParamStr(I)) = 1 then
+      else if MatchValueOption(ParamStr(I), '--min-documentation-coverage', I, OptionValue) then
       begin
-        ThemeFont := Copy(ParamStr(I), Length('--theme-font=') + 1, MaxInt);
-        if not IsValidThemeFont(ThemeFont) then
-          raise EPasWeaveInputError.Create(
-            '--theme-font must be a safe font family name');
-        HasThemeFont := True;
-      end
-      else if ParamStr(I) = '--min-documentation-coverage' then
-      begin
-        ThresholdValue := RequireOptionValue(I, '--min-documentation-coverage');
-        if not TryStrToInt(ThresholdValue, MinimumCoverage) or
+        if not TryStrToInt(OptionValue, MinimumCoverage) or
           (MinimumCoverage < 0) or (MinimumCoverage > 100) then
           raise EPasWeaveInputError.Create(
             '--min-documentation-coverage must be an integer from 0 to 100');
         HasMinimumCoverage := True;
       end
-      else if Pos('--min-documentation-coverage=', ParamStr(I)) = 1 then
+      else if MatchValueOption(ParamStr(I), '--fail-on', I, OptionValue) then
       begin
-        ThresholdValue := Copy(ParamStr(I),
-          Length('--min-documentation-coverage=') + 1, MaxInt);
-        if not TryStrToInt(ThresholdValue, MinimumCoverage) or
-          (MinimumCoverage < 0) or (MinimumCoverage > 100) then
-          raise EPasWeaveInputError.Create(
-            '--min-documentation-coverage must be an integer from 0 to 100');
-        HasMinimumCoverage := True;
-      end
-      else if ParamStr(I) = '--fail-on' then
-      begin
-        ThresholdValue := RequireOptionValue(I, '--fail-on');
-        if not TryParseDiagnosticSeverity(ThresholdValue, FailureSeverity) then
-          raise EPasWeaveInputError.Create(
-            '--fail-on must be warning or error');
-      end
-      else if Pos('--fail-on=', ParamStr(I)) = 1 then
-      begin
-        ThresholdValue := Copy(ParamStr(I), Length('--fail-on=') + 1, MaxInt);
-        if not TryParseDiagnosticSeverity(ThresholdValue, FailureSeverity) then
+        if not TryParseDiagnosticSeverity(OptionValue, FailureSeverity) then
           raise EPasWeaveInputError.Create(
             '--fail-on must be warning or error');
       end

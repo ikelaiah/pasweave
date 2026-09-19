@@ -278,6 +278,7 @@ src/validation/   Authoring diagnostics and coverage gates
 src/render/       HTML, Markdown, links, shared helpers, offline assets
 src/diagnostics/  Stable diagnostic codes and severities
 src/incremental/  Fingerprints, manifest.json, atomic writes
+src/support/      Shared filesystem helpers (PasWeave.FS)
 tests/            Fixtures, shared assertions, CLI + focused regression suites
 examples/         Minimal documented-api first, rich scientific-api second
 ```

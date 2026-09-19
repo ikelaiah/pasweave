@@ -8,11 +8,16 @@ interface
 uses
   PasWeave.Model;
 
+/// Route-relative filename of a unit page, for example `Demo.Core.md`.
 function MarkdownUnitFilename(AUnit: TDocUnit): string;
+/// Stable anchor shared with the HTML renderer.
 function MarkdownSymbolAnchor(ASymbol: TDocSymbol): string;
+/// Renders the Markdown project index with the units table and diagnostics.
 function RenderMarkdownIndex(AProject: TDocProject): UTF8String;
+/// Renders one unit page with symbols, documentation, and source links.
 function RenderMarkdownUnit(AProject: TDocProject;
   AUnit: TDocUnit): UTF8String;
+/// Writes the Markdown index and unit pages under `AOutputDirectory`.
 procedure WriteMarkdownDocumentation(AProject: TDocProject;
   const AOutputDirectory: string);
 

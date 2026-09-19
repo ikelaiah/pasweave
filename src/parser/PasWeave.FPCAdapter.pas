@@ -7,6 +7,20 @@ interface
 uses
   PasWeave.Comments, PasWeave.Compiler, PasWeave.Diagnostics, PasWeave.Model;
 
+/// Parses one unit file into the documentation model.
+///
+/// Reads the source, parses its interface section with `fcl-passrc`, and
+/// converts the resulting elements into a `TDocUnit`. Parser failures are
+/// reported as a diagnostic instead of an exception so a build can continue
+/// with the remaining units.
+///
+/// @param AFileName Source file to parse.
+/// @param ASourceRoot Root used to store root-relative source filenames.
+/// @param ACommentStyles Documentation comment styles to recognize.
+/// @param ACompilerOptions Search paths, defines, and target; may be nil.
+/// @param AUnit Receives the parsed unit when the result is True.
+/// @param ADiagnostic Receives a stable diagnostic when the result is False.
+/// @returns True when the unit parsed into the model.
 function ParseUnitFile(const AFileName, ASourceRoot: string;
   ACommentStyles: TDocumentationCommentStyles;
   ACompilerOptions: TCompilerOptions;
@@ -16,7 +30,7 @@ implementation
 
 uses
   Classes, Contnrs, SysUtils, PParser, PScanner, PasTree,
-  PasWeave.FPCAdapter.Symbols;
+  PasWeave.FPCAdapter.Symbols, PasWeave.FS;
 
 type
 

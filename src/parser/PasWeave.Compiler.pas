@@ -5,11 +5,16 @@ unit PasWeave.Compiler;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, PasWeave.FS;
 
 type
+  /// Raised when compiler settings cannot be validated or normalized.
   ECompilerConfigurationError = class(Exception);
 
+  /// Parser search paths, conditional defines, and target selection.
+  ///
+  /// Explicit settings take precedence over values imported from a Lazarus
+  /// project or package through @link(ApplyDefaultsFrom).
   TCompilerOptions = class
   private
     FDefines: TStringList;
@@ -28,15 +33,27 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    /// Adds a conditional define; names are normalized to uppercase and
+    /// duplicates ignored. Invalid identifiers raise
+    /// @link(ECompilerConfigurationError).
     procedure AddDefine(const AValue: string);
+    /// Adds an existing include directory; missing paths raise.
     procedure AddIncludePath(const AValue: string);
+    /// Adds an existing unit search directory; missing paths raise.
     procedure AddUnitPath(const AValue: string);
+    /// Appends `-d`, `-Fi`, `-Fu`, and target arguments for `fcl-passrc`.
     procedure AppendParserArguments(AArguments: TStrings);
+    /// Merges settings imported from a project or package into this object.
     procedure AppendImported(const AOptions: TCompilerOptions);
+    /// Applies imported settings only where this object has no explicit
+    /// value, so command-line options override Lazarus configuration.
     procedure ApplyDefaultsFrom(const AOptions: TCompilerOptions);
+    /// Sets and normalizes the target CPU; unsupported values raise.
     procedure SetTargetCPU(const AValue: string);
+    /// Sets and normalizes the target OS; unsupported values raise.
     procedure SetTargetOS(const AValue: string);
     property Defines: TStringList read FDefines;
+    /// True when any path, define, or target was set explicitly.
     property HasExplicitSettings: Boolean read GetHasExplicitSettings;
     property IncludePaths: TStringList read FIncludePaths;
     property TargetCPU: string read FTargetCPU;
@@ -46,9 +63,16 @@ type
     property UnitPaths: TStringList read FUnitPaths;
   end;
 
+/// True for a plain Pascal identifier usable as a conditional define.
 function IsValidConditionalDefine(const AValue: string): Boolean;
+/// Normalizes a CPU alias (for example `arm64` to `aarch64`).
+///
+/// @returns False when the CPU is not a supported FPC target.
 function TryNormaliseTargetCPU(const AValue: string;
   out ANormalised: string): Boolean;
+/// Normalizes an OS alias (for example `macOS` to `darwin`).
+///
+/// @returns False when the OS is not a supported FPC target.
 function TryNormaliseTargetOS(const AValue: string;
   out ANormalised: string): Boolean;
 
@@ -128,15 +152,7 @@ begin
     ANormalised := '';
 end;
 
-function DirectoryIsReadable(const APath: string): Boolean;
-var
-  Search: TSearchRec;
-begin
-  Result := FindFirst(IncludeTrailingPathDelimiter(APath) + '*',
-    faAnyFile, Search) = 0;
-  if Result then
-    FindClose(Search);
-end;
+
 
 function NormaliseDirectoryPath(const AValue, AOptionName: string): string;
 begin

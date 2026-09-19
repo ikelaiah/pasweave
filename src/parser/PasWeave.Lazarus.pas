@@ -5,7 +5,8 @@ unit PasWeave.Lazarus;
 interface
 
 uses
-  Classes, SysUtils, PasWeave.Compiler, PasWeave.Lazarus.Support;
+  Classes, SysUtils, PasWeave.Compiler, PasWeave.FS,
+  PasWeave.Lazarus.Support;
 
 type
 

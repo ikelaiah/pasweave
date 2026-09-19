@@ -46,28 +46,12 @@ function PeakHeapBytes: QWord;
 implementation
 
 uses
-  PasWeave.Hashing, PasWeave.Version, PasWeave.Output;
+  PasWeave.FS, PasWeave.Hashing, PasWeave.Version;
 
 var
   GPeakHeap: QWord;
 
-function IsPascalLikeFilename(const AFilename: string): Boolean;
-var
-  Extension: string;
-begin
-  Extension := LowerCase(ExtractFileExt(AFilename));
-  Result := (Extension = '.pas') or (Extension = '.pp') or
-    (Extension = '.inc') or (Extension = '.lpi') or (Extension = '.lpk');
-end;
 
-function IsSymbolicLink(AAttributes: LongInt): Boolean;
-begin
-  {$IFDEF UNIX}
-  Result := (AAttributes and faSymLink) <> 0;
-  {$ELSE}
-  Result := False;
-  {$ENDIF}
-end;
 
 procedure CollectDirectoryPascalFiles(const ARootDirectory,
   ARelativeDirectory: string; ARecursive: Boolean;
@@ -105,7 +89,7 @@ begin
           CollectDirectoryPascalFiles(ARootDirectory, RelativePath, ARecursive,
             ADiscovery, AFiles);
       end
-      else if IsPascalLikeFilename(Search.Name) then
+      else if HasBuildInputExtension(Search.Name) then
       begin
         if Assigned(ADiscovery) and
           (ADiscovery.IsExcluded(RelativePath) or
@@ -137,7 +121,7 @@ begin
       FullPath := IncludeTrailingPathDelimiter(ADirectory) + Search.Name;
       if (Search.Attr and faDirectory) = 0 then
       begin
-        if IsPascalLikeFilename(Search.Name) then
+        if HasBuildInputExtension(Search.Name) then
           AFiles.Add(NormalisePath(ExpandFileName(FullPath)));
       end;
     until FindNext(Search) <> 0;

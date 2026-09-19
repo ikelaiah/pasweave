@@ -30,7 +30,6 @@ type
     function TextFor(const AFileName: string): string;
   end;
 
-function NormalisePath(const APath: string): string;
 function RelativeSourceFilename(const AFileName, ASourceRoot: string): string;
 function ReadSourceText(const AFileName: string): string;
 function ConvertModule(AModule: TPasModule;
@@ -41,7 +40,7 @@ function ConvertModule(AModule: TPasModule;
 implementation
 
 uses
-  SysUtils;
+  SysUtils, PasWeave.FS;
 
 constructor TElementSourceInfo.Create(AColumn: Integer);
 begin
@@ -50,10 +49,6 @@ begin
 end;
 
 
-function NormalisePath(const APath: string): string;
-begin
-  Result := StringReplace(APath, '\', '/', [rfReplaceAll]);
-end;
 
 function RelativeSourceFilename(const AFileName, ASourceRoot: string): string;
 var
