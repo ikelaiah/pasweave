@@ -4,7 +4,7 @@
 /// names the behavior under test instead of only printing the assertion text.
 unit PasWeave.TestSupport;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

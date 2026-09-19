@@ -1,7 +1,7 @@
 /// Demonstrates documented APIs that depend on another project unit.
 unit Demo.Services;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

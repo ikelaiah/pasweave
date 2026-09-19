@@ -2,7 +2,7 @@
 /// expansion, and Free Pascal custom-option parsing.
 unit PasWeave.Lazarus.Support;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

@@ -1,6 +1,6 @@
 unit PasWeave.Render.Links;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 {$codepage utf8}
 
 interface

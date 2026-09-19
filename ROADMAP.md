@@ -386,7 +386,7 @@ from: generated pages cannot smuggle active content, output replacement cannot
 destroy the previous build, the CLI contract is covered by automated tests, and
 the documentation is accurate, indexed, and link-checked.
 
-Status: completed on 2026-09-17. The security and correctness fixes, CLI test
+Status: completed on 2026-09-19. The security and correctness fixes, CLI test
 suite, shared render helpers, documentation overhaul, and verification strategy
 are recorded in [CHANGELOG.md](CHANGELOG.md),
 [ADR-0003](docs/decisions/0003-golden-output-and-cli-tests.md), and the

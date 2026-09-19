@@ -4,7 +4,7 @@
 /// This is a leaf unit so renderers and the model never link the parser.
 unit PasWeave.Output;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

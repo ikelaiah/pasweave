@@ -1,6 +1,6 @@
 program test_pasweave;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 uses
   Classes, SysUtils, FPJSON, JSONParser,

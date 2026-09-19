@@ -4,7 +4,7 @@
 /// output code can share one definition of path and file handling.
 unit PasWeave.FS;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

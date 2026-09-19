@@ -1,6 +1,6 @@
 unit PasWeave.Render.Support;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

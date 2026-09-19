@@ -1,6 +1,6 @@
 unit PasWeave.Model.JSON;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

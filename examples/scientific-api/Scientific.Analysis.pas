@@ -4,7 +4,7 @@
 /// such as $\mu$ and $\sigma$ to complete display equations.
 unit Scientific.Analysis;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

@@ -3,7 +3,7 @@
 /// The generated output tree is owned by PasWeave.Output.
 unit PasWeave.Incremental;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 

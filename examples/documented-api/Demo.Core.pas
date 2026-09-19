@@ -4,7 +4,7 @@
 /// documentation marker.
 unit Demo.Core;
 
-{$mode objfpc}{$H+}
+{$mode objfpc}{$H+}{$J+}
 
 interface
 
